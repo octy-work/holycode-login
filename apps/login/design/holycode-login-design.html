@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дизайн входа HolyCode — экраны id.holycode.org</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a1a; --surface: #151525; --card: #171722; --card-2: #1c1c32; --border: #2a2a45; --border-subtle: #1f1f35;
+    --text: #f6f4ff; --text-2: #b4b0cc; --muted: #8494ab;
+    --p600: #7c3aed; --p500: #8b5cf6; --p400: #a78bfa; --cyan: #06b6d4; --soft: rgba(124,58,237,.16);
+    --err: #f87171; --warn: #f59e0b; --ok: #22c55e; --link: #a78bfa;
+    --input: #101020; --input-border: #2f2f4a;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f8fafc; --surface: #fff; --card: #fff; --card-2: #f4f2ff; --border: #e2e8f0; --border-subtle: #eef2f7; --text: #1e1b3a; --text-2: #475569; --muted: #64748b; --soft: rgba(124,58,237,.10); --err: #dc2626; --link: #6d28d9; --input: #fff; --input-border: #cbd5e1; color-scheme: light; } }
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .row, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, li, td, th, dd, figcaption) { overflow-wrap: anywhere; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 Inter, ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 90px; }
+  h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 .4rem; font-weight: 800; letter-spacing: -.01em; }
+  h2 { font-size: 1.4rem; margin: 2.8rem 0 .6rem; font-weight: 700; }
+  h3 { font-size: 1rem; margin: 1rem 0 .4rem; font-weight: 600; }
+  p { margin: .4rem 0; }
+  code { font: .85em ui-monospace, Menlo, monospace; background: var(--card-2); border: 1px solid var(--border-subtle); padding: .05rem .35rem; border-radius: 6px; }
+  .lead { color: var(--text-2); max-width: 70ch; }
+  .meta { color: var(--muted); font-size: .85rem; }
+  .chip { display: inline-block; font-size: .74rem; font-weight: 600; padding: .15rem .55rem; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; vertical-align: middle; }
+  .chip.ok { background: rgba(34,197,94,.15); color: var(--ok); border-color: rgba(34,197,94,.35); }
+  .chip.bad { background: rgba(248,113,113,.15); color: var(--err); border-color: rgba(248,113,113,.35); }
+  .chip.pur { background: var(--soft); color: var(--link); border-color: rgba(139,92,246,.4); }
+  .chip.dim { color: var(--muted); border-color: var(--border); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .grid { display: grid; gap: 14px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: top; }
+  th { color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; }
+  .tbl { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(255,255,255,.15); vertical-align: -2px; margin-right: 6px; }
+  figure { margin: 0; }
+  figcaption { color: var(--muted); font-size: .84rem; margin-top: 8px; }
+  figcaption b { color: var(--text-2); }
+  .shot { border: 1px solid var(--border); border-radius: 10px; display: block; }
+  .vs { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+  /* ===== Рамка «как в браузере» и сами экраны — 1:1 ===== */
+  .frame { --f-bg: #0a0a1a; --f-card: #151525; --f-border: #2a2a45; --f-text: #f6f4ff; --f-text2: #b4b0cc; --f-muted: #8494ab; --f-input: #101020; --f-inb: #2f2f4a; --f-soft: rgba(124,58,237,.16);
+    background: radial-gradient(70% 60% at 50% -10%, rgba(124,58,237,.28), transparent 60%), radial-gradient(40% 40% at 100% 100%, rgba(6,182,212,.10), transparent 60%), var(--f-bg);
+    color: var(--f-text); border: 1px solid var(--f-border); border-radius: 14px; padding: 44px 20px 28px; position: relative; font-size: 15px; line-height: 1.45; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .frame.light { --f-bg: #f6f4ff; --f-card: #ffffff; --f-border: #e2e8f0; --f-text: #1e1b3a; --f-text2: #475569; --f-muted: #64748b; --f-input: #fff; --f-inb: #cbd5e1; --f-soft: rgba(124,58,237,.08); }
+  .frame.mobile { max-width: 375px; padding: 44px 16px 24px; margin: 0 auto; }
+  .frame .tag { position: absolute; top: 12px; left: 14px; font-size: .72rem; font-weight: 700; color: #fff; background: var(--p600); padding: 3px 9px; border-radius: 999px; }
+  .frame .url { position: absolute; top: 12px; right: 14px; font-size: .72rem; color: var(--f-muted); font-family: ui-monospace, Menlo, monospace; }
+  .lg { width: 100%; max-width: 420px; background: var(--f-card); border: 1px solid var(--f-border); border-radius: 20px; padding: 28px 28px 24px; box-shadow: 0 24px 80px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.02) inset; }
+  .frame.mobile .lg { padding: 24px 20px 20px; border-radius: 18px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .brand .em { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); position: relative; flex: none; }
+  .brand .em::after { content: ""; position: absolute; inset: 9px 7px; border: 2.5px solid rgba(255,255,255,.85); border-radius: 999px; }
+  .brand .wm { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+  .brand .wm .h { background: linear-gradient(135deg, #a855f7, #06b6d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand .spacer { flex: 1; }
+  .lang { font-size: 12px; color: var(--f-muted); border: 1px solid var(--f-border); border-radius: 8px; padding: 4px 8px; display: inline-flex; gap: 6px; align-items: center; }
+  .lang b { color: var(--f-text); }
+  .t { font-size: 24px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 4px; }
+  .d { color: var(--f-text2); font-size: 14px; margin: 0 0 16px; }
+  .lbl { display: block; font-size: 12.5px; font-weight: 600; color: var(--f-text2); margin: 12px 0 6px; }
+  .in { height: 44px; display: flex; align-items: center; background: var(--f-input); border: 1px solid var(--f-inb); border-radius: 12px; padding: 0 14px; color: var(--f-muted); font-size: 15px; }
+  .in.v { color: var(--f-text); }
+  .in.focus { border-color: var(--p500); box-shadow: 0 0 0 3px var(--f-soft); }
+  .in.err { border-color: var(--err); }
+  .in .caret { width: 1px; height: 18px; background: var(--f-text); margin-left: 1px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .b { height: 44px; display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 12px; font-weight: 600; font-size: 15px; margin-top: 14px; border: 1px solid transparent; gap: 8px; }
+  .b.p { background: linear-gradient(90deg, #7c3aed, #8b5cf6); color: #fff; box-shadow: 0 8px 24px rgba(124,58,237,.35); }
+  .b.p.dis { background: var(--f-inb); color: var(--f-muted); box-shadow: none; }
+  .b.s { background: transparent; border-color: var(--f-border); color: var(--f-text); }
+  .b.g { background: transparent; color: var(--p400); border: 0; height: 36px; margin-top: 8px; font-weight: 500; font-size: 14px; }
+  .b.gh { background: #24292f; color: #fff; }
+  .opt { display: flex; align-items: center; gap: 12px; background: var(--f-input); border: 1px solid var(--f-inb); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
+  .opt .ic { width: 38px; height: 38px; border-radius: 10px; background: var(--f-soft); color: var(--p400); display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none; }
+  .opt b { display: block; font-size: 15px; }
+  .opt small { color: var(--f-muted); font-size: 12.5px; }
+  .opt.rec { border-color: var(--p500); box-shadow: 0 0 0 3px var(--f-soft); }
+  .opt .arr { margin-left: auto; color: var(--f-muted); }
+  .note { background: var(--f-soft); border: 1px solid rgba(139,92,246,.35); border-radius: 14px; padding: 11px 13px; font-size: 13px; color: var(--f-text2); margin-top: 14px; }
+  .note b { color: var(--f-text); display: block; margin-bottom: 2px; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .ava { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); flex: none; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; font-size: 12px; color: var(--f-muted); }
+  .foot .th { display: inline-flex; gap: 2px; border: 1px solid var(--f-border); border-radius: 999px; padding: 2px; }
+  .foot .th i { width: 24px; height: 24px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 12px; }
+  .foot .th i.on { background: var(--f-soft); color: var(--f-text); }
+  .errbox { background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.4); color: #fca5a5; border-radius: 12px; padding: 10px 12px; font-size: 13px; margin-top: 12px; display: flex; gap: 8px; }
+  .frame.light .errbox { color: #b91c1c; background: rgba(220,38,38,.08); border-color: rgba(220,38,38,.3); }
+  .codes { display: flex; gap: 8px; margin-top: 8px; }
+  .codes i { flex: 1; height: 52px; border-radius: 12px; background: var(--f-input); border: 1px solid var(--f-inb); display: flex; align-items: center; justify-content: center; font: 700 22px ui-monospace, Menlo, monospace; font-style: normal; color: var(--f-text); }
+  .codes i.focus { border-color: var(--p500); box-shadow: 0 0 0 3px var(--f-soft); }
+  .code { font: 800 30px/1 ui-monospace, Menlo, monospace; letter-spacing: .26em; text-align: center; background: var(--f-input); border: 1px dashed var(--f-inb); border-radius: 14px; padding: 16px; margin-top: 10px; color: var(--f-text); }
+  .hint { font-size: 12.5px; color: var(--f-muted); text-align: center; margin-top: 8px; }
+  .sys { position: absolute; left: 50%; transform: translateX(-50%); top: 120px; width: 300px; background: rgba(40,40,52,.96); backdrop-filter: blur(12px); border-radius: 14px; padding: 18px 16px 12px; text-align: center; color: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.55); font-size: 13px; z-index: 2; }
+  .sys .fid { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 10px; background: radial-gradient(circle at 50% 50%, #f472b6, #7c3aed); }
+  .sys b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .sys .btns { display: flex; border-top: 1px solid rgba(255,255,255,.12); margin-top: 12px; }
+  .sys .btns span { flex: 1; padding: 9px 0; font-weight: 600; color: #0a84ff; }
+  .sys .btns span:first-child { border-right: 1px solid rgba(255,255,255,.12); font-weight: 400; }
+  .scope { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--f-border); font-size: 14px; }
+  .scope:last-child { border: 0; }
+  .scope i { width: 22px; height: 22px; border-radius: 6px; background: var(--f-soft); color: var(--p400); display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 12px; flex: none; }
+  .app { display: flex; align-items: center; gap: 12px; background: var(--f-input); border: 1px solid var(--f-inb); border-radius: 14px; padding: 12px; }
+  .app .ic { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg, #8b5cf6, #38bdf8); flex: none; }
+  .app b { display: block; }
+  .app small { color: var(--f-muted); font-size: 12.5px; }
+  .callouts { font-size: .88rem; color: var(--text-2); }
+  .callouts li { margin: .3rem 0; }
+  .num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--p600); color: #fff; font-size: .72rem; font-weight: 700; margin-right: 6px; }
+  .comp { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .comp .frame { min-height: 0; padding: 18px 16px; }
+  .q { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--card); }
+  .q h3 { margin: 0 0 6px; }
+  .q label { display: flex; gap: 10px; align-items: flex-start; padding: 6px 4px; border-radius: 8px; cursor: pointer; }
+  .q label:hover { background: var(--card-2); }
+  .q input { margin-top: 4px; accent-color: var(--p600); }
+  .q .ot { font-weight: 600; } .q .od { color: var(--text-2); font-size: .88rem; display: block; }
+  .q textarea { width: 100%; min-height: 60px; background: var(--input); color: var(--text); border: 1px solid var(--input-border); border-radius: 8px; padding: 8px; font: inherit; font-size: .9rem; }
+  .btn-q { display: inline-block; margin-top: 10px; background: var(--p600); color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  .queued { display: none; margin-left: 10px; font-size: .85rem; color: var(--ok); }
+  .q.done .queued { display: inline; }
+  .or { display: flex; align-items: center; gap: 10px; color: var(--f-muted); font-size: 12px; margin-top: 14px; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--f-border); }
+  .idps { display: flex; gap: 8px; margin-top: 10px; }
+  .idps span { flex: 1; height: 44px; border-radius: 12px; border: 1px solid var(--f-inb); background: var(--f-input); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: var(--f-text); }
+  .idps span.gh { background: #24292f; color: #fff; border-color: #24292f; }
+  .idps span.tg { color: #2AABEE; }
+  .idps span.ya { color: #fc3f1d; }
+  .idps span.vk { color: #0077ff; }
+  .idps span small { font-size: 11px; font-weight: 500; margin-left: 4px; color: var(--f-muted); }
+</style>
+<script type="application/json" data-lavish-revisions>
+[{ "id": "r1", "label": "Правка 1", "timestamp": "2026-09-26T10:35:00Z", "summary": "Другие входы на первом экране: ряд провайдеров (GitHub, Google, Apple, Яндекс, Telegram, VK) — замечание владельца; таблица, как каждый подключается" },
+ { "id": "r2", "label": "Правка 2", "timestamp": "2026-09-26T10:50:00Z", "summary": "Решения владельца: дизайн принят, делаем форк; знак — эмблема + HolyCode; провайдеры — GitHub, Google, Apple (аккаунт есть), Яндекс ID, Telegram; VK и Microsoft убраны" }]
+</script>
+</head>
+<body>
+<main>
+<p class="meta">HolyCode · дизайн входа · 26.09.2026 · для id.holycode.org (Zitadel Login V2 → форк typescript-login)</p>
+<h1>Экраны входа HolyCode — как они должны выглядеть</h1>
+<p class="lead">Брендинг Zitadel «из коробки» дал то, что вы видели: белый квадрат вместо логотипа, серую кнопку, «Back» на первом шаге и раскладку по умолчанию. Настройками дальше не уехать. Ниже — экраны 1:1 в стиле сайта и HolyChat (шрифт Inter, фиолетовый 600/500, тёмный <code>#0a0a1a</code>, светлая тема), токены и карта: какой файл форка typescript-login за какой экран отвечает. Кликайте по любому элементу — это обычный HTML.</p>
+
+<h2 id="vs">Было → станет</h2>
+<div class="vs">
+  <figure class="card">
+    <img class="shot" src="img/zitadel-now.png" alt="Текущий вид id.holycode.org после брендинга Zitadel" width="752" height="711" loading="lazy">
+    <figcaption><b>Сейчас (брендинг Zitadel).</b> Логотип в белой рамке, «Back» без смысла на первом шаге, серый «Continue», подпись под заголовком, выпадашка из 22 языков.</figcaption>
+  </figure>
+  <figure data-lavish-revision="r1">
+    <div class="frame"><span class="tag">Экран 1 · вход</span><span class="url">id.holycode.org</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span><span class="spacer"></span><span class="lang">🌐 <b>RU</b> · EN</span></div>
+        <p class="t">Войти</p>
+        <p class="d">Один аккаунт для HolyChat, HolyAgent, HolyBuild и панели.</p>
+        <label class="lbl">Логин или e-mail</label>
+        <div class="in focus v">rodion@oggo.app<span class="caret"></span></div>
+        <div class="b p">Продолжить</div>
+        <div class="or">или войти через</div>
+        <div class="idps"><span class="gh" title="GitHub">⌥</span><span title="Google">G</span><span title="Apple"></span><span class="ya" title="Яндекс ID">Я</span><span class="tg" title="Telegram">✈</span></div>
+        <div class="b g">Нет аккаунта? Создать</div>
+        <div class="note"><b>Вас пригласили?</b>Откройте ссылку из письма или сообщения — она сама приведёт в нужный аккаунт с нужной ролью.</div>
+        <div class="foot"><span>Помощь · Конфиденциальность</span><span class="th"><i>☀</i><i class="on">◐</i><i>☾</i></span></div>
+      </div>
+    </div>
+    <figcaption data-lavish-revision="r1"><b>Станет.</b> Шапка с эмблемой и словом HolyCode, как на сайте (градиент на «Holy»); заголовок как действие; одно поле; фиолетовая кнопка на всю ширину; под ней — ряд «или войти через»: GitHub, Google, Apple, Яндекс ID, Telegram (решение владельца 26.09; VK и Microsoft — нет); «Назад» нет — некуда.</figcaption>
+  </figure>
+</div>
+
+<h2 id="screens">Экраны</h2>
+<div class="grid g2">
+  <figure>
+    <div class="frame"><span class="tag">Экран 2 · как войдёте</span><span class="url">…/login/authenticator</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span></div>
+        <div class="who"><span class="ava">Р</span><div><b>Родион</b><br><small style="color:var(--f-muted)">rodion@oggo.app · <span style="color:var(--p400)">не вы?</span></small></div></div>
+        <p class="t" style="margin-top:14px">Как войдёте?</p>
+        <div class="opt rec"><span class="ic">◉</span><div><b>Touch ID или ключ</b><small>Passkey этого устройства — быстрее и надёжнее пароля</small></div><span class="arr">›</span></div>
+        <div class="opt"><span class="ic">✉</span><div><b>Код на почту</b><small>Пришлём на rodion@oggo.app</small></div><span class="arr">›</span></div>
+        <div class="opt"><span class="ic">🔑</span><div><b>Пароль</b><small>Как раньше</small></div><span class="arr">›</span></div>
+        <div class="or">или</div>
+        <div class="idps"><span class="gh" title="GitHub">⌥</span><span title="Google">G</span><span title="Apple"></span><span class="ya" title="Яндекс ID">Я</span><span class="tg" title="Telegram">✈</span></div>
+        <div class="b g">Не могу войти — восстановить доступ</div>
+      </div>
+    </div>
+    <figcaption data-lavish-revision="r1"><ol class="callouts"><li>Порядок фиксирован: passkey, почта, пароль; ниже — те же провайдеры, что на экране 1 (если к аккаунту привязан, скажем, GitHub — он подсвечен). Выбранный в прошлый раз — подсвечен.</li><li>«Не вы?» возвращает к экрану 1 — это и есть «Назад».</li></ol></figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame"><span class="tag">Экран 3 · passkey</span><span class="url">…/login/passkey</span>
+      <div class="sys"><div class="fid"></div><b>Войти на id.holycode.org?</b>Touch ID для rodion@oggo.app<div class="btns"><span>Отмена</span><span>Продолжить</span></div></div>
+      <div class="lg" style="opacity:.55">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span></div>
+        <p class="t">Подтвердите passkey</p>
+        <p class="d">Устройство попросит Touch ID, Windows Hello или ключ.</p>
+        <div class="b p dis">Ждём подтверждения…</div>
+        <div class="b g">Войти по паролю</div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>Системный диалог — не наш; наш экран приглушён и ждёт. Ошибка/отмена — возврат к экрану 2 с подсказкой.</li></ol></figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame"><span class="tag">Экран 4 · код на почту</span><span class="url">…/login/otp/email</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span></div>
+        <p class="t">Введите код</p>
+        <p class="d">Отправили на <b style="color:var(--f-text)">rodion@oggo.app</b>. Действует 10 минут.</p>
+        <div class="codes"><i>4</i><i>8</i><i>2</i><i class="focus"></i><i></i><i></i></div>
+        <div class="b p">Продолжить</div>
+        <div class="hint">Код не пришёл? <span style="color:var(--p400)">Отправить ещё раз</span> · проверьте «Спам»</div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>Шесть ячеек, вставка из буфера целиком, автопереход. Тот же экран для TOTP (заголовок «Код из приложения»).</li></ol></figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame"><span class="tag">Экран 5 · пароль + ошибка</span><span class="url">…/login/password</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span></div>
+        <div class="who"><span class="ava">Р</span><div><b>Родион</b><br><small style="color:var(--f-muted)">rodion@oggo.app</small></div></div>
+        <p class="t" style="margin-top:14px">Пароль</p>
+        <label class="lbl">Пароль от аккаунта HolyCode</label>
+        <div class="in err v">••••••••••<span style="margin-left:auto;color:var(--f-muted)">👁</span></div>
+        <div class="errbox"><span>⚠</span><span>Не подошло. Проверьте пароль. Осталось 3 попытки, потом вход закроется на 15 минут.</span></div>
+        <div class="b p">Войти</div>
+        <div class="b g">Забыли пароль? Восстановить</div>
+        <div class="b g" style="margin-top:0">Войти по passkey</div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>Ошибка — под полем, красным, с числом попыток (lockout 10 уже стоит на сервере).</li><li>Восстановление — ссылкой на почту через наш Stalwart.</li></ol></figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame"><span class="tag">Экран 6 · регистрация</span><span class="url">…/login/register</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span><span class="spacer"></span><span class="lang">🌐 <b>RU</b> · EN</span></div>
+        <div class="note" style="margin-top:0"><div class="who"><span class="ava">Р</span><div><b style="display:inline">Родион приглашает вас в OGGO</b><br><small style="color:var(--f-muted)">роль: участник · ссылка действует до 3 октября</small></div></div></div>
+        <p class="t" style="margin-top:14px">Создать аккаунт</p>
+        <label class="lbl">Имя</label><div class="in v">Мария Иванова</div>
+        <label class="lbl">Почта — она же логин</label>
+        <div class="opt rec"><span class="ic">✉</span><div><b>Завести почту в OGGO</b><small>Ящик на нашем сервере — сразу в HolyAgent и HolyChat</small></div></div>
+        <div style="display:flex;gap:8px;margin-top:8px"><div class="in v" style="flex:1">maria</div><div class="in v" style="flex:none">@oggo.app ▾</div></div>
+        <div class="opt"><span class="ic">@</span><div><b>Своя почта</b><small>Пришлём письмо для подтверждения</small></div></div>
+        <label class="lbl">Как будете входить</label>
+        <div class="opt rec"><span class="ic">◉</span><div><b>Создать passkey</b><small>Touch ID / Windows Hello — без пароля</small></div></div>
+        <div class="opt"><span class="ic">🔑</span><div><b>Придумать пароль</b><small>Не короче 12 символов</small></div></div>
+        <p class="hint" style="text-align:left;margin-top:12px">Создавая аккаунт, вы принимаете <span style="color:var(--p400)">условия HolyCode</span> и <span style="color:var(--p400)">политику конфиденциальности</span>.</p>
+        <div class="b p">Присоединиться к OGGO</div>
+        <div class="b g">У меня уже есть аккаунт — войти</div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>С сайта — та же форма без плашки приглашения, кнопка «Создать аккаунт», домен ящика <code>@holycode.org</code>.</li><li>Согласие — текстом, не чекбоксом: меньше кликов, юридически достаточно.</li></ol></figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame"><span class="tag">Экран 7 · вход с устройства</span><span class="url">…/login/device</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span></div>
+        <p class="t">Вход на устройстве</p>
+        <p class="d">Введите код, который показан в HolyAgent или в терминале.</p>
+        <div class="code">HKQR-7M</div>
+        <div class="b p">Продолжить</div>
+        <div class="app" style="margin-top:18px"><i class="ic"></i><div><b>HolyAgent на MacBook Родиона</b><small>хочет войти в ваш аккаунт HolyCode</small></div></div>
+        <div class="scope"><i>✓</i>Подтвердить вашу личность</div>
+        <div class="scope"><i>✓</i>Видеть имя и e-mail</div>
+        <div class="scope"><i>✓</i>Оставаться в системе</div>
+        <div class="b p">Разрешить</div>
+        <div class="b s">Отклонить</div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>Два шага Zitadel (код → согласие) показаны вместе; в жизни — по очереди. Имя приложения и устройства — из клиента.</li></ol></figcaption>
+  </figure>
+
+  <figure data-lavish-revision="r1">
+    <div class="frame light"><span class="tag">Экран 1 · светлая тема</span><span class="url">id.holycode.org</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span><span class="spacer"></span><span class="lang">🌐 <b>EN</b> · RU</span></div>
+        <p class="t">Sign in</p>
+        <p class="d">One account for HolyChat, HolyAgent, HolyBuild and the panel.</p>
+        <label class="lbl">Login or e-mail</label>
+        <div class="in">name@company.com</div>
+        <div class="b p dis">Continue</div>
+        <div class="or">or sign in with</div>
+        <div class="idps"><span class="gh" title="GitHub">⌥</span><span title="Google">G</span><span title="Apple"></span><span class="ya" title="Yandex ID">Я</span><span class="tg" title="Telegram">✈</span></div>
+        <div class="b g">No account? Create one</div>
+        <div class="foot"><span>Help · Privacy</span><span class="th"><i class="on">☀</i><i>◐</i><i>☾</i></span></div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>Те же токены в светлом варианте; кнопка «Продолжить» неактивна, пока поле пустое — серая, но с тем же скруглением и высотой.</li></ol></figcaption>
+  </figure>
+
+  <figure data-lavish-revision="r1">
+    <div class="frame mobile"><span class="tag">Экран 1 · телефон 375</span><span class="url">id.holycode.org</span>
+      <div class="lg">
+        <div class="brand"><i class="em"></i><span class="wm"><span class="h">Holy</span>Code</span></div>
+        <p class="t">Войти</p>
+        <p class="d">Один аккаунт для HolyChat, HolyAgent, HolyBuild и панели.</p>
+        <label class="lbl">Логин или e-mail</label>
+        <div class="in v">rodion@oggo.app</div>
+        <div class="b p">Продолжить</div>
+        <div class="or">или войти через</div>
+        <div class="idps"><span class="gh" title="GitHub">⌥</span><span title="Google">G</span><span title="Apple"></span><span class="ya" title="Яндекс ID">Я</span><span class="tg" title="Telegram">✈</span></div>
+        <div class="b g">Нет аккаунта? Создать</div>
+        <div class="foot"><span>RU · EN</span><span class="th"><i>☀</i><i class="on">◐</i><i>☾</i></span></div>
+      </div>
+    </div>
+    <figcaption><ol class="callouts"><li>Карточка во всю ширину минус 16px, без тени; язык уходит в подвал.</li></ol></figcaption>
+  </figure>
+</div>
+
+<h2 id="idp" data-lavish-revision="r1">Другие входы: что подключается и чем</h2>
+<div class="tbl" data-lavish-revision="r1"><table>
+<thead><tr><th>Провайдер</th><th>Как в Zitadel</th><th>Что нужно от владельца</th><th>Срок</th><th>Заметка</th></tr></thead>
+<tbody>
+<tr><td><b>GitHub</b> <span class="chip ok">да</span></td><td>встроенный провайдер</td><td>OAuth App в организации GitHub (client id/secret)</td><td>10 мин</td><td>решено ранее; разработчики</td></tr>
+<tr><td><b>Google</b> <span class="chip ok">да</span></td><td>встроенный провайдер</td><td>OAuth-клиент в Google Cloud Console</td><td>20 мин</td><td>ранее не выбирали; для международного контура — самый ожидаемый</td></tr>
+<tr><td><b>Apple</b> <span class="chip ok">да</span></td><td>встроенный провайдер (Sign in with Apple)</td><td>Services ID + ключ .p8 в Apple Developer (аккаунт есть — владелец)</td><td>1 час</td><td>решено 26.09</td></tr>
+<tr><td><b>Яндекс ID</b> <span class="chip ok">да</span></td><td>generic OAuth2 (authorize/token/userinfo)</td><td>приложение на oauth.yandex.ru</td><td>30 мин</td><td>ключевой для РФ; e-mail отдаёт</td></tr>
+<tr><td><b>VK ID</b> <span class="chip dim">нет</span></td><td>generic OAuth2 (VK ID, PKCE)</td><td>приложение на id.vk.com</td><td>1 час</td><td>e-mail отдаёт не всегда — тогда просим на экране «дозаполните»</td></tr>
+<tr><td><b>Telegram</b> <span class="chip ok">да</span></td><td>не OAuth: Login Widget + наш мост, который проверяет подпись и выдаёт JWT → Zitadel JWT-IdP</td><td>бот у BotFather, домен</td><td>1 день</td><td>для РФ самый удобный; e-mail не отдаёт — просим на первом входе</td></tr>
+<tr><td><b>Microsoft</b> <span class="chip dim">нет</span></td><td>встроенный (Entra ID)</td><td>App registration в Azure</td><td>30 мин</td><td>только если появятся корпоративные клиенты</td></tr>
+</tbody></table></div>
+<p class="meta" data-lavish-revision="r1">Общее правило: провайдер только подтверждает личность и e-mail; аккаунт HolyCode один — привязать можно несколько провайдеров. Если e-mail от провайдера совпал с существующим аккаунтом — предлагаем привязать после входа паролем/passkey, автоматически не связываем (защита от захвата).</p>
+
+<h2 id="tokens">Токены и компоненты</h2>
+<div class="grid g2">
+  <div class="tbl"><table>
+    <thead><tr><th>Токен</th><th>Тёмная</th><th>Светлая</th><th>Где</th></tr></thead>
+    <tbody>
+      <tr><td>Фон страницы</td><td><i class="sw" style="background:#0a0a1a"></i>#0a0a1a + фиолетовое свечение сверху</td><td><i class="sw" style="background:#f6f4ff"></i>#f6f4ff</td><td>body</td></tr>
+      <tr><td>Карточка</td><td><i class="sw" style="background:#151525"></i>#151525, рамка #2a2a45, r=20</td><td><i class="sw" style="background:#fff"></i>#fff, рамка #e2e8f0</td><td>.lg</td></tr>
+      <tr><td>Текст / вторичный / приглушённый</td><td>#f6f4ff / #b4b0cc / #8494ab</td><td>#1e1b3a / #475569 / #64748b</td><td>заголовки, подписи, подсказки</td></tr>
+      <tr><td>Акцент</td><td colspan="2"><i class="sw" style="background:#7c3aed"></i>#7c3aed → <i class="sw" style="background:#8b5cf6"></i>#8b5cf6 (кнопка, градиент 90°), ссылки #a78bfa; «Holy» — градиент #a855f7→#06b6d4 как на сайте</td><td>кнопки, фокус, ссылки, эмблема</td></tr>
+      <tr><td>Поле</td><td>#101020, рамка #2f2f4a, h=44, r=12; фокус — рамка #8b5cf6 + кольцо 3px rgba(124,58,237,.16)</td><td>#fff, рамка #cbd5e1</td><td>.in</td></tr>
+      <tr><td>Ошибка</td><td>#f87171, плашка rgba(248,113,113,.12)</td><td>#dc2626</td><td>.errbox, .in.err</td></tr>
+      <tr><td>Кнопки</td><td colspan="2">h=44, r=12, 600; основная — градиент с тенью 0 8px 24px rgba(124,58,237,.35); вторичная — контур; тихая — текст #a78bfa; GitHub — #24292f</td><td>.b.p / .b.s / .b.g / .b.gh</td></tr>
+      <tr><td>Карточка-вариант</td><td colspan="2">иконка 38px в плашке акцента, заголовок 15/600, подпись 12.5; выбранная — рамка #8b5cf6 + кольцо</td><td>.opt (способы входа, почта)</td></tr>
+      <tr><td>Шрифт</td><td colspan="2">Inter 400/500/600/700/800; заголовок 24/700, тело 15, подписи 12.5–13; моно ui-monospace для кодов</td><td>везде</td></tr>
+    </tbody>
+  </table></div>
+  <div>
+    <div class="comp">
+      <div class="frame"><div class="b p" style="margin:0">Основная</div><div class="b p dis">Неактивная</div><div class="b s">Вторичная</div><div class="b g">Тихая ссылка</div><div class="b gh">⌥ GitHub</div></div>
+      <div class="frame"><div class="in">Пусто</div><div class="in focus v" style="margin-top:8px">В фокусе<span class="caret"></span></div><div class="in err v" style="margin-top:8px">С ошибкой</div><div class="codes"><i>4</i><i class="focus"></i><i></i></div></div>
+      <div class="frame light"><div class="opt rec" style="margin:0"><span class="ic">◉</span><div><b>Выбранный</b><small>подпись</small></div></div><div class="opt"><span class="ic">✉</span><div><b>Обычный</b><small>подпись</small></div></div><div class="note"><b>Плашка</b>подсказка</div></div>
+    </div>
+    <p class="meta" style="margin-top:10px">Состояния: hover — рамка светлеет на шаг; focus-visible — кольцо; disabled — 50% и без тени; loading — спиннер вместо текста, ширина не прыгает.</p>
+  </div>
+</div>
+
+<h2 id="impl">Как это попадёт на id.holycode.org</h2>
+<div class="grid g2">
+  <div class="card">
+    <h3 style="margin-top:0">Форк typescript-login (Zitadel Login V2)</h3>
+    <p>Login V2 на <code>id.holycode.org</code> — это контейнер <code>ghcr.io/zitadel/zitadel-login:v4.19.1</code>, Next.js-приложение из репозитория <code>zitadel/typescript</code> (<code>apps/login</code>). Все потоки — passkey, коды, пароль, регистрация, device flow, внешние провайдеры, MFA — уже там; мы меняем внешний вид и тексты, логику не трогаем.</p>
+    <ul>
+      <li><b>Репозиторий</b>: форк в наш GitHub <code>octy-work/holycode-login</code>, ветка <code>holycode</code>; апстрим подтягиваем по тегам.</li>
+      <li><b>Тема</b>: Tailwind-конфиг → наши токены; компоненты <code>Button</code>, <code>TextInput</code>, <code>Card</code>, <code>DynamicTheme</code>, <code>LanguageSwitcher</code>, <code>Themed</code> — переписываются под таблицу выше.</li>
+      <li><b>Экраны</b>: <code>loginname</code> (экран 1: шапка-бренд, без Back, GitHub-кнопка), <code>authenticator</code> (экран 2: карточки-варианты), <code>passkey</code>, <code>otp/[method]</code> (ячейки кода), <code>password</code>, <code>register</code> (плашка приглашения из <code>previewInviteToken</code> Daenerys, выбор почты), <code>device</code>, <code>mfa</code>, <code>accounts</code>, <code>signedin</code>, <code>verify</code>.</li>
+      <li><b>Тексты</b>: остаются в <code>hosted_login_translation</code> (уже наши RU/EN) — форк читает их как сейчас.</li>
+      <li><b>Сборка и выкат</b>: образ <code>reg.oggo.app/holycode/login:&lt;tag&gt;</code>, в compose почтового контура подменяется <code>image:</code> у сервиса <code>zitadel-login</code> — одна строка, делает почтовая сессия по договорённости.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Что можно сделать сегодня без форка</h3>
+    <ul>
+      <li>Логотип без белого квадрата — прозрачный PNG (уже перезалит) и горизонтальный знак «эмблема + HolyCode» вместо квадрата.</li>
+      <li>Тексты — уже наши.</li>
+      <li>Остальное (кнопки, Back, раскладка, карточки способов, ячейки кода, GitHub на первом экране) — только форком.</li>
+    </ul>
+    <h3>Оценка форка</h3>
+    <p><b>4 рабочих дня</b>: день — тема и общие компоненты; день — экраны 1, 2, 5; день — регистрация, коды, device; день — светлая тема, телефон, RU/EN, проверка всех потоков вживую. Обновление апстрима — ~час в месяц.</p>
+    <h3>Риск</h3>
+    <p>Апстрим меняет структуру страниц — при обновлении форк может конфликтовать; лечится тем, что мы правим стили и компоненты, а не логику страниц.</p>
+  </div>
+</div>
+
+<h2 id="decide">Решения <span class="chip ok">приняты 26.09.2026</span></h2>
+<div class="grid g2" data-lavish-revision="r2">
+  <div class="card">
+    <p><b>1 · Дизайн</b> — принят как есть, делаем форк typescript-login.</p>
+    <p><b>2 · Знак в шапке</b> — эмблема + слово HolyCode с градиентом на «Holy», как на сайте.</p>
+    <p><b>3 · Другие входы</b> — GitHub, Google, Apple (аккаунт разработчика есть), Яндекс ID, Telegram. VK ID и Microsoft — нет.</p>
+  </div>
+  <div class="card">
+    <p><b>Что дальше</b></p>
+    <ol class="callouts">
+      <li>Форк — отдельная задача с этим артефактом как ТЗ (чип «Форк Zitadel Login V2 под дизайн HolyCode»): тема и компоненты, экраны 1–7, светлая тема, телефон, RU/EN, образ в reg.oggo.app, подмена <code>image:</code> у сервиса zitadel-login — через почтовую сессию.</li>
+      <li>Провайдеры подключаю по мере появления ключей: GitHub и Google — сразу, Apple — по Services ID и .p8, Яндекс — по приложению OAuth, Telegram — после моста в форке.</li>
+      <li>Пока форк в работе, на id.holycode.org остаётся Login V2 с брендингом настройками — рабочий, но не наш.</li>
+    </ol>
+  </div>
+</div>
+<form class="q" data-lavish-question="free2" style="margin-top:12px" onsubmit="qf(event)">
+  <h3>Что ещё</h3>
+  <textarea name="free" placeholder="Правки по ходу — сюда"></textarea>
+  <button class="btn-q" type="submit">В очередь</button><span class="queued">✓ в очереди</span>
+</form>
+<p class="meta" style="margin-top:18px">Дизайн — токены сайта holycode.org (<code>apps/holycode-web/tailwind.config</code>: violet 400/500/600, Inter, gradient-text #a855f7→#06b6d4) и HolyChat (<code>apps/holychat-web</code>: #0a0a1a, #151525, #2a2a45). Скриншот «сейчас» — id.holycode.org 26.09.2026 после брендинга настройками.</p>
+</main>
+<script>
+  function q(ev, key, title){ ev.preventDefault(); const f=ev.currentTarget; const v=new FormData(f).get(key); if(!v) return; window.lavish && window.lavish.queuePrompt(title+': '+v, {tag:'decision', text:title+': '+v, element:f, queueKey:key, data:{question:key, answer:v}}); f.classList.add('done'); }
+  function qm(ev, key, title){ ev.preventDefault(); const f=ev.currentTarget; const vals=[...f.querySelectorAll('input[name=m]:checked')].map(i=>i.value); if(!vals.length) return; window.lavish && window.lavish.queuePrompt(title+': '+vals.join(', '), {tag:'decision', text:title+': '+vals.length, element:f, queueKey:key, data:{question:key, answer:vals}}); f.classList.add('done'); }
+  function qf(ev){ ev.preventDefault(); const f=ev.currentTarget; const v=(new FormData(f).get('free')||'').trim(); if(!v) return; window.lavish && window.lavish.queuePrompt('Правки дизайна: '+v, {tag:'feedback', text:'Правки дизайна', element:f, queueKey:'free', data:{free:v}}); f.classList.add('done'); }
+</script>
+</body>
+</html>
