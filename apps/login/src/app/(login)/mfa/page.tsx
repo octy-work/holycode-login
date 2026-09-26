@@ -110,9 +110,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           </Alert>
         )}
 
-        <div className="mt-8 flex w-full flex-row items-center">
+        <div className="mt-4 flex w-full justify-center">
           <BackButton />
-          <span className="flex-grow"></span>
         </div>
       </div>
     </DynamicTheme>

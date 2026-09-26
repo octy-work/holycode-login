@@ -14,6 +14,7 @@ import { Alert, AlertType } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { FormActions } from "./form-actions";
 import { TextInput } from "./input";
 import { PasswordComplexity } from "./password-complexity";
 import { Spinner } from "./spinner";
@@ -193,7 +194,7 @@ export function SetPasswordForm({
                   aria-label={t("set.resend")}
                   disabled={loading}
                   type="button"
-                  className="text-primary-light-500 hover:text-primary-light-400 dark:text-primary-dark-500 hover:dark:text-primary-dark-400 ml-4 cursor-pointer disabled:cursor-default disabled:text-gray-400 dark:disabled:text-gray-700"
+                  className="text-hc-link hover:text-hc-p500 disabled:text-hc-muted ml-4 cursor-pointer font-medium disabled:cursor-default"
                   onClick={() => {
                     resendCode();
                   }}
@@ -259,18 +260,21 @@ export function SetPasswordForm({
 
         {error && <Alert>{error}</Alert>}
 
-        <div className="mt-8 flex w-full flex-row items-center justify-between">
-          <BackButton data-testid="back-button" />
-          <Button
-            type="submit"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword}
-            onClick={handleSubmit(submitPassword)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="set.submit" namespace="password" />
-          </Button>
-        </div>
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword}
+              onClick={handleSubmit(submitPassword)}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />} <Translated i18nKey="set.submit" namespace="password" />
+            </Button>
+          }
+
+          secondary={<BackButton data-testid="back-button" />}
+        />
       </form>
     </>
   );

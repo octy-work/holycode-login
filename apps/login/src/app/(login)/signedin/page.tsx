@@ -117,11 +117,9 @@ export default async function Page(props: { searchParams: Promise<any> }) {
         )}
 
         {redirectUri && !isSamePage && (
-          <div className="mt-8 flex w-full flex-row items-center">
-            <span className="flex-grow"></span>
-
-            <Link href={redirectUri}>
-              <Button type="submit" className="self-end" variant={ButtonVariants.Primary}>
+          <div className="mt-5 flex w-full flex-row items-center">
+            <Link href={redirectUri} className="block w-full">
+              <Button type="submit" variant={ButtonVariants.Primary}>
                 <Translated i18nKey="continue" namespace="signedin" />
               </Button>
             </Link>

@@ -1,5 +1,6 @@
 import { Alert } from "@/components/alert";
 import { DynamicTheme } from "@/components/dynamic-theme";
+import { InviteBanner, inviteContextFromSearchParams } from "@/components/invite-banner";
 import { RegisterForm } from "@/components/register-form";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { Translated } from "@/components/translated";
@@ -27,6 +28,15 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   let { firstname, lastname, email, organization, requestId } = searchParams;
 
+  // Invitation context (Daenerys) — see invite-banner.tsx for the parameter contract.
+  const invite = inviteContextFromSearchParams(searchParams);
+
+  // Mail domains HolyCode can host for new users, e.g. HC_MAIL_DOMAINS=oggo.app,holycode.org
+  const mailDomains = (process.env.HC_MAIL_DOMAINS ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter(Boolean);
+
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
@@ -53,7 +63,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   if (!loginSettings) {
     return (
       <DynamicTheme branding={branding}>
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-3">
           <h1>
             <Translated i18nKey="title" namespace="register" />
           </h1>
@@ -69,7 +79,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   if (!loginSettings?.allowRegister && (!loginSettings.allowExternalIdp || identityProviders.length === 0)) {
     return (
       <DynamicTheme branding={branding}>
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-1">
           <h1>
             <Translated i18nKey="disabled.title" namespace="register" />
           </h1>
@@ -82,9 +92,17 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     );
   }
 
+  const t = await getTranslations("register");
+  const submitLabel = invite?.organization && t.has("join") ? t("join", { organization: invite.organization }) : undefined;
+
   return (
     <DynamicTheme branding={branding}>
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-1">
+        {invite && (
+          <div className="mb-3">
+            <InviteBanner invite={invite} />
+          </div>
+        )}
         <h1>
           <Translated i18nKey="title" namespace="register" />
         </h1>
@@ -93,7 +111,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
         </p>
       </div>
 
-      <div className="w-full">
+      <div className="flex w-full flex-col gap-4">
         {!organization && (
           <Alert>
             <Translated i18nKey="unknownContext" namespace="error" />
@@ -110,17 +128,17 @@ export default async function Page(props: { searchParams: Promise<Record<string 
             email={email}
             requestId={requestId}
             loginSettings={loginSettings}
+            mailDomains={mailDomains}
+            submitLabel={submitLabel}
           ></RegisterForm>
         )}
 
         {loginSettings?.allowExternalIdp && !!identityProviders.length && (
-          <>
-            <SignInWithIdp
-              identityProviders={identityProviders}
-              requestId={requestId}
-              organization={organization}
-            ></SignInWithIdp>
-          </>
+          <SignInWithIdp
+            identityProviders={identityProviders}
+            requestId={requestId}
+            organization={organization}
+          ></SignInWithIdp>
         )}
       </div>
     </DynamicTheme>

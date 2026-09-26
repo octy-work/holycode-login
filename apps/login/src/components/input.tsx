@@ -1,9 +1,8 @@
 "use client";
 
-import { getComponentRoundness } from "@/lib/theme";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import { CheckCircleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { clsx } from "clsx";
-import { ChangeEvent, DetailedHTMLProps, forwardRef, InputHTMLAttributes, ReactNode } from "react";
+import { ChangeEvent, DetailedHTMLProps, forwardRef, InputHTMLAttributes, ReactNode, useState } from "react";
 
 export type TextInputProps = DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
   label: string;
@@ -15,27 +14,24 @@ export type TextInputProps = DetailedHTMLProps<InputHTMLAttributes<HTMLInputElem
   disabled?: boolean;
   onChange?: (value: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (value: ChangeEvent<HTMLInputElement>) => void;
-  roundness?: string; // Allow override via props
+  roundness?: string; // kept for API compatibility
+  /** Extra classes for the <input> itself (e.g. mono/centered device codes). */
+  inputClassName?: string;
+  /** Hide the reserved error line below the field. */
+  hideErrorLine?: boolean;
 };
 
-const styles = (error: boolean, disabled: boolean, roundnessClasses: string = "rounded-md") =>
+const styles = (error: boolean, disabled: boolean, hasTrailing: boolean, roundnessClasses: string = "rounded-xl") =>
   clsx(
-    {
-      "h-[40px] mb-[2px] p-[7px] bg-input-light-background dark:bg-input-dark-background transition-colors duration-300 grow": true,
-      "border border-input-light-border dark:border-input-dark-border hover:border-black hover:dark:border-white focus:border-primary-light-500 focus:dark:border-primary-dark-500": true,
-      "focus:outline-none focus:ring-0 text-base text-black dark:text-white placeholder:italic placeholder-gray-700 dark:placeholder-gray-700": true,
-      "border border-warn-light-500 dark:border-warn-dark-500 hover:border-warn-light-500 hover:dark:border-warn-dark-500 focus:border-warn-light-500 focus:dark:border-warn-dark-500":
-        error,
-      "pointer-events-none text-gray-500 dark:text-gray-800 border border-input-light-border dark:border-input-dark-border hover:border-light-hoverborder hover:dark:border-hoverborder cursor-default":
-        disabled,
-    },
-    roundnessClasses, // Apply the full roundness classes directly
+    "h-11 w-full bg-hc-input text-hc-text text-[15px] px-3.5 border transition-all duration-200 outline-none",
+    "placeholder:text-hc-muted/70 focus:ring-[3px] focus:ring-hc-ring",
+    hasTrailing && "pr-11",
+    error
+      ? "border-hc-err hover:border-hc-err focus:border-hc-err focus:ring-hc-err/15"
+      : "border-hc-input-border hover:border-hc-p400/60 focus:border-hc-p500",
+    disabled && "pointer-events-none cursor-default opacity-60",
+    roundnessClasses,
   );
-
-// Helper function to get default input roundness from theme
-function getDefaultInputRoundness(): string {
-  return getComponentRoundness("input");
-}
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
@@ -51,50 +47,67 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       onChange,
       onBlur,
       roundness,
+      inputClassName,
+      hideErrorLine,
+      type,
+      className,
       ...props
     },
     ref,
   ) => {
-    // Use theme-based roundness if not explicitly provided
-    const actualRoundness = roundness || getDefaultInputRoundness();
+    const [reveal, setReveal] = useState(false);
+    const isPassword = type === "password";
+    const effectiveType = isPassword && reveal ? "text" : type;
 
     return (
-      <label className="text-12px text-input-light-label dark:text-input-dark-label relative flex flex-col">
-        <span className={`mb-1 leading-3 ${error ? "text-warn-light-500 dark:text-warn-dark-500" : ""}`}>
-          {label} {required && "*"}
+      <label className={clsx("relative flex w-full flex-col text-left", className)}>
+        <span className={clsx("mb-1.5 text-[12.5px] leading-4 font-semibold", error ? "text-hc-err" : "text-hc-text-2")}>
+          {label}
+          {required && " *"}
         </span>
-        <input
-          suppressHydrationWarning
-          ref={ref}
-          className={styles(!!error, !!disabled, actualRoundness)}
-          defaultValue={defaultValue}
-          required={required}
-          disabled={disabled}
-          placeholder={placeholder}
-          autoComplete={props.autoComplete ?? "off"}
-          onChange={(e) => onChange && onChange(e)}
-          onBlur={(e) => onBlur && onBlur(e)}
-          {...props}
-        />
+        <span className="relative block">
+          <input
+            suppressHydrationWarning
+            ref={ref}
+            type={effectiveType}
+            className={clsx(styles(!!error, !!disabled, isPassword || !!suffix, roundness ?? "rounded-xl"), inputClassName)}
+            defaultValue={defaultValue}
+            required={required}
+            disabled={disabled}
+            placeholder={placeholder}
+            autoComplete={props.autoComplete ?? "off"}
+            onChange={(e) => onChange && onChange(e)}
+            onBlur={(e) => onBlur && onBlur(e)}
+            {...props}
+          />
 
-        {suffix && (
-          <span
-            className={clsx(
-              "bg-background-light-500 dark:bg-background-dark-500 absolute right-[3px] bottom-[22px] z-30 translate-y-1/2 transform p-2",
-              // Extract just the roundness part for the suffix (no padding)
-              actualRoundness.split(" ")[0], // Take only the first part (rounded-full, rounded-md, etc.)
-            )}
-          >
-            @{suffix}
-          </span>
+          {suffix && !isPassword && (
+            <span className="text-hc-muted pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-sm">
+              @{suffix}
+            </span>
+          )}
+
+          {isPassword && (
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label={reveal ? "Hide password" : "Show password"}
+              onClick={() => setReveal((v) => !v)}
+              className="text-hc-muted hover:text-hc-text absolute top-1/2 right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg transition-colors"
+            >
+              {reveal ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+            </button>
+          )}
+        </span>
+
+        {!hideErrorLine && (
+          <div className="text-hc-err mt-1 flex min-h-[18px] flex-row items-center text-xs leading-4">
+            <span>{error ? error : " "}</span>
+          </div>
         )}
 
-        <div className="leading-14.5px h-14.5px text-12px text-warn-light-500 dark:text-warn-dark-500 flex flex-row items-center">
-          <span>{error ? error : " "}</span>
-        </div>
-
         {success && (
-          <div className="text-md mt-1 flex flex-row items-center text-green-500">
+          <div className="text-hc-ok mt-1 flex flex-row items-center text-sm">
             <CheckCircleIcon className="h-4 w-4" />
             <span className="ml-1">{success}</span>
           </div>

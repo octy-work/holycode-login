@@ -11,7 +11,8 @@ import { useForm } from "react-hook-form";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
-import { TextInput } from "./input";
+import { CodeInput } from "./code-input";
+import { FormActions } from "./form-actions";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
 
@@ -124,64 +125,62 @@ export function VerifyForm({ userId, loginName, organization, requestId, code, i
     <>
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
       {codeSent && (
-        <div className="w-full py-4">
+        <div className="w-full pb-4">
           <Alert type={AlertType.INFO}>
             <Translated i18nKey="verify.codeSent" namespace="verify" />
           </Alert>
         </div>
       )}
-      <form className="w-full">
-        <Alert type={AlertType.INFO}>
-          <div className="flex flex-row">
-            <span className="mr-auto flex-1 text-left">
-              <Translated i18nKey="verify.noCodeReceived" namespace="verify" />
-            </span>
-            <button
-              aria-label="Resend Code"
-              disabled={loading}
-              type="button"
-              className="text-primary-light-500 hover:text-primary-light-400 dark:text-primary-dark-500 hover:dark:text-primary-dark-400 ml-4 cursor-pointer disabled:cursor-default disabled:text-gray-400 dark:disabled:text-gray-700"
-              onClick={() => {
-                resendCode();
-              }}
-              data-testid="resend-button"
-            >
-              <Translated i18nKey="verify.resendCode" namespace="verify" />
-            </button>
-          </div>
-        </Alert>
-        <div className="mt-4">
-          <TextInput
-            type="text"
-            autoComplete="one-time-code"
-            autoFocus
-            {...register("code", { required: t("verify.required.code") })}
-            label={t("verify.labels.code")}
-            data-testid="code-text-input"
-          />
-        </div>
+      <form className="w-full" onSubmit={handleSubmit(fcn)}>
+        <CodeInput
+          autoComplete="one-time-code"
+          autoFocus
+          mode="text"
+          {...register("code", { required: t("verify.required.code") })}
+          label={t("verify.labels.code")}
+          data-testid="code-text-input"
+        />
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="pb-3" data-testid="error">
             <Alert>{error}</Alert>
           </div>
         )}
 
-        <div className="mt-8 flex w-full flex-row items-center">
-          <BackButton />
-          <span className="flex-grow"></span>
-          <Button
-            type="submit"
-            className="self-end"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !formState.isValid}
-            onClick={handleSubmit(fcn)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />}
-            <Translated i18nKey="verify.submit" namespace="verify" />
-          </Button>
-        </div>
+        <FormActions
+          className="mt-1"
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !formState.isValid}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />}
+              <Translated i18nKey="verify.submit" namespace="verify" />
+            </Button>
+          }
+          secondary={
+            <>
+              <span className="text-hc-muted flex flex-wrap items-center justify-center gap-x-1 text-[12.5px]">
+                <Translated i18nKey="verify.noCodeReceived" namespace="verify" />
+                <button
+                  aria-label="Resend Code"
+                  disabled={loading}
+                  type="button"
+                  className="text-hc-link hover:text-hc-p500 disabled:text-hc-muted cursor-pointer font-medium disabled:cursor-default"
+                  onClick={() => {
+                    resendCode();
+                  }}
+                  data-testid="resend-button"
+                >
+                  <Translated i18nKey="verify.resendCode" namespace="verify" />
+                </button>
+              </span>
+              <BackButton />
+            </>
+          }
+        />
       </form>
     </>
   );

@@ -17,7 +17,7 @@ function CheckIcon({ title }: { title: string }) {
       viewBox="0 0 24 24"
       strokeWidth={1.5}
       stroke="currentColor"
-      className="las la-check mr-2 h-6 w-6 flex-none text-lg text-green-500 dark:text-green-500"
+      className="text-hc-ok mr-1.5 h-4 w-4 flex-none"
       role="img"
     >
       <title>{title}</title>
@@ -29,7 +29,7 @@ function CheckIcon({ title }: { title: string }) {
 function CrossIcon({ title }: { title: string }) {
   return (
     <svg
-      className="las la-times text-warn-light-500 dark:text-warn-dark-500 mr-2 h-6 w-6 flex-none text-lg"
+      className="text-hc-muted mr-1.5 h-4 w-4 flex-none"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ function CrossIcon({ title }: { title: string }) {
 function renderIcon(matched: boolean, t: ReturnType<typeof useTranslations>) {
   return matched ? <CheckIcon title={t("complexity.matches")} /> : <CrossIcon title={t("complexity.doesNotMatch")} />;
 }
-const desc = "text-14px leading-4 text-input-light-label dark:text-input-dark-label";
+const desc = "text-[12.5px] leading-4 text-hc-text-2";
 
 export function PasswordComplexity({ passwordComplexitySettings, password, equals }: Props) {
   const t = useTranslations("password");
@@ -57,7 +57,7 @@ export function PasswordComplexity({ passwordComplexitySettings, password, equal
   const hasLowercase = lowerCaseValidator(password);
 
   return (
-    <div className="mb-4 grid grid-cols-2 gap-x-8 gap-y-2">
+    <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
       {passwordComplexitySettings.minLength != undefined ? (
         <div className="flex flex-row items-center" data-testid="length-check">
           {renderIcon(hasMinLength, t)}

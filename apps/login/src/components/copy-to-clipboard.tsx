@@ -21,12 +21,7 @@ export function CopyToClipboard({ value }: Props) {
 
   return (
     <div className="flex flex-row items-center px-2">
-      <button
-        id="tooltip-ctc"
-        type="button"
-        className="text-primary-light-500 dark:text-primary-dark-500"
-        onClick={() => setCopied(true)}
-      >
+      <button id="tooltip-ctc" type="button" className="text-hc-link hover:text-hc-p500" onClick={() => setCopied(true)}>
         {!copied ? <ClipboardIcon className="h-5 w-5" /> : <ClipboardDocumentCheckIcon className="h-5 w-5" />}
       </button>
     </div>

@@ -1,65 +1,26 @@
-import { APPEARANCE_STYLES, SPACING_STYLES, getComponentRoundness, getThemeConfig } from "@/lib/theme";
 import { clsx } from "clsx";
 import { HTMLAttributes, ReactNode, forwardRef } from "react";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
-  roundness?: string; // Allow override via props
+  roundness?: string; // kept for API compatibility with upstream
   padding?: string; // Allow override via props
 }
 
-// Helper function to get default card roundness from theme
-function getDefaultCardRoundness(): string {
-  return getComponentRoundness("card");
-}
-
-// Helper function to get default padding from centralized theme system
-function getDefaultCardPadding(): string {
-  const themeConfig = getThemeConfig();
-  return SPACING_STYLES[themeConfig.spacing].padding;
-}
-
-// Helper function to get default background from centralized theme system
-function getDefaultCardBackground(): string {
-  const themeConfig = getThemeConfig();
-  const appearance = APPEARANCE_STYLES[themeConfig.appearance];
-
-  // Use appearance-specific background if defined, otherwise fallback to material design (current system)
-  return appearance?.background || "bg-background-light-400 dark:bg-background-dark-500";
-}
-
-// Helper function to get default card styling from centralized theme system
-function getDefaultCardStyling(): string {
-  const themeConfig = getThemeConfig();
-  const appearance = APPEARANCE_STYLES[themeConfig.appearance];
-  return appearance?.card || "shadow-sm border-0"; // Fallback to material design
-}
-
+/**
+ * HolyCode card: #151525 / #fff, 1px border, radius 20, soft shadow.
+ * The upstream env-driven appearance/roundness presets are intentionally not applied —
+ * the design is fixed (see THEME_HOLYCODE.md).
+ */
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  (
-    {
-      children,
-      className = "",
-      roundness, // Will use theme default if not provided
-      padding, // Will use theme default if not provided
-      ...props
-    },
-    ref,
-  ) => {
-    // Use theme-based values if not explicitly provided
-    const actualRoundness = roundness || getDefaultCardRoundness();
-    const actualPadding = padding || getDefaultCardPadding();
-    const actualBackground = getDefaultCardBackground();
-    const actualCardStyling = getDefaultCardStyling();
-
+  ({ children, className = "", roundness, padding, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={clsx(
-          actualBackground,
-          actualCardStyling,
-          actualPadding,
-          actualRoundness, // Apply the full roundness classes directly
+          "bg-hc-card border-hc-border shadow-hc-card border",
+          roundness || "rounded-[18px] sm:rounded-[20px]",
+          padding || "px-5 pt-6 pb-5 sm:px-7 sm:pt-7 sm:pb-6",
           className,
         )}
         {...props}

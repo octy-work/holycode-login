@@ -1,7 +1,10 @@
 {
   "common": {
     "back": "Back",
-    "title": "Login with Zitadel"
+    "title": "Login with Zitadel",
+    "notYou": "not you?",
+    "help": "Help",
+    "privacy": "Privacy"
   },
   "accounts": {
     "title": "Accounts",
@@ -51,6 +54,10 @@
       "passkeysNotAllowed": "Passkeys not allowed! Contact your administrator for more information.",
       "couldNotFindIdentityProvider": "Could not find identity provider.",
       "userNotActive": "User is not active. Contact your administrator for more information."
+    },
+    "invited": {
+      "title": "Were you invited?",
+      "description": "Open the link from the e-mail or message — it takes you straight to the right account with the right role."
     }
   },
   "zitadel": {
@@ -247,7 +254,8 @@
       },
       "required": {
         "code": "This field is required"
-      }
+      },
+      "spamHint": "check your spam folder"
     },
     "set": {
       "title": "Set up 2-Factor",
@@ -286,7 +294,8 @@
         "couldNotUpdateSession": "Could not update session",
         "userNotFound": "User not found in the system",
         "couldNotDetermineRedirect": "Could not determine redirect URL after passkey verification"
-      }
+      },
+      "waiting": "Waiting for your confirmation…"
     },
     "set": {
       "title": "Setup a passkey",
@@ -360,7 +369,26 @@
       "userNotFound": "User not found in the system",
       "couldNotLinkIDP": "Could not link IDP to user",
       "couldNotRegisterUser": "Could not register user"
-    }
+    },
+    "methodDescriptions": {
+      "passkey": "Touch ID / Windows Hello — no password",
+      "password": "The classic way"
+    },
+    "invite": {
+      "title": "{inviter} invites you to {organization}",
+      "role": "role: {role}",
+      "validUntil": "link valid until {date}"
+    },
+    "consent": "By creating an account you accept the <tos>terms of service</tos> and the <privacy>privacy policy</privacy>.",
+    "mail": {
+      "title": "E-mail — it is also your login",
+      "hosted": "Create a mailbox at {domain}",
+      "hostedDescription": "A mailbox on our server — ready in HolyAgent and HolyChat",
+      "own": "Your own e-mail",
+      "ownDescription": "We'll send a confirmation e-mail",
+      "localPart": "Mailbox name"
+    },
+    "join": "Join {organization}"
   },
   "invite": {
     "title": "Invite User",
@@ -435,6 +463,14 @@
       "otpSms": "Code via SMS",
       "passkey": "Passkeys",
       "password": "Password"
+    },
+    "methodDescriptions": {
+      "passkey": "This device's passkey — faster and safer than a password",
+      "otpEmail": "We'll e-mail you a code",
+      "otpSms": "We'll text you a code",
+      "password": "The classic way",
+      "totp": "Code from your authenticator app",
+      "u2f": "Hardware security key"
     }
   },
   "device": {

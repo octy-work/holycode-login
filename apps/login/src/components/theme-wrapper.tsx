@@ -109,9 +109,20 @@ export const ThemeWrapper = ({ children, branding }: Props) => {
           break;
         case ThemeMode.AUTO:
         case ThemeMode.UNSPECIFIED:
-        default:
-          setNextTheme("system");
+        default: {
+          // Keep the visitor's own choice (light/dark from the footer toggle) across
+          // pages; only fall back to "system" when nothing was chosen yet.
+          let stored: string | null = null;
+          try {
+            stored = localStorage.getItem("cp-theme");
+          } catch {
+            /* localStorage unavailable (e.g. private mode) */
+          }
+          if (stored !== "light" && stored !== "dark") {
+            setNextTheme("system");
+          }
           break;
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

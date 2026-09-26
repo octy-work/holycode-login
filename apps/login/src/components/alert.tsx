@@ -12,23 +12,24 @@ export enum AlertType {
   INFO,
 }
 
-const yellow =
-  "border-yellow-600/40 dark:border-yellow-500/20 bg-yellow-200/30 text-yellow-600 dark:bg-yellow-700/20 dark:text-yellow-200";
-// const red =
-//   "border-red-600/40 dark:border-red-500/20 bg-red-200/30 text-red-600 dark:bg-red-700/20 dark:text-red-200";
-const neutral = "border-divider-light dark:border-divider-dark bg-black/5 text-gray-600 dark:bg-white/10 dark:text-gray-200";
+const error = "border-hc-err-border bg-hc-err-bg text-hc-err-text";
+const info = "border-hc-p500/35 bg-hc-soft text-hc-text-2";
 
 export function Alert({ children, type = AlertType.ALERT }: Props) {
   return (
     <div
-      className={clsx("flex scroll-px-40 flex-row items-center justify-center rounded-md border py-2 pr-2", {
-        [yellow]: type === AlertType.ALERT,
-        [neutral]: type === AlertType.INFO,
-      })}
+      role={type === AlertType.ALERT ? "alert" : "status"}
+      className={clsx(
+        "flex w-full flex-row items-start gap-2 rounded-xl border px-3 py-2.5 text-left text-[13px] leading-snug",
+        {
+          [error]: type === AlertType.ALERT,
+          [info]: type === AlertType.INFO,
+        },
+      )}
     >
-      {type === AlertType.ALERT && <ExclamationTriangleIcon className="mr-2 ml-2 h-5 w-5 flex-shrink-0" />}
-      {type === AlertType.INFO && <InformationCircleIcon className="mr-2 ml-2 h-5 w-5 flex-shrink-0" />}
-      <span className="w-full text-sm">{children}</span>
+      {type === AlertType.ALERT && <ExclamationTriangleIcon className="mt-px h-4 w-4 flex-shrink-0" />}
+      {type === AlertType.INFO && <InformationCircleIcon className="text-hc-p400 mt-px h-4 w-4 flex-shrink-0" />}
+      <span className="w-full">{children}</span>
     </div>
   );
 }

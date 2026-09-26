@@ -12,6 +12,7 @@ import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { FormActions } from "./form-actions";
 import { TextInput } from "./input";
 import { PasswordComplexity } from "./password-complexity";
 import { Spinner } from "./spinner";
@@ -151,18 +152,21 @@ export function SetRegisterPasswordForm({
 
         {error && <Alert>{error}</Alert>}
 
-        <div className="mt-8 flex w-full flex-row items-center justify-between">
-          <BackButton data-testid="back-button" />
-          <Button
-            type="submit"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword}
-            onClick={handleSubmit(submitRegister)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="password.submit" namespace="register" />
-          </Button>
-        </div>
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !policyIsValid || !formState.isValid || watchPassword !== watchConfirmPassword}
+              onClick={handleSubmit(submitRegister)}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />} <Translated i18nKey="password.submit" namespace="register" />
+            </Button>
+          }
+
+          secondary={<BackButton data-testid="back-button" />}
+        />
       </form>
     </>
   );

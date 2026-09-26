@@ -1,9 +1,12 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
+import { Note } from "@/components/invite-note";
+import { RegisterLink } from "@/components/register-link";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
 import { Translated } from "@/components/translated";
 import { UsernameForm } from "@/components/username-form";
 import { getServiceConfig } from "@/lib/service-url";
 import { getActiveIdentityProviders, getBrandingSettings, getDefaultOrg, getLoginSettings } from "@/lib/zitadel";
+import { EnvelopeOpenIcon } from "@heroicons/react/24/outline";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -50,9 +53,13 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
 
+  const showIdps = !!loginSettings?.allowExternalIdp && !!identityProviders?.length;
+  const t = await getTranslations("loginname");
+  const showInvitedNote = t.has("invited.title");
+
   return (
     <DynamicTheme branding={branding}>
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-1">
         <h1>
           <Translated i18nKey="title" namespace="loginname" />
         </h1>
@@ -61,7 +68,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
         </p>
       </div>
 
-      <div className="w-full">
+      <div className="flex w-full flex-col gap-4">
         {loginSettings?.allowLocalAuthentication && (
           <UsernameForm
             loginName={loginName}
@@ -76,17 +83,23 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           ></UsernameForm>
         )}
 
-        {loginSettings?.allowExternalIdp && !!identityProviders?.length && (
-          <div className="w-full pt-6 pb-4">
-            <SignInWithIdp
-              identityProviders={identityProviders}
-              requestId={requestId}
-              organization={organization}
-              postErrorRedirectUrl="/loginname"
-              loginHint={idpLoginHint}
-              showLabel={loginSettings?.allowLocalAuthentication}
-            ></SignInWithIdp>
-          </div>
+        {showIdps && (
+          <SignInWithIdp
+            identityProviders={identityProviders}
+            requestId={requestId}
+            organization={organization}
+            postErrorRedirectUrl="/loginname"
+            loginHint={idpLoginHint}
+            showLabel={loginSettings?.allowLocalAuthentication}
+          ></SignInWithIdp>
+        )}
+
+        {loginSettings?.allowRegister && <RegisterLink organization={organization} requestId={requestId} />}
+
+        {showInvitedNote && (
+          <Note title={<Translated i18nKey="invited.title" namespace="loginname" />} icon={<EnvelopeOpenIcon />}>
+            <Translated i18nKey="invited.description" namespace="loginname" />
+          </Note>
         )}
       </div>
     </DynamicTheme>

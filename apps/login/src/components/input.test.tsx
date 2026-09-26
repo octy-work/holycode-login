@@ -56,7 +56,7 @@ describe("TextInput Component", () => {
       const input = container.querySelector("input");
       expect(input).toBeTruthy();
       // Should have border-warn or warn-related styles
-      expect(input?.className).toMatch(/border-warn/);
+      expect(input?.className).toMatch(/border-hc-err/);
     });
 
     it("should render success state with message", () => {

@@ -9,7 +9,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
-import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
 import { TextInput } from "./input";
 import { Spinner } from "./spinner";
@@ -28,9 +27,13 @@ type Props = {
   suffix?: string;
   hideSuffix?: boolean;
   submit: boolean;
+  /** Kept for API compatibility; the register link is rendered by the page (RegisterLink). */
   allowRegister: boolean;
 };
 
+/**
+ * Screen 1: one field, one full-width button. No "Back" — there is nowhere to go.
+ */
 export function UsernameForm({
   loginName,
   requestId,
@@ -40,7 +43,6 @@ export function UsernameForm({
   hideSuffix,
   loginSettings,
   submit,
-  allowRegister,
 }: Props) {
   const { register, handleSubmit, formState } = useForm<Inputs>({
     mode: "onChange",
@@ -100,63 +102,37 @@ export function UsernameForm({
   return (
     <>
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
-      <form className="w-full">
-        <div className="">
-          <TextInput
-            type="text"
-            autoComplete="username"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            autoFocus
-            {...register("loginName", { required: t("required.loginName") })}
-            label={inputLabel}
-            data-testid="username-text-input"
-            suffix={hideSuffix ? undefined : suffix}
-          />
-          {allowRegister && (
-            <button
-              className="hover:text-primary-light-500 dark:hover:text-primary-dark-500 text-sm transition-all"
-              onClick={() => {
-                const registerParams = new URLSearchParams();
-                if (organization) {
-                  registerParams.append("organization", organization);
-                }
-                if (requestId) {
-                  registerParams.append("requestId", requestId);
-                }
-
-                router.push("/register?" + registerParams);
-              }}
-              type="button"
-              disabled={loading}
-              data-testid="register-button"
-            >
-              <Translated i18nKey="register" namespace="loginname" />
-            </button>
-          )}
-        </div>
+      <form className="w-full" onSubmit={handleSubmit((e) => submitLoginName(e, organization))}>
+        <TextInput
+          type="text"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoFocus
+          {...register("loginName", { required: t("required.loginName") })}
+          label={inputLabel}
+          data-testid="username-text-input"
+          suffix={hideSuffix ? undefined : suffix}
+          hideErrorLine
+        />
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="pt-3" data-testid="error">
             <Alert>{error}</Alert>
           </div>
         )}
-        <div className="mt-4 flex w-full flex-row items-center">
-          <BackButton data-testid="back-button" />
-          <span className="flex-grow"></span>
-          <Button
-            data-testid="submit-button"
-            type="submit"
-            className="self-end"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !formState.isValid}
-            onClick={handleSubmit((e) => submitLoginName(e, organization))}
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />}
-            <Translated i18nKey="submit" namespace="loginname" />
-          </Button>
-        </div>
+
+        <Button
+          data-testid="submit-button"
+          type="submit"
+          className="mt-4"
+          variant={ButtonVariants.Primary}
+          disabled={loading || !formState.isValid}
+        >
+          {loading && <Spinner className="h-5 w-5" />}
+          <Translated i18nKey="submit" namespace="loginname" />
+        </Button>
       </form>
     </>
   );

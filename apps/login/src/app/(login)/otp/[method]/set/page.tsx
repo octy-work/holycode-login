@@ -2,6 +2,7 @@ import { Alert } from "@/components/alert";
 import { BackButton } from "@/components/back-button";
 import { Button, ButtonVariants } from "@/components/button";
 import { DynamicTheme } from "@/components/dynamic-theme";
+import { FormActions } from "@/components/form-actions";
 import { TotpRegister } from "@/components/totp-register";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
@@ -171,16 +172,16 @@ export default async function Page(props: {
             ></TotpRegister>
           </div>
         ) : (
-          <div className="mt-8 flex w-full flex-row items-center">
-            <BackButton />
-            <span className="flex-grow"></span>
-
-            <Link href={urlToContinue}>
-              <Button type="submit" className="self-end" variant={ButtonVariants.Primary}>
-                <Translated i18nKey="set.submit" namespace="otp" />
-              </Button>
-            </Link>
-          </div>
+          <FormActions
+            primary={
+              <Link href={urlToContinue} className="block w-full">
+                <Button type="submit" variant={ButtonVariants.Primary}>
+                  <Translated i18nKey="set.submit" namespace="otp" />
+                </Button>
+              </Link>
+            }
+            secondary={<BackButton />}
+          />
         )}
       </div>
     </DynamicTheme>

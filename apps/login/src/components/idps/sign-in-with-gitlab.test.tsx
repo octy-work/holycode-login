@@ -29,7 +29,7 @@ describe("<SignInWithGitlab />", async () => {
         <SignInWithGitlab />
       </NextIntlClientProvider>,
     );
-    const signInText = screen.getByText(/Sign in with Gitlab/i);
+    const signInText = screen.getByRole("button", { name: /Sign in with Gitlab/i });
     expect(signInText).toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe("<SignInWithGitlab />", async () => {
         <SignInWithGitlab name={"Gitlab"} />
       </NextIntlClientProvider>,
     );
-    const signInText = screen.getByText(/Gitlab/i);
+    const signInText = screen.getByRole("button", { name: /Gitlab/i });
     expect(signInText).toBeInTheDocument();
   });
 });

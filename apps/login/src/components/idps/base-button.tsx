@@ -1,6 +1,5 @@
 "use client";
 
-import { APPEARANCE_STYLES, getComponentRoundness, getThemeConfig } from "@/lib/theme";
 import { clsx } from "clsx";
 import { Loader2Icon } from "lucide-react";
 import { ButtonHTMLAttributes, DetailedHTMLProps, forwardRef } from "react";
@@ -12,19 +11,20 @@ export type SignInWithIdentityProviderProps = DetailedHTMLProps<
 > & {
   name?: string;
   e2e?: string;
+  /**
+   * "icon" — square 44px tile for the "or sign in with" row (default),
+   * "list" — full-width button with the provider name.
+   */
+  layout?: "icon" | "list";
+  /** Dark GitHub-style tile. */
+  tone?: "default" | "dark";
 };
 
-// Helper function to get default IDP button appearance from centralized theme system
-function getDefaultIdpButtonAppearance(): string {
-  const themeConfig = getThemeConfig();
-  const appearance = APPEARANCE_STYLES[themeConfig.appearance];
-  return appearance?.["idp-button"] || "border border-divider-light dark:border-divider-dark"; // Fallback to basic border
-}
-
-export const BaseButton = forwardRef<HTMLButtonElement, SignInWithIdentityProviderProps>(function BaseButton(props, ref) {
+export const BaseButton = forwardRef<HTMLButtonElement, SignInWithIdentityProviderProps>(function BaseButton(
+  { layout = "icon", tone = "default", name, e2e: _e2e, className, children, ...props },
+  ref,
+) {
   const formStatus = useFormStatus();
-  const buttonRoundness = getComponentRoundness("button");
-  const idpButtonAppearance = getDefaultIdpButtonAppearance();
 
   return (
     <button
@@ -32,18 +32,26 @@ export const BaseButton = forwardRef<HTMLButtonElement, SignInWithIdentityProvid
       type="submit"
       ref={ref}
       disabled={formStatus.pending}
+      title={layout === "icon" ? name : undefined}
+      aria-label={layout === "icon" ? name : undefined}
       className={clsx(
-        `text-text-light-500 focus:border-primary-light-500 dark:text-text-dark-500 focus:dark:border-primary-dark-500 flex flex-1 cursor-pointer flex-row items-center px-4 text-sm transition-all outline-none hover:border-black hover:dark:border-white`,
-        buttonRoundness,
-        idpButtonAppearance,
-        `bg-background-light-400 dark:bg-background-dark-500`, // Keep background as fallback for non-glass themes
-        props.className,
+        "flex h-11 cursor-pointer items-center rounded-xl border text-[15px] font-semibold transition-all duration-200 outline-none",
+        "focus-visible:border-hc-p500 focus-visible:ring-hc-ring focus-visible:ring-[3px] disabled:cursor-default disabled:opacity-60",
+        layout === "icon" ? "flex-1 justify-center px-2" : "w-full justify-start gap-3 px-3.5",
+        tone === "dark"
+          ? "border-[#24292f] bg-[#24292f] text-white hover:border-[#3a4048] hover:bg-[#2f353d]"
+          : "border-hc-input-border bg-hc-input text-hc-text hover:border-hc-p500",
+        className,
       )}
     >
-      <div className="flex flex-1 items-center justify-between gap-4">
-        <div className="flex flex-1 flex-row items-center">{props.children}</div>
-        {formStatus.pending && <Loader2Icon className="h-4 w-4 animate-spin" />}
-      </div>
+      {formStatus.pending ? (
+        <Loader2Icon className="h-5 w-5 animate-spin" aria-hidden="true" />
+      ) : (
+        <>
+          {children}
+          {layout === "list" && <span className="truncate">{name}</span>}
+        </>
+      )}
     </button>
   );
 });

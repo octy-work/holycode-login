@@ -91,7 +91,7 @@ describe("<PasswordComplexity/>", () => {
 
     const lengthCheck = screen.getByTestId("length-check");
     const svg = lengthCheck.querySelector("svg");
-    expect(svg).toHaveClass("text-green-500");
+    expect(svg).toHaveClass("text-hc-ok");
   });
 
   test("should render cross icon when password does not meet length requirement", () => {
@@ -116,7 +116,7 @@ describe("<PasswordComplexity/>", () => {
 
     const lengthCheck = screen.getByTestId("length-check");
     const svg = lengthCheck.querySelector("svg");
-    expect(svg).toHaveClass("text-warn-light-500");
+    expect(svg).toHaveClass("text-hc-muted");
   });
 
   test("should render all complexity checks when all requirements are enabled", () => {

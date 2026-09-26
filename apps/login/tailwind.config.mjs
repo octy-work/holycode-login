@@ -51,8 +51,42 @@ export default {
         "12px": "12px",
         "14px": "14px",
       },
+      fontFamily: {
+        sans: ["var(--font-inter)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+      },
+      boxShadow: {
+        "hc-card": "var(--hc-card-shadow)",
+        "hc-primary": "0 8px 24px rgba(124,58,237,.35)",
+      },
       colors: {
         gray: colors.zinc,
+        // HolyCode tokens — CSS custom properties defined in styles/globals.scss
+        hc: {
+          bg: "var(--hc-bg)",
+          card: "var(--hc-card)",
+          "card-2": "var(--hc-card-2)",
+          border: "var(--hc-border)",
+          "border-subtle": "var(--hc-border-subtle)",
+          text: "var(--hc-text)",
+          "text-2": "var(--hc-text-2)",
+          muted: "var(--hc-muted)",
+          input: "var(--hc-input)",
+          "input-border": "var(--hc-input-border)",
+          p600: "var(--hc-p600)",
+          p500: "var(--hc-p500)",
+          p400: "var(--hc-p400)",
+          cyan: "var(--hc-cyan)",
+          soft: "var(--hc-soft)",
+          ring: "var(--hc-ring)",
+          link: "var(--hc-link)",
+          err: "var(--hc-err)",
+          "err-bg": "var(--hc-err-bg)",
+          "err-border": "var(--hc-err-border)",
+          "err-text": "var(--hc-err-text)",
+          ok: "var(--hc-ok)",
+          warn: "var(--hc-warn)",
+        },
         // Dynamic theme colors
         ...themeColors,
         // State colors

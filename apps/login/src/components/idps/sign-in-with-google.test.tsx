@@ -28,7 +28,7 @@ describe("<SignInWithGoogle />", async () => {
         <SignInWithGoogle />
       </NextIntlClientProvider>,
     );
-    const signInText = screen.getByText(/Sign in with Google/i);
+    const signInText = screen.getByRole("button", { name: /Sign in with Google/i });
     expect(signInText).toBeInTheDocument();
   });
 
@@ -38,7 +38,7 @@ describe("<SignInWithGoogle />", async () => {
         <SignInWithGoogle name={"Google"} />
       </NextIntlClientProvider>,
     );
-    const signInText = screen.getByText(/Google/i);
+    const signInText = screen.getByRole("button", { name: /Google/i });
     expect(signInText).toBeInTheDocument();
   });
 });

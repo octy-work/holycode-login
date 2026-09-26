@@ -3,10 +3,12 @@
 import { idpTypeToSlug } from "@/lib/idp";
 import { redirectToIdp } from "@/lib/server/idp";
 import { IdentityProvider, IdentityProviderType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
+import { clsx } from "clsx";
 import { ReactNode, useActionState } from "react";
 import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { SignInWithIdentityProviderProps } from "./idps/base-button";
+import { detectIdpBrand } from "./idps/idp-icons";
 import { SignInWithApple } from "./idps/sign-in-with-apple";
 import { SignInWithAzureAd } from "./idps/sign-in-with-azure-ad";
 import { SignInWithGeneric } from "./idps/sign-in-with-generic";
@@ -26,6 +28,21 @@ export interface SignInWithIDPProps {
   /** Forwarded to the IdP as login_hint so the user does not have to type the identifier again. */
   loginHint?: string;
   showLabel?: boolean;
+  /** Override the "or sign in with" label (e.g. "or" on the authenticator screen). */
+  label?: ReactNode;
+  /** "row" — icon tiles side by side (default up to 6 providers); "list" — named buttons. */
+  layout?: "row" | "list";
+}
+
+/** Divider with a centered caption: ——— or sign in with ——— */
+export function OrDivider({ children }: { children: ReactNode }) {
+  return (
+    <div className="text-hc-muted flex items-center gap-2.5 text-xs">
+      <span className="bg-hc-border h-px flex-1" aria-hidden="true" />
+      <span>{children}</span>
+      <span className="bg-hc-border h-px flex-1" aria-hidden="true" />
+    </div>
+  );
 }
 
 export function SignInWithIdp({
@@ -36,8 +53,13 @@ export function SignInWithIdp({
   postErrorRedirectUrl,
   loginHint,
   showLabel = true,
+  label,
+  layout,
 }: Readonly<SignInWithIDPProps>) {
   const [state, action, _isPending] = useActionState(redirectToIdp, {});
+
+  const effectiveLayout: "row" | "list" = layout ?? (identityProviders.length <= 6 ? "row" : "list");
+  const buttonLayout = effectiveLayout === "row" ? "icon" : "list";
 
   const renderIDPButton = (idp: IdentityProvider, index: number) => {
     const { id, name, type } = idp;
@@ -59,8 +81,13 @@ export function SignInWithIdp({
     };
 
     const Component = components[type];
+    const brand = detectIdpBrand(type, name);
     return Component ? (
-      <form action={action} className="flex" key={`idp-${index}`}>
+      <form
+        action={action}
+        className={clsx("flex", effectiveLayout === "row" ? "min-w-0 flex-1" : "w-full")}
+        key={`idp-${index}`}
+      >
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="provider" value={idpTypeToSlug(type)} />
         <input type="hidden" name="requestId" value={requestId} />
@@ -68,22 +95,22 @@ export function SignInWithIdp({
         {sessionId && <input type="hidden" name="sessionId" value={sessionId} />}
         {postErrorRedirectUrl && <input type="hidden" name="postErrorRedirectUrl" value={postErrorRedirectUrl} />}
         {loginHint && <input type="hidden" name="loginHint" value={loginHint} />}
-        <Component key={id} name={name} />
+        <Component key={id} name={name} layout={buttonLayout} {...(Component === SignInWithGeneric ? { brand } : {})} />
       </form>
     ) : null;
   };
 
   return (
-    <div className="flex w-full flex-col space-y-2 text-sm">
+    <div className="flex w-full flex-col space-y-2.5 text-sm" data-testid="idp-buttons">
       {state?.samlData && <AutoSubmitForm url={state.samlData.url} fields={state.samlData.fields} />}
-      {showLabel && (
-        <p className="ztdl-p text-center">
-          <Translated i18nKey="orSignInWith" namespace="idp" />
-        </p>
+      {showLabel && <OrDivider>{label ?? <Translated i18nKey="orSignInWith" namespace="idp" />}</OrDivider>}
+      {!!identityProviders?.length && (
+        <div className={clsx(effectiveLayout === "row" ? "flex gap-2" : "flex flex-col gap-2")}>
+          {identityProviders.map(renderIDPButton)}
+        </div>
       )}
-      {!!identityProviders?.length && identityProviders?.map(renderIDPButton)}
       {state?.error && (
-        <div className="py-4">
+        <div className="py-2">
           <Alert>{state?.error}</Alert>
         </div>
       )}

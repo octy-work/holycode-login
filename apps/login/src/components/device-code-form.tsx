@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { FormActions } from "./form-actions";
 import { TextInput } from "./input";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
@@ -60,38 +61,42 @@ export function DeviceCodeForm({ userCode }: { userCode?: string }) {
 
   return (
     <>
-      <form className="w-full">
-        <div className="mt-4">
-          <TextInput
-            type="text"
-            autoComplete="one-time-code"
-            autoFocus
-            {...register("userCode", { required: t("usercode.required.code") })}
-            label={t("usercode.labels.code")}
-            data-testid="code-text-input"
-          />
-        </div>
+      <form className="w-full" onSubmit={handleSubmit(submitCodeAndContinue)}>
+        <TextInput
+          type="text"
+          autoComplete="one-time-code"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+          autoFocus
+          {...register("userCode", { required: t("usercode.required.code") })}
+          label={t("usercode.labels.code")}
+          data-testid="code-text-input"
+          inputClassName="h-[60px] rounded-[14px] border-dashed text-center font-mono text-[28px] font-extrabold tracking-[0.26em] uppercase"
+          hideErrorLine
+        />
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="pt-3" data-testid="error">
             <Alert>{error}</Alert>
           </div>
         )}
 
-        <div className="mt-8 flex w-full flex-row items-center">
-          <BackButton />
-          <span className="flex-grow"></span>
-          <Button
-            type="submit"
-            className="self-end"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !formState.isValid}
-            onClick={handleSubmit(submitCodeAndContinue)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="usercode.submit" namespace="device" />
-          </Button>
-        </div>
+        <FormActions
+          className="mt-4"
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !formState.isValid}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />}
+              <Translated i18nKey="usercode.submit" namespace="device" />
+            </Button>
+          }
+          secondary={<BackButton />}
+        />
       </form>
     </>
   );

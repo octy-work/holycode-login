@@ -45,7 +45,7 @@ export const Boundary = ({
       className={clsx("relative rounded-lg border border-dashed", {
         "p-3 lg:p-5": size === "small",
         "p-4 lg:p-9 lg:pb-6": size === "default",
-        "border-divider-light dark:border-divider-dark": color === "default",
+        "border-hc-border": color === "default",
         "border-pink-500": color === "pink",
         "border-blue-500": color === "blue",
         "border-cyan-500": color === "cyan",

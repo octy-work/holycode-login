@@ -13,8 +13,9 @@ import { useForm } from "react-hook-form";
 import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { Button, ButtonVariants } from "./button";
+import { CodeInput } from "./code-input";
 import { CopyToClipboard } from "./copy-to-clipboard";
-import { TextInput } from "./input";
+import { FormActions } from "./form-actions";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
 
@@ -105,45 +106,46 @@ export function TotpRegister({ uri, loginName, sessionId, requestId, organizatio
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
       {uri && (
         <>
-          <QRCodeSVG className="my-4 h-40 w-40 rounded-md bg-white p-2" value={uri} />
-          <div className="border-divider-light dark:border-divider-dark my-2 mb-4 flex w-96 rounded-lg border px-4 py-2 pr-2 text-sm">
-            <Link href={uri} target="_blank" className="flex-1 overflow-x-auto">
+          <div className="border-hc-input-border mb-3 rounded-2xl border bg-white p-2">
+            <QRCodeSVG className="h-40 w-40" value={uri} />
+          </div>
+          <div className="border-hc-input-border bg-hc-input text-hc-text-2 mb-4 flex w-full items-center rounded-xl border px-3 py-2 text-xs">
+            <Link href={uri} target="_blank" className="flex-1 overflow-x-auto font-mono whitespace-nowrap">
               {uri}
             </Link>
 
             <CopyToClipboard value={uri}></CopyToClipboard>
           </div>
-          <form className="w-full">
-            <div className="">
-              <TextInput
-                type="text"
-                autoFocus
-                {...register("code", { required: t("set.required.code") })}
-                label={t("set.labels.code")}
-                data-testid="code-text-input"
-              />
-            </div>
+          <form className="w-full" onSubmit={handleSubmit(continueWithCode)}>
+            <CodeInput
+              autoFocus
+              mode="numeric"
+              autoComplete="one-time-code"
+              {...register("code", { required: t("set.required.code") })}
+              label={t("set.labels.code")}
+              data-testid="code-text-input"
+            />
 
             {error && (
-              <div className="py-4">
+              <div className="pb-3">
                 <Alert>{error}</Alert>
               </div>
             )}
 
-            <div className="mt-8 flex w-full flex-row items-center">
-              <span className="flex-grow"></span>
-              <Button
-                type="submit"
-                className="self-end"
-                variant={ButtonVariants.Primary}
-                disabled={loading || !formState.isValid}
-                onClick={handleSubmit(continueWithCode)}
-                data-testid="submit-button"
-              >
-                {loading && <Spinner className="mr-2 h-5 w-5" />}
-                <Translated i18nKey="set.submit" namespace="otp" />
-              </Button>
-            </div>
+            <FormActions
+              className="mt-1"
+              primary={
+                <Button
+                  type="submit"
+                  variant={ButtonVariants.Primary}
+                  disabled={loading || !formState.isValid}
+                  data-testid="submit-button"
+                >
+                  {loading && <Spinner className="h-5 w-5" />}
+                  <Translated i18nKey="set.submit" namespace="otp" />
+                </Button>
+              }
+            />
           </form>
         </>
       )}

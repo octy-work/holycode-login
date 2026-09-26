@@ -38,7 +38,7 @@ describe("Button Component", () => {
       const button = container.querySelector("button");
       expect(button).toBeTruthy();
       // Primary should have background color
-      expect(button?.className).toMatch(/bg-/);
+      expect(button?.className).toMatch(/hc-btn-primary|bg-/);
     });
 
     it("should render secondary variant", () => {
@@ -94,7 +94,7 @@ describe("Button Component", () => {
       const button = container.querySelector("button");
       expect(button).toBeTruthy();
       // Should have background color
-      expect(button?.className).toMatch(/bg-/);
+      expect(button?.className).toMatch(/hc-btn-primary|bg-/);
     });
 
     it("should render warn color", () => {
@@ -102,7 +102,7 @@ describe("Button Component", () => {
       const button = container.querySelector("button");
       expect(button).toBeTruthy();
       // Should have background color
-      expect(button?.className).toMatch(/bg-/);
+      expect(button?.className).toMatch(/hc-btn-primary|bg-/);
     });
 
     it("should render all color types", () => {

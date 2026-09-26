@@ -13,6 +13,7 @@ import { Alert, AlertType } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { FormActions } from "./form-actions";
 import { TextInput } from "./input";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
@@ -111,57 +112,63 @@ export function PasswordForm({ loginSettings, loginName, organization, defaultOr
   return (
     <>
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
-      <form className="w-full">
+      <form className="w-full" onSubmit={handleSubmit(submitPassword)}>
         <div className={`${error && "animate-shake transform-gpu"}`}>
           <TextInput
             type="password"
-            autoComplete="password"
+            autoComplete="current-password"
             autoFocus
             {...register("password", { required: t("verify.required.password") })}
             label={t("verify.labels.password")}
             data-testid="password-text-input"
+            hideErrorLine
           />
-          {!loginSettings?.hidePasswordReset && (
-            <button
-              className="hover:text-primary-light-500 dark:hover:text-primary-dark-500 text-sm transition-all"
-              onClick={() => resetPasswordAndContinue()}
-              type="button"
-              disabled={loading}
-              data-testid="reset-button"
-            >
-              <Translated i18nKey="verify.resetPassword" namespace="password" />
-            </button>
-          )}
 
           {loginName && <input type="hidden" name="loginName" autoComplete="username" value={loginName} />}
         </div>
 
         {info && (
-          <div className="py-4">
+          <div className="pt-3">
             <Alert type={AlertType.INFO}>{info}</Alert>
           </div>
         )}
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="pt-3" data-testid="error">
             <Alert>{error}</Alert>
           </div>
         )}
 
-        <div className="mt-8 flex w-full flex-row items-center">
-          <BackButton data-testid="back-button" />
-          <span className="flex-grow"></span>
-          <Button
-            type="submit"
-            className="self-end"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !formState.isValid}
-            onClick={handleSubmit(submitPassword)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="verify.submit" namespace="password" />
-          </Button>
-        </div>
+        <FormActions
+          className="mt-4"
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !formState.isValid}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />}
+              <Translated i18nKey="verify.submit" namespace="password" />
+            </Button>
+          }
+          secondary={
+            <>
+              {!loginSettings?.hidePasswordReset && (
+                <Button
+                  variant={ButtonVariants.Ghost}
+                  onClick={() => resetPasswordAndContinue()}
+                  type="button"
+                  disabled={loading}
+                  data-testid="reset-button"
+                >
+                  <Translated i18nKey="verify.resetPassword" namespace="password" />
+                </Button>
+              )}
+              <BackButton data-testid="back-button" />
+            </>
+          }
+        />
       </form>
     </>
   );

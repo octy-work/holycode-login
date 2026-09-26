@@ -1,12 +1,6 @@
 import { Avatar } from "@/components/avatar";
-import { getComponentRoundness } from "@/lib/theme";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-
-// Helper function to get user avatar container roundness from theme
-function getUserAvatarRoundness(): string {
-  return getComponentRoundness("avatarContainer");
-}
+import { Translated } from "./translated";
 
 type Props = {
   loginName?: string;
@@ -15,9 +9,12 @@ type Props = {
   searchParams?: Record<string | number | symbol, string | undefined>;
 };
 
+/**
+ * "Who is signing in" block: avatar, display name, login name and — when the user may
+ * switch — a "not you?" link to the account chooser (this is the "Back" of the design).
+ */
 export function UserAvatar({ loginName, displayName, showDropdown, searchParams }: Props) {
   const params = new URLSearchParams({});
-  const userAvatarRoundness = getUserAvatarRoundness();
 
   if (searchParams?.sessionId) {
     params.set("sessionId", searchParams.sessionId);
@@ -35,21 +32,23 @@ export function UserAvatar({ loginName, displayName, showDropdown, searchParams 
     params.set("loginName", searchParams.loginName);
   }
 
+  const name = displayName && displayName !== loginName ? displayName : undefined;
+
   return (
-    <div className={`flex h-full flex-row items-center border p-[1px] dark:border-white/20 ${userAvatarRoundness}`}>
-      <div>
-        <Avatar size="small" name={displayName ?? loginName ?? ""} loginName={loginName ?? ""} />
+    <div className="flex items-center gap-3 text-left" data-testid="user-avatar">
+      <Avatar size="base" name={name ?? loginName ?? ""} loginName={loginName ?? ""} />
+      <div className="min-w-0 flex-1">
+        <div className="text-hc-text truncate text-[15px] leading-tight font-semibold">{name ?? loginName}</div>
+        <div className="text-hc-muted mt-0.5 truncate text-[12.5px]">
+          {name && <span>{loginName}</span>}
+          {name && showDropdown && <span aria-hidden="true"> · </span>}
+          {showDropdown && (
+            <Link href={"/accounts?" + params} className="text-hc-link hover:underline" data-testid="switch-account">
+              <Translated i18nKey="notYou" namespace="common" />
+            </Link>
+          )}
+        </div>
       </div>
-      <span className="text-14px ml-4 max-w-[250px] overflow-hidden pr-4 text-ellipsis">{loginName}</span>
-      <span className="flex-grow"></span>
-      {showDropdown && (
-        <Link
-          href={"/accounts?" + params}
-          className={`mr-1 ml-4 flex items-center justify-center p-1 transition-all hover:bg-black/10 dark:hover:bg-white/10 ${userAvatarRoundness}`}
-        >
-          <ChevronDownIcon className="h-4 w-4" />
-        </Link>
-      )}
     </div>
   );
 }

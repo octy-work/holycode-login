@@ -11,8 +11,8 @@ import { Session, SessionSchema } from "@zitadel/proto/zitadel/session/v2/sessio
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 // import { getLocale } from "next-intl/server";
+import { OptionCardLink } from "@/components/option-card";
 import { headers } from "next/headers";
-import Link from "next/link";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("accounts");
@@ -118,16 +118,11 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       <div className="w-full">
         <div className="flex w-full flex-col space-y-2">
           <SessionsList sessions={sessions} requestId={requestId} />
-          <Link href={`/loginname?` + params}>
-            <div className="flex flex-row items-center rounded-md px-4 py-3 transition-all hover:bg-black/10 dark:hover:bg-white/10">
-              <div className="mr-4 flex h-8 w-8 flex-row items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-                <UserPlusIcon className="h-5 w-5" />
-              </div>
-              <span className="text-sm">
-                <Translated i18nKey="addAnother" namespace="accounts" />
-              </span>
-            </div>
-          </Link>
+          <OptionCardLink
+            href={`/loginname?` + params}
+            icon={<UserPlusIcon />}
+            title={<Translated i18nKey="addAnother" namespace="accounts" />}
+          />
         </div>
       </div>
     </DynamicTheme>

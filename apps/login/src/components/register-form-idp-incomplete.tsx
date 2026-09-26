@@ -10,6 +10,7 @@ import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { FormActions } from "./form-actions";
 import { TextInput } from "./input";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
@@ -153,18 +154,21 @@ export function RegisterFormIDPIncomplete({
           </div>
         )}
 
-        <div className="mt-8 flex w-full flex-row items-center justify-between">
-          <BackButton data-testid="back-button" />
-          <Button
-            type="submit"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !formState.isValid}
-            onClick={handleSubmit(submitAndRegister)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="submit" namespace="register" />
-          </Button>
-        </div>
+        <FormActions
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !formState.isValid}
+              onClick={handleSubmit(submitAndRegister)}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />} <Translated i18nKey="submit" namespace="register" />
+            </Button>
+          }
+
+          secondary={<BackButton data-testid="back-button" />}
+        />
       </form>
     </>
   );

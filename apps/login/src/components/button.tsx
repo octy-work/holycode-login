@@ -1,4 +1,3 @@
-import { APPEARANCE_STYLES, getComponentRoundness, getThemeConfig } from "@/lib/theme";
 import { ThemeableProps } from "@/lib/themeUtils";
 import { clsx } from "clsx";
 import { ButtonHTMLAttributes, DetailedHTMLProps, forwardRef } from "react";
@@ -12,6 +11,8 @@ export enum ButtonVariants {
   Primary = "Primary",
   Secondary = "Secondary",
   Destructive = "Destructive",
+  /** Quiet text button (links such as "Back", "Use password"). */
+  Ghost = "Ghost",
 }
 
 export enum ButtonColors {
@@ -24,46 +25,39 @@ export type ButtonProps = DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonEleme
   size?: ButtonSizes;
   variant?: ButtonVariants;
   color?: ButtonColors;
+  /** Primary/secondary buttons stretch to the card width by default. */
+  fullWidth?: boolean;
 } & ThemeableProps;
 
 export const getButtonClasses = (
   size: ButtonSizes,
   variant: ButtonVariants,
   color: ButtonColors,
-  roundnessClasses: string = "rounded-md", // Default fallback
-  appearance: string = "", // Theme appearance (shadows, borders, etc.)
+  roundnessClasses: string = "rounded-xl",
+  appearance: string = "",
+  fullWidth: boolean = true,
 ) =>
   clsx(
+    "box-border inline-flex items-center justify-center gap-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-hc-ring disabled:cursor-not-allowed",
     {
-      "box-border leading-36px text-14px inline-flex items-center focus:outline-none transition-colors transition-shadow duration-300": true,
-      "disabled:border-none disabled:bg-gray-300 disabled:text-gray-600 disabled:shadow-none disabled:cursor-not-allowed disabled:dark:bg-gray-700 disabled:dark:text-gray-900":
-        variant === ButtonVariants.Primary,
-      "bg-primary-light-500 dark:bg-primary-dark-500 hover:bg-primary-light-400 hover:dark:bg-primary-dark-400 text-primary-light-contrast-500 dark:text-primary-dark-contrast-500":
-        variant === ButtonVariants.Primary && color !== ButtonColors.Warn,
-      "bg-warn-light-500 dark:bg-warn-dark-500 hover:bg-warn-light-400 hover:dark:bg-warn-dark-400 text-white dark:text-white":
+      "h-11 px-4 text-[15px] font-semibold": variant !== ButtonVariants.Ghost,
+      "w-full": fullWidth && variant !== ButtonVariants.Ghost,
+      "h-9 px-2 text-sm font-medium text-hc-link hover:text-hc-p500 disabled:text-hc-muted":
+        variant === ButtonVariants.Ghost,
+      "hc-btn-primary text-white": variant === ButtonVariants.Primary && color !== ButtonColors.Warn,
+      "bg-hc-err text-white hover:brightness-110 disabled:opacity-50":
         variant === ButtonVariants.Primary && color === ButtonColors.Warn,
-      "border border-button-light-border dark:border-button-dark-border text-gray-950 hover:bg-gray-500/20 hover:dark:bg-white/10 focus:bg-gray-500/20 focus:dark:bg-white/10 dark:text-white disabled:text-gray-600 disabled:hover:bg-transparent disabled:dark:hover:bg-transparent disabled:cursor-not-allowed disabled:dark:text-gray-900":
-        variant === ButtonVariants.Secondary,
-      "border border-button-light-border dark:border-button-dark-border text-warn-light-500 dark:text-warn-dark-500 hover:bg-warn-light-500/10 dark:hover:bg-warn-light-500/10 focus:bg-warn-light-500/20 dark:focus:bg-warn-light-500/20":
-        color === ButtonColors.Warn && variant !== ButtonVariants.Primary,
-      "px-16 py-2": size === ButtonSizes.Large,
-      "px-4 h-[36px]": size === ButtonSizes.Small,
+      "border border-hc-border bg-transparent text-hc-text hover:border-hc-p500 hover:bg-hc-soft disabled:opacity-50 disabled:hover:border-hc-border disabled:hover:bg-transparent":
+        variant === ButtonVariants.Secondary && color !== ButtonColors.Warn,
+      "border border-hc-err-border bg-transparent text-hc-err hover:bg-hc-err-bg disabled:opacity-50":
+        (variant === ButtonVariants.Secondary || variant === ButtonVariants.Destructive) && color === ButtonColors.Warn,
+      "border border-hc-err-border bg-transparent text-hc-err hover:bg-hc-err-bg":
+        variant === ButtonVariants.Destructive && color !== ButtonColors.Warn,
+      "min-w-[160px]": size === ButtonSizes.Large,
     },
-    roundnessClasses, // Apply the full roundness classes directly
-    appearance, // Apply appearance-specific styling (shadows, borders, etc.)
+    variant === ButtonVariants.Ghost ? "rounded-lg" : roundnessClasses,
+    appearance,
   );
-
-// Helper function to get default button roundness from theme
-function getDefaultButtonRoundness(): string {
-  return getComponentRoundness("button");
-}
-
-// Helper function to get default button appearance from centralized theme system
-function getDefaultButtonAppearance(): string {
-  const themeConfig = getThemeConfig();
-  const appearance = APPEARANCE_STYLES[themeConfig.appearance];
-  return appearance?.button || "border border-button-light-border dark:border-button-dark-border"; // Fallback to flat design
-}
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -73,20 +67,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = ButtonVariants.Primary,
       size = ButtonSizes.Small,
       color = ButtonColors.Primary,
-      roundness, // Will use theme default if not provided
+      roundness,
+      fullWidth = true,
+      // ThemeableProps are accepted for compatibility but not forwarded to the DOM
+      spacing: _spacing,
+      padding: _padding,
+      typography: _typography,
       ...props
     },
     ref,
   ) => {
-    // Use theme-based values if not explicitly provided
-    const actualRoundness = roundness || getDefaultButtonRoundness();
-    const actualAppearance = getDefaultButtonAppearance();
-
     return (
       <button
         type="button"
         ref={ref}
-        className={`${getButtonClasses(size, variant, color, actualRoundness, actualAppearance)} ${className}`}
+        className={`${getButtonClasses(size, variant, color, roundness ?? "rounded-xl", "", fullWidth)} ${className}`}
         {...props}
       >
         {children}

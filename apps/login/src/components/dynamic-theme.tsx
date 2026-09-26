@@ -1,23 +1,23 @@
 "use client";
 
-import { Logo } from "@/components/logo";
-import { useResponsiveLayout } from "@/lib/theme-hooks";
+import { BrandMark } from "@/components/brand-mark";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { usePageChrome } from "@/components/page-chrome-context";
+import ThemeSwitch from "@/components/theme-switch";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import React, { Children, ReactNode } from "react";
 import { Card } from "./card";
 import { ThemeWrapper } from "./theme-wrapper";
+import { Translated } from "./translated";
 
 /**
- * DynamicTheme component handles layout switching between traditional top-to-bottom
- * and modern side-by-side layouts based on NEXT_PUBLIC_THEME_LAYOUT.
+ * HolyCode page frame: one centered card (max 420px) with
+ *   header  — brand mark + language (desktop),
+ *   body    — first child: title/description/user, second child: the form,
+ *   footer  — legal links / language (mobile) + theme toggle.
  *
- * For side-by-side layout:
- * - First child: Goes to left side (title, description, etc.)
- * - Second child: Goes to right side (forms, buttons, etc.)
- * - Single child: Falls back to right side for backward compatibility
- *
- * For top-to-bottom layout:
- * - All children rendered in traditional centered layout
+ * The upstream side-by-side layout (NEXT_PUBLIC_THEME_LAYOUT) is not supported here:
+ * the design is a single card on every screen size.
  */
 export function DynamicTheme({
   branding,
@@ -26,109 +26,83 @@ export function DynamicTheme({
   children: ReactNode | ((isSideBySide: boolean) => ReactNode);
   branding?: BrandingSettings;
 }) {
-  const { isSideBySide } = useResponsiveLayout();
+  const chrome = usePageChrome();
 
-  // Resolve children immediately to avoid passing functions through React
   const actualChildren: ReactNode = React.useMemo(() => {
     if (typeof children === "function") {
-      return (children as (isSideBySide: boolean) => ReactNode)(isSideBySide);
+      return (children as (isSideBySide: boolean) => ReactNode)(false);
     }
     return children;
-  }, [children, isSideBySide]);
+  }, [children]);
+
+  const childArray = Children.toArray(actualChildren);
+  const titleContent = childArray[0] || null;
+  const formContent = childArray[1] || null;
+  const hasMultipleChildren = childArray.length > 1;
+
+  const hasLegal = !!(chrome.helpLink || chrome.privacyPolicyLink);
+  const showLanguages = chrome.languages.length > 1;
 
   return (
     <ThemeWrapper branding={branding}>
-      {isSideBySide
-        ? // Side-by-side layout: first child goes left, second child goes right
-          (() => {
-            const childArray = Children.toArray(actualChildren);
-            const leftContent = childArray[0] || null;
-            const rightContent = childArray[1] || null;
-
-            // If there's only one child, it's likely the old format - keep it on the right side
-            const hasLeftRightStructure = childArray.length === 2;
-
-            return (
-              <div className="relative mx-auto w-full max-w-[1100px] px-8 py-4">
-                <Card>
-                  <div className="flex min-h-[400px]">
-                    {/* Left side: First child + branding */}
-                    <div className="from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 flex w-1/2 flex-col justify-center bg-gradient-to-br p-4 lg:p-8">
-                      <div className="mx-auto max-w-[440px] space-y-8">
-                        {/* Logo and branding */}
-                        {branding && (
-                          <Logo
-                            lightSrc={branding.lightTheme?.logoUrl}
-                            darkSrc={branding.darkTheme?.logoUrl}
-                            height={150}
-                            width={150}
-                          />
-                        )}
-
-                        {/* First child content (title, description) - only if we have left/right structure */}
-                        {hasLeftRightStructure && (
-                          <div className="flex flex-col items-start space-y-4 text-left">
-                            {/* Apply larger styling to the content */}
-                            <div className="space-y-6 [&_h1]:text-left [&_h1]:text-4xl [&_h1]:leading-tight [&_h1]:text-gray-900 [&_h1]:lg:text-4xl [&_h1]:dark:text-white [&_p]:text-left [&_p]:leading-relaxed [&_p]:text-gray-700 [&_p]:dark:text-gray-300">
-                              {leftContent}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right side: Second child (form) or single child if old format */}
-                    <div className="flex w-1/2 items-center justify-center p-4 lg:p-8">
-                      <div className="w-full max-w-[440px]">
-                        <div className="space-y-6">{hasLeftRightStructure ? rightContent : leftContent}</div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+      <div className="relative mx-auto w-full max-w-[420px] px-4 py-4 sm:px-0">
+        <Card>
+          <div className="mb-5 flex items-center gap-3">
+            <BrandMark branding={branding} />
+            <span className="flex-1" />
+            {showLanguages && (
+              <div className="hidden sm:block">
+                <LanguageSwitcher languages={chrome.languages} />
               </div>
-            );
-          })()
-        : // Traditional top-to-bottom layout - center title/description, left-align forms
-          (() => {
-            const childArray = Children.toArray(actualChildren);
-            const titleContent = childArray[0] || null;
-            const formContent = childArray[1] || null;
-            const hasMultipleChildren = childArray.length > 1;
+            )}
+          </div>
 
-            return (
-              <div className="relative mx-auto w-full max-w-[440px] px-4 py-4">
-                <Card>
-                  <div className="mx-auto flex flex-col items-center space-y-8">
-                    <div className="relative flex flex-row items-center justify-center">
-                      {branding && (
-                        <Logo
-                          lightSrc={branding.lightTheme?.logoUrl}
-                          darkSrc={branding.darkTheme?.logoUrl}
-                          height={150}
-                          width={150}
-                        />
-                      )}
-                    </div>
+          {hasMultipleChildren ? (
+            <>
+              <div className="flex w-full flex-col text-left">{titleContent}</div>
+              <div className="mt-4 w-full">{formContent}</div>
+            </>
+          ) : (
+            <div className="w-full">{actualChildren}</div>
+          )}
 
-                    {hasMultipleChildren ? (
-                      <>
-                        {/* Title and description - center aligned */}
-                        <div className="mb-4 flex w-full flex-col items-center text-center">{titleContent}</div>
-
-                        {/* Form content - left aligned */}
-                        <div className="w-full">{formContent}</div>
-                      </>
-                    ) : (
-                      // Single child - use original behavior
-                      <div className="w-full">{actualChildren}</div>
-                    )}
-
-                    <div className="flex flex-row justify-between"></div>
-                  </div>
-                </Card>
-              </div>
-            );
-          })()}
+          <div className="text-hc-muted mt-5 flex items-center justify-between gap-3 text-xs">
+            <div className="flex min-w-0 items-center gap-2">
+              {showLanguages && (
+                <div className="sm:hidden">
+                  <LanguageSwitcher languages={chrome.languages} />
+                </div>
+              )}
+              {hasLegal && (
+                <div className={showLanguages ? "hidden items-center gap-1.5 sm:flex" : "flex items-center gap-1.5"}>
+                  {chrome.helpLink && (
+                    <a
+                      href={chrome.helpLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-hc-text transition-colors"
+                    >
+                      <Translated i18nKey="help" namespace="common" />
+                    </a>
+                  )}
+                  {chrome.helpLink && chrome.privacyPolicyLink && <span aria-hidden="true">·</span>}
+                  {chrome.privacyPolicyLink && (
+                    <a
+                      href={chrome.privacyPolicyLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-hc-text transition-colors"
+                    >
+                      <Translated i18nKey="privacy" namespace="common" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+            <ThemeSwitch />
+          </div>
+        </Card>
+      </div>
     </ThemeWrapper>
   );
 }

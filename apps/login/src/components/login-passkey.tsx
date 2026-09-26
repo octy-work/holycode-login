@@ -14,6 +14,8 @@ import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
+import { FormActions } from "./form-actions";
+import { OptionalTranslated } from "./optional-translated";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
 
@@ -188,81 +190,93 @@ export function LoginPasskey({ loginName, sessionId, requestId, altPassword, org
   return (
     <div className="w-full">
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
+
+      {loading && !error && (
+        <div className="text-hc-muted flex items-center justify-center gap-2 py-3 text-sm" data-testid="passkey-waiting">
+          <Spinner className="h-4 w-4" />
+          <OptionalTranslated i18nKey="verify.waiting" namespace="passkey" />
+        </div>
+      )}
+
       {error && (
-        <div className="py-4">
+        <div className="py-2">
           <Alert>{error}</Alert>
         </div>
       )}
-      <div className="mt-8 flex w-full flex-row items-center">
-        {altPassword ? (
+
+      <FormActions
+        className="mt-3"
+        primary={
           <Button
-            type="button"
-            variant={ButtonVariants.Secondary}
-            onClick={() => {
-              const params = new URLSearchParams();
-
-              if (loginName) {
-                params.append("loginName", loginName);
-              }
-
-              if (sessionId) {
-                params.append("sessionId", sessionId);
-              }
-
-              if (requestId) {
-                params.append("requestId", requestId);
-              }
-
-              if (organization) {
-                params.append("organization", organization);
-              }
-
-              return router.push(
-                "/password?" + params, // alt is set because password is requested as alternative auth method, so passkey prompt can be escaped
-              );
-            }}
-            data-testid="password-button"
-          >
-            <Translated i18nKey="verify.usePassword" namespace="passkey" />
-          </Button>
-        ) : (
-          <BackButton />
-        )}
-
-        <span className="flex-grow"></span>
-        <Button
-          type="submit"
-          className="self-end"
-          variant={ButtonVariants.Primary}
-          disabled={loading}
-          onClick={async () => {
-            const response = await updateOrCreateSessionForChallenge().finally(() => {
-              setLoading(false);
-            });
-
-            const pK = response?.challenges?.webAuthN?.publicKeyCredentialRequestOptions?.publicKey;
-
-            if (!pK) {
-              setError(t("verify.errors.couldNotRequestChallenge"));
-              return;
-            }
-
-            setLoading(true);
-
-            return submitLoginAndContinue(pK)
-              .catch((error) => {
-                setError(error instanceof Error ? error.message : String(error));
-                return;
-              })
-              .finally(() => {
+            type="submit"
+            variant={ButtonVariants.Primary}
+            disabled={loading}
+            onClick={async () => {
+              const response = await updateOrCreateSessionForChallenge().finally(() => {
                 setLoading(false);
               });
-          }}
-          data-testid="submit-button"
-        >
-          {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="verify.submit" namespace="passkey" />
-        </Button>
-      </div>
+
+              const pK = response?.challenges?.webAuthN?.publicKeyCredentialRequestOptions?.publicKey;
+
+              if (!pK) {
+                setError(t("verify.errors.couldNotRequestChallenge"));
+                return;
+              }
+
+              setLoading(true);
+
+              return submitLoginAndContinue(pK)
+                .catch((error) => {
+                  setError(error instanceof Error ? error.message : String(error));
+                  return;
+                })
+                .finally(() => {
+                  setLoading(false);
+                });
+            }}
+            data-testid="submit-button"
+          >
+            {loading && <Spinner className="h-5 w-5" />}
+            <Translated i18nKey="verify.submit" namespace="passkey" />
+          </Button>
+        }
+        secondary={
+          altPassword ? (
+            <Button
+              type="button"
+              variant={ButtonVariants.Ghost}
+              onClick={() => {
+                const params = new URLSearchParams();
+
+                if (loginName) {
+                  params.append("loginName", loginName);
+                }
+
+                if (sessionId) {
+                  params.append("sessionId", sessionId);
+                }
+
+                if (requestId) {
+                  params.append("requestId", requestId);
+                }
+
+                if (organization) {
+                  params.append("organization", organization);
+                }
+
+                return router.push(
+                  "/password?" + params, // alt is set because password is requested as alternative auth method, so passkey prompt can be escaped
+                );
+              }}
+              data-testid="password-button"
+            >
+              <Translated i18nKey="verify.usePassword" namespace="passkey" />
+            </Button>
+          ) : (
+            <BackButton />
+          )
+        }
+      />
     </div>
   );
 }

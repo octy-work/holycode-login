@@ -1,3 +1,4 @@
+import { BrandEmblem } from "@/components/brand-mark";
 import { ConsentScreen } from "@/components/consent";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { Translated } from "@/components/translated";
@@ -56,10 +57,22 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   return (
     <DynamicTheme branding={branding}>
-      <div className="flex flex-col space-y-4">
-        <h1>
-          <Translated i18nKey="request.title" namespace="device" data={{ appName: deviceAuthorizationRequest?.appName }} />
-        </h1>
+      <div className="flex flex-col space-y-3">
+        <div className="bg-hc-input border-hc-input-border flex items-center gap-3 rounded-[14px] border p-3 text-left">
+          <BrandEmblem className="h-[42px] w-[42px] shrink-0 rounded-[11px]" />
+          <div className="min-w-0">
+            <div className="text-hc-text truncate text-[15px] leading-tight font-semibold">
+              {deviceAuthorizationRequest?.appName}
+            </div>
+            <div className="text-hc-muted mt-0.5 text-[12.5px]">
+              <Translated
+                i18nKey="request.title"
+                namespace="device"
+                data={{ appName: deviceAuthorizationRequest?.appName }}
+              />
+            </div>
+          </div>
+        </div>
 
         <p className="ztdl-p">
           <Translated

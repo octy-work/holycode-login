@@ -1,23 +1,24 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { forwardRef, useId } from "react";
-import { Translated } from "../translated";
 import { BaseButton, SignInWithIdentityProviderProps } from "./base-button";
 
 export const SignInWithZitadel = forwardRef<HTMLButtonElement, SignInWithIdentityProviderProps>(
   function SignInWithZitadel(props, ref) {
     const { children, name, ...restProps } = props;
+    const t = useTranslations("idp");
     // Unique per component instance: multiple ZITADEL IdPs can be rendered on
     // the same page, and duplicate SVG gradient ids would be invalid HTML.
     const gradientId = useId().replace(/:/g, "");
 
     return (
-      <BaseButton {...restProps} ref={ref}>
-        <div className="flex h-12 w-12 items-center justify-center">
+      <BaseButton {...restProps} ref={ref} name={name || t("signInWithZitadel")}>
+        {children ?? (
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width={24}
-            height={24}
+            width={20}
+            height={20}
             viewBox="0 0 467 467"
             fillRule="evenodd"
             clipRule="evenodd"
@@ -175,11 +176,6 @@ export const SignInWithZitadel = forwardRef<HTMLButtonElement, SignInWithIdentit
               </linearGradient>
             </defs>
           </svg>
-        </div>
-        {children ? (
-          children
-        ) : (
-          <span className="ml-4">{name ? name : <Translated i18nKey="signInWithZitadel" namespace="idp" />}</span>
         )}
       </BaseButton>
     );

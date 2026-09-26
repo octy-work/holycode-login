@@ -56,21 +56,25 @@ export function SessionClearItem({ session, reload }: { session: Session; reload
             reload();
           }
         }}
-        className="group border-divider-light bg-background-light-400 dark:bg-background-dark-400 flex flex-row items-center rounded-md border px-4 py-2 transition-all hover:shadow-lg dark:hover:bg-white/10"
+        className="group bg-hc-input border-hc-input-border hover:border-hc-err focus-visible:ring-hc-ring flex w-full flex-row items-center gap-3 rounded-[14px] border px-3.5 py-3 text-left transition-all focus-visible:ring-[3px] focus-visible:outline-none"
       >
-        <div className="pr-4">
+        <div>
           <Avatar
-            size="small"
+            size="base"
             loginName={session.factors?.user?.loginName as string}
             name={session.factors?.user?.displayName ?? ""}
           />
         </div>
 
-        <div className="flex flex-col items-start overflow-hidden">
-          <span className="">{session.factors?.user?.displayName}</span>
-          <span className="text-xs text-ellipsis opacity-80">{session.factors?.user?.loginName}</span>
+        <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
+          <span className="text-hc-text w-full truncate text-[15px] leading-tight font-semibold">
+            {session.factors?.user?.displayName || session.factors?.user?.loginName}
+          </span>
+          {session.factors?.user?.displayName && (
+            <span className="text-hc-muted w-full truncate text-[12.5px]">{session.factors?.user?.loginName}</span>
+          )}
           {valid ? (
-            <span className="text-xs text-ellipsis opacity-80">
+            <span className="text-hc-muted text-[12px]">
               {verifiedAt && (
                 <Translated
                   i18nKey="verifiedAt"
@@ -81,23 +85,22 @@ export function SessionClearItem({ session, reload }: { session: Session; reload
             </span>
           ) : (
             verifiedAt && (
-              <span className="text-xs text-ellipsis opacity-80">
+              <span className="text-hc-muted text-[12px]">
                 expired {session.expirationDate && moment(timestampDate(session.expirationDate)).fromNow()}
               </span>
             )
           )}
         </div>
 
-        <span className="flex-grow"></span>
-        <div className="relative flex flex-row items-center">
-          <div className="text-warn-light-500 dark:text-warn-dark-500 mr-6 flex hidden items-center justify-center rounded-full bg-[#ff0000]/10 px-2 py-[2px] text-xs transition-all group-hover:block dark:bg-[#ff0000]/10">
+        <div className="flex shrink-0 flex-row items-center gap-2">
+          <div className="text-hc-err bg-hc-err-bg hidden items-center justify-center rounded-full px-2 py-[2px] text-xs transition-all group-hover:flex">
             <Translated i18nKey="clear" namespace="logout" />
           </div>
 
           {valid ? (
-            <div className="absolute right-0 mx-2 h-2 w-2 transform rounded-full bg-green-500 transition-all"></div>
+            <div className="bg-hc-ok h-2 w-2 rounded-full"></div>
           ) : (
-            <div className="absolute right-0 mx-2 h-2 w-2 transform rounded-full bg-red-500 transition-all"></div>
+            <div className="bg-hc-err h-2 w-2 rounded-full"></div>
           )}
         </div>
       </button>

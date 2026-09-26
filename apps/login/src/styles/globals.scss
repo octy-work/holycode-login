@@ -2,33 +2,135 @@
 @use "tailwindcss";
 @config "../../tailwind.config.mjs";
 
-@layer base {
-  h1,
-  .ztdl-h1 {
-    @apply text-center text-2xl;
-  }
+// HolyCode design tokens (see THEME_HOLYCODE.md). Light is the default,
+// `.dark` on <html> (next-themes) switches to the dark set.
+:root {
+  --hc-bg: #f6f4ff;
+  --hc-card: #ffffff;
+  --hc-card-2: #f4f2ff;
+  --hc-border: #e2e8f0;
+  --hc-border-subtle: #eef2f7;
+  --hc-text: #1e1b3a;
+  --hc-text-2: #475569;
+  --hc-muted: #64748b;
+  --hc-input: #ffffff;
+  --hc-input-border: #cbd5e1;
+  --hc-p600: #7c3aed;
+  --hc-p500: #8b5cf6;
+  --hc-p400: #a78bfa;
+  --hc-cyan: #06b6d4;
+  --hc-soft: rgba(124, 58, 237, 0.08);
+  --hc-ring: rgba(124, 58, 237, 0.16);
+  --hc-link: #6d28d9;
+  --hc-err: #dc2626;
+  --hc-err-bg: rgba(220, 38, 38, 0.08);
+  --hc-err-border: rgba(220, 38, 38, 0.3);
+  --hc-err-text: #b91c1c;
+  --hc-ok: #16a34a;
+  --hc-warn: #d97706;
+  --hc-card-shadow: 0 24px 80px rgba(30, 27, 58, 0.1);
+  --hc-glow:
+    radial-gradient(70% 60% at 50% -10%, rgba(124, 58, 237, 0.16), transparent 60%),
+    radial-gradient(40% 40% at 100% 100%, rgba(6, 182, 212, 0.08), transparent 60%);
+  color-scheme: light;
+}
 
-  .ztdl-p {
-    @apply text-text-light-secondary-500 dark:text-text-dark-secondary-500 text-sm;
-  }
+.dark {
+  --hc-bg: #0a0a1a;
+  --hc-card: #151525;
+  --hc-card-2: #1c1c32;
+  --hc-border: #2a2a45;
+  --hc-border-subtle: #1f1f35;
+  --hc-text: #f6f4ff;
+  --hc-text-2: #b4b0cc;
+  --hc-muted: #8494ab;
+  --hc-input: #101020;
+  --hc-input-border: #2f2f4a;
+  --hc-soft: rgba(124, 58, 237, 0.16);
+  --hc-ring: rgba(124, 58, 237, 0.22);
+  --hc-link: #a78bfa;
+  --hc-err: #f87171;
+  --hc-err-bg: rgba(248, 113, 113, 0.12);
+  --hc-err-border: rgba(248, 113, 113, 0.4);
+  --hc-err-text: #fca5a5;
+  --hc-ok: #22c55e;
+  --hc-warn: #f59e0b;
+  --hc-card-shadow: 0 24px 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  --hc-glow:
+    radial-gradient(70% 60% at 50% -10%, rgba(124, 58, 237, 0.28), transparent 60%),
+    radial-gradient(40% 40% at 100% 100%, rgba(6, 182, 212, 0.1), transparent 60%);
+  color-scheme: dark;
 }
 
 html {
+  // kept for the legacy label-policy variables set by helpers/colors.ts
   --background-color: #ffffff;
   --dark-background-color: #000000;
+  background: var(--hc-bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--hc-text);
+  background-color: var(--hc-bg);
+  background-image: var(--hc-glow);
+  background-attachment: fixed;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer base {
+  h1,
+  .ztdl-h1 {
+    @apply text-hc-text text-left text-2xl leading-tight font-bold tracking-tight;
+  }
+
+  .ztdl-p {
+    @apply text-hc-text-2 text-left text-sm;
+  }
+
+  a {
+    @apply focus-visible:ring-hc-ring rounded-sm focus-visible:ring-[3px] focus-visible:outline-none;
+  }
+}
+
+// Gradient word-mark ("Holy" in HolyCode) — same as the site header.
+.hc-gradient-text {
+  background: linear-gradient(135deg, #a855f7, #06b6d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hc-btn-primary {
+  background-image: linear-gradient(90deg, #7c3aed, #8b5cf6);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+}
+.hc-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.45);
+}
+.hc-btn-primary:disabled {
+  background-image: none;
+  background-color: var(--hc-input-border);
+  color: var(--hc-muted);
+  box-shadow: none;
 }
 
 .form-checkbox {
   position: relative;
+  border-radius: 6px;
+  border-color: var(--hc-input-border);
+  background-color: var(--hc-input);
 }
 
 .form-checkbox:checked {
   background-image: none !important;
-  background-color: var(--theme-light-primary-500);
-}
-
-.dark .form-checkbox:checked {
-  background-color: var(--theme-dark-primary-500);
+  background-color: var(--hc-p600);
+  border-color: var(--hc-p600);
 }
 
 .form-checkbox:checked::after {
@@ -41,25 +143,12 @@ html {
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  background-color: var(--theme-light-primary-contrast-500);
-}
-
-.dark .form-checkbox:checked::after {
-  background-color: var(--theme-dark-primary-contrast-500);
+  background-color: #ffffff;
 }
 
 .skeleton {
-  --accents-2: var(--theme-light-background-400);
-  --accents-1: var(--theme-light-background-500);
-
-  background-image: linear-gradient(270deg, var(--accents-1), var(--accents-2), var(--accents-2), var(--accents-1));
-  background-size: 400% 100%;
-  animation: skeleton_loading 8s ease-in-out infinite;
-}
-
-.dark .skeleton {
-  --accents-2: var(--theme-dark-background-400);
-  --accents-1: var(--theme-dark-background-500);
+  --accents-2: var(--hc-card-2);
+  --accents-1: var(--hc-card);
 
   background-image: linear-gradient(270deg, var(--accents-1), var(--accents-2), var(--accents-2), var(--accents-1));
   background-size: 400% 100%;
@@ -73,4 +162,13 @@ html {
   100% {
     background-position: -200% 0;
   }
+}
+
+@keyframes hc-caret {
+  50% {
+    opacity: 0;
+  }
+}
+.hc-caret {
+  animation: hc-caret 1s steps(2) infinite;
 }

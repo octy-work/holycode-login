@@ -101,27 +101,31 @@ export function SessionItem({ session, reload, requestId }: { session: Session; 
                 }
               }
             }}
-            className="group border-divider-light bg-background-light-400 dark:bg-background-dark-400 flex flex-row items-center rounded-md border px-4 py-2 transition-all hover:shadow-lg dark:hover:bg-white/10"
+            className="group bg-hc-input border-hc-input-border hover:border-hc-p500 focus-visible:ring-hc-ring flex w-full flex-row items-center gap-3 rounded-[14px] border px-3.5 py-3 text-left transition-all focus-visible:ring-[3px] focus-visible:outline-none"
           >
-            <div className="pr-4">
+            <div>
               <Avatar
-                size="small"
+                size="base"
                 loginName={session.factors?.user?.loginName as string}
                 name={session.factors?.user?.displayName ?? ""}
               />
             </div>
 
-            <div className="flex flex-col items-start overflow-hidden">
-              <span className="">{session.factors?.user?.displayName}</span>
-              <span className="text-xs text-ellipsis opacity-80">{session.factors?.user?.loginName}</span>
+            <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
+              <span className="text-hc-text w-full truncate text-[15px] leading-tight font-semibold">
+                {session.factors?.user?.displayName || session.factors?.user?.loginName}
+              </span>
+              {session.factors?.user?.displayName && (
+                <span className="text-hc-muted w-full truncate text-[12.5px]">{session.factors?.user?.loginName}</span>
+              )}
               {valid ? (
-                <span className="text-xs text-ellipsis opacity-80">
+                <span className="text-hc-muted text-[12px]">
                   <Translated i18nKey="verified" namespace="accounts" />{" "}
                   {verifiedAt && moment(timestampDate(verifiedAt)).fromNow()}
                 </span>
               ) : (
                 verifiedAt && (
-                  <span className="text-xs text-ellipsis opacity-80">
+                  <span className="text-hc-muted text-[12px]">
                     <Translated i18nKey="expired" namespace="accounts" />{" "}
                     {session.expirationDate && moment(timestampDate(session.expirationDate)).fromNow()}
                   </span>
@@ -129,16 +133,15 @@ export function SessionItem({ session, reload, requestId }: { session: Session; 
               )}
             </div>
 
-            <span className="flex-grow"></span>
-            <div className="relative flex flex-row items-center">
+            <div className="flex shrink-0 flex-row items-center gap-2">
               {valid ? (
-                <div className="absolute right-6 mx-2 h-2 w-2 transform rounded-full bg-green-500 transition-all group-hover:right-6 sm:right-0"></div>
+                <div className="bg-hc-ok h-2 w-2 rounded-full"></div>
               ) : (
-                <div className="absolute right-6 mx-2 h-2 w-2 transform rounded-full bg-red-500 transition-all group-hover:right-6 sm:right-0"></div>
+                <div className="bg-hc-err h-2 w-2 rounded-full"></div>
               )}
 
               <XCircleIcon
-                className="h-5 w-5 opacity-50 transition-all group-hover:block hover:opacity-100 sm:hidden"
+                className="text-hc-muted hover:text-hc-err h-5 w-5 transition-colors"
                 onClick={async (event: React.MouseEvent) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -153,11 +156,11 @@ export function SessionItem({ session, reload, requestId }: { session: Session; 
         {valid && session.expirationDate && (
           <Tooltip.Portal>
             <Tooltip.Content
-              className="bg-background-light-500 dark:bg-background-dark-500 z-50 rounded-md border px-3 py-2 text-xs text-black shadow-xl select-none dark:border-white/20 dark:text-white"
+              className="bg-hc-card border-hc-border text-hc-text z-50 rounded-lg border px-3 py-2 text-xs shadow-xl select-none"
               sideOffset={5}
             >
               Expires {moment(timestampDate(session.expirationDate)).fromNow()}
-              <Tooltip.Arrow className="fill-white dark:fill-white/20" />
+              <Tooltip.Arrow className="fill-hc-border" />
             </Tooltip.Content>
           </Tooltip.Portal>
         )}

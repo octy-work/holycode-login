@@ -11,11 +11,13 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Alert, AlertType } from "./alert";
+import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
 import { BackButton } from "./back-button";
 import { Button, ButtonVariants } from "./button";
-import { TextInput } from "./input";
+import { CodeInput } from "./code-input";
+import { FormActions } from "./form-actions";
+import { OptionalTranslated } from "./optional-translated";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
 
@@ -209,67 +211,74 @@ export function LoginOTP({ host, loginName, sessionId, requestId, organization, 
     });
   }
 
+  const canResend = ["email", "sms"].includes(method);
+
   return (
     <>
       {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
-      <form className="w-full">
-        {["email", "sms"].includes(method) && (
-          <Alert type={AlertType.INFO}>
-            <div className="flex flex-row">
-              <span className="mr-auto flex-1 text-left">
-                <Translated i18nKey="verify.noCodeReceived" namespace="otp" />
-              </span>
-              <button
-                aria-label={t("verify.resendCode")}
-                disabled={loading}
-                type="button"
-                className="text-primary-light-500 hover:text-primary-light-400 dark:text-primary-dark-500 hover:dark:text-primary-dark-400 ml-4 cursor-pointer disabled:cursor-default disabled:text-gray-400 dark:disabled:text-gray-700"
-                onClick={async () => {
-                  setLoading(true);
-                  const response = await updateSessionForOTPChallenge();
-                  if (response?.error) {
-                    setError(response.error);
-                  }
-                  setLoading(false);
-                }}
-                data-testid="resend-button"
-              >
-                <Translated i18nKey="verify.resendCode" namespace="otp" />
-              </button>
-            </div>
-          </Alert>
-        )}
-        <div className="mt-4">
-          <TextInput
-            type="text"
-            autoFocus
-            {...register("code", { required: t("verify.required.code") })}
-            label={t("verify.labels.code")}
-            autoComplete="one-time-code"
-            data-testid="code-text-input"
-          />
-        </div>
+      <form className="w-full" onSubmit={handleSubmit(setCodeAndContinue)}>
+        <CodeInput
+          autoFocus
+          {...register("code", { required: t("verify.required.code") })}
+          label={t("verify.labels.code")}
+          autoComplete="one-time-code"
+          mode="numeric"
+          data-testid="code-text-input"
+        />
 
         {error && (
-          <div className="py-4" data-testid="error">
+          <div className="pb-3" data-testid="error">
             <Alert>{error}</Alert>
           </div>
         )}
 
-        <div className="mt-8 flex w-full flex-row items-center">
-          <BackButton data-testid="back-button" />
-          <span className="flex-grow"></span>
-          <Button
-            type="submit"
-            className="self-end"
-            variant={ButtonVariants.Primary}
-            disabled={loading || !formState.isValid}
-            onClick={handleSubmit(setCodeAndContinue)}
-            data-testid="submit-button"
-          >
-            {loading && <Spinner className="mr-2 h-5 w-5" />} <Translated i18nKey="verify.submit" namespace="otp" />
-          </Button>
-        </div>
+        <FormActions
+          className="mt-1"
+          primary={
+            <Button
+              type="submit"
+              variant={ButtonVariants.Primary}
+              disabled={loading || !formState.isValid}
+              data-testid="submit-button"
+            >
+              {loading && <Spinner className="h-5 w-5" />}
+              <Translated i18nKey="verify.submit" namespace="otp" />
+            </Button>
+          }
+          secondary={
+            <>
+              {canResend && (
+                <span className="text-hc-muted flex flex-wrap items-center justify-center gap-x-1 text-[12.5px]">
+                  <Translated i18nKey="verify.noCodeReceived" namespace="otp" />
+                  <button
+                    aria-label={t("verify.resendCode")}
+                    disabled={loading}
+                    type="button"
+                    className="text-hc-link hover:text-hc-p500 disabled:text-hc-muted cursor-pointer font-medium disabled:cursor-default"
+                    onClick={async () => {
+                      setLoading(true);
+                      const response = await updateSessionForOTPChallenge();
+                      if (response?.error) {
+                        setError(response.error);
+                      }
+                      setLoading(false);
+                    }}
+                    data-testid="resend-button"
+                  >
+                    <Translated i18nKey="verify.resendCode" namespace="otp" />
+                  </button>
+                  {method === "email" && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <OptionalTranslated i18nKey="verify.spamHint" namespace="otp" />
+                    </>
+                  )}
+                </span>
+              )}
+              <BackButton data-testid="back-button" />
+            </>
+          }
+        />
       </form>
     </>
   );

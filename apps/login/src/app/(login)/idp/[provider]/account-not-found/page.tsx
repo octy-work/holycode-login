@@ -34,7 +34,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   return (
     <DynamicTheme branding={branding}>
-      <div className="flex flex-col items-center space-y-4">
+      <div className="flex flex-col space-y-1">
         <h1>
           <Translated i18nKey="accountNotFound.title" namespace="idp" />
         </h1>
@@ -49,8 +49,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
         </div>
 
         {postErrorRedirectUrl && (
-          <Link href={postErrorRedirectUrl}>
-            <Button className="bg-primary-light-500 hover:bg-primary-light-400 dark:bg-primary-dark-500 dark:hover:bg-primary-dark-400 w-full rounded-md px-4 py-3 text-center transition-all">
+          <Link href={postErrorRedirectUrl} className="block w-full">
+            <Button className="mt-4">
               <Translated i18nKey="accountNotFound.backToLogin" namespace="idp" />
             </Button>
           </Link>
