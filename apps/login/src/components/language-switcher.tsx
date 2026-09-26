@@ -18,11 +18,16 @@ export function LanguageSwitcher({ languages }: { languages: Lang[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  const [selected, setSelected] = useState(languages.find((l) => l.code === currentLocale) || languages[0]);
+  // The switcher is mounted twice (card header on desktop, footer on phones); derive the
+  // selection from the active locale so both copies agree, and keep only an optimistic
+  // override while the refresh is in flight.
+  const [optimistic, setOptimistic] = useState<Lang | null>(null);
+  const current = languages.find((l) => l.code === currentLocale) || languages[0];
+  const selected = optimistic && optimistic.code !== currentLocale ? optimistic : current;
 
   const handleChange = async (language: Lang) => {
     if (!language || language.code === selected?.code) return;
-    setSelected(language);
+    setOptimistic(language);
     await setLanguageCookie(language.code);
     startTransition(() => router.refresh());
   };
