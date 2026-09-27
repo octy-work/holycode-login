@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildCSP } from "./csp";
+import { buildCSP, daenerysConnectOrigin } from "./csp";
 
 describe("buildCSP", () => {
   test("returns all base directives with safe defaults", () => {
@@ -60,5 +60,21 @@ describe("buildCSP", () => {
     expect(csp).toContain("connect-src 'self'");
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("object-src 'none'");
+  });
+});
+
+describe("buildCSP — HolyCode profile talks to Daenerys", () => {
+  test("adds the Daenerys origin to connect-src only", () => {
+    const csp = buildCSP({ serviceUrl: "https://id.holycode.org", connectOrigins: ["https://daenerys-api.holycode.org"] });
+
+    expect(csp).toContain("connect-src 'self' https://daenerys-api.holycode.org");
+    expect(csp).toContain("img-src 'self' https://id.holycode.org");
+    expect(csp).toContain("default-src 'self'");
+  });
+
+  test("the Daenerys origin comes from NEXT_PUBLIC_DAENERYS_API_URL, else production", () => {
+    expect(daenerysConnectOrigin(undefined)).toBe("https://daenerys-api.holycode.org");
+    expect(daenerysConnectOrigin("http://localhost:4010/api/")).toBe("http://localhost:4010");
+    expect(daenerysConnectOrigin("not a url")).toBe("https://daenerys-api.holycode.org");
   });
 });

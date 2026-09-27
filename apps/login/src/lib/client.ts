@@ -118,6 +118,19 @@ export async function getNextUrl(
  * 4. Reserved for future extensions
  */
 export async function resolveRedirectUri(command: FinishFlowCommand, defaultRedirectUri?: string): Promise<string> {
+  // 0. HolyCode: a flow started from the profile (sign-in to reach it, passkey,
+  //    second factor, password, provider link) goes back to the profile.
+  try {
+    const { takeReturnTo } = await import("./server/return-to");
+    const returnTo = await takeReturnTo();
+    if (returnTo) {
+      console.log("resolveRedirectUri: Returning to the profile:", returnTo);
+      return returnTo;
+    }
+  } catch (error) {
+    console.warn("resolveRedirectUri: Could not read the profile return target", error);
+  }
+
   // 1. Environment variable override
   const envOverride = process.env.DEFAULT_REDIRECT_URI;
   if (envOverride) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildCSP } from "./lib/csp";
+import { buildCSP, daenerysConnectOrigin } from "./lib/csp";
 import { applyCustomHeaders } from "./lib/custom-headers";
 import { createLogger } from "./lib/logger";
 import { getIframeOrigins } from "./lib/server/security-settings";
@@ -38,11 +38,14 @@ export async function proxy(request: NextRequest) {
 
   const cspFetchEnabled = process.env.CSP_FETCH_ENABLED !== "false";
 
+  // HolyCode: the profile page (/me) fetches Daenerys from the browser.
+  const connectOrigins = [daenerysConnectOrigin(process.env.NEXT_PUBLIC_DAENERYS_API_URL)];
+
   if (cspFetchEnabled) {
     try {
       const iframeOrigins = await getIframeOrigins(baseUrl, instanceHost, publicHost);
 
-      responseHeaders.set("Content-Security-Policy", buildCSP({ serviceUrl: baseUrl, iframeOrigins }));
+      responseHeaders.set("Content-Security-Policy", buildCSP({ serviceUrl: baseUrl, iframeOrigins, connectOrigins }));
 
       if (!iframeOrigins) {
         responseHeaders.set("X-Frame-Options", "deny");
@@ -51,11 +54,11 @@ export async function proxy(request: NextRequest) {
       logger.error("Failed to load security settings for CSP, using default CSP", {
         error: err instanceof Error ? err.message : String(err),
       });
-      responseHeaders.set("Content-Security-Policy", buildCSP({ serviceUrl: baseUrl }));
+      responseHeaders.set("Content-Security-Policy", buildCSP({ serviceUrl: baseUrl, connectOrigins }));
       responseHeaders.set("X-Frame-Options", "deny");
     }
   } else {
-    responseHeaders.set("Content-Security-Policy", buildCSP({ serviceUrl: baseUrl }));
+    responseHeaders.set("Content-Security-Policy", buildCSP({ serviceUrl: baseUrl, connectOrigins }));
     responseHeaders.set("X-Frame-Options", "deny");
   }
 

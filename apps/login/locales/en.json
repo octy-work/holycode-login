@@ -526,5 +526,330 @@
     "tryagain": "Try Again",
     "couldNotContinueSession": "Could not continue with session - missing user information",
     "couldNotClearSession": "Could not end the session. Please try again."
+  },
+  "profile": {
+    "title": "HolyCode profile",
+    "nav": {
+      "home": "Home",
+      "data": "Data",
+      "security": "Security",
+      "orgs": "Organizations",
+      "settings": "Settings",
+      "short": {
+        "home": "Home",
+        "data": "Data",
+        "security": "Security",
+        "orgs": "Teams",
+        "settings": "More"
+      }
+    },
+    "common": {
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "open": "Open",
+      "later": "later",
+      "now": "now",
+      "saved": "Saved"
+    },
+    "home": {
+      "protection": "Account protection",
+      "recommendations": "{count, plural, one {# recommendation} other {# recommendations}}",
+      "allGood": "all good",
+      "checkAll": "Check everything ›",
+      "tiles": {
+        "passkey": "Add Touch ID",
+        "passkeyDone": "Touch ID is on",
+        "passkeyCount": "{count, plural, one {# passkey} other {# passkeys}}",
+        "passkeyHint": "one-touch sign-in and a second factor",
+        "secondFactor": "Second factor",
+        "secondFactorOn": "on",
+        "secondFactorByPasskey": "Touch ID covers this",
+        "secondFactorIdp": "A provider is linked — enough if you forget your password",
+        "secondFactorHint": "a code from your app when signing in with a password",
+        "email": "Verify your e-mail",
+        "emailDone": "E-mail verified",
+        "emailMissing": "no e-mail",
+        "devices": "Check your devices",
+        "sessions": "{count, plural, one {# active session} other {# active sessions}}",
+        "sessionsUnavailable": "sessions unavailable"
+      },
+      "sections": "Sections",
+      "summary": {
+        "data": "Name, e-mail, @handle",
+        "linked": "Linked accounts: {list}",
+        "linkedNone": "No linked accounts",
+        "emailOk": "E-mail verified",
+        "emailTodo": "E-mail not verified",
+        "passwordOn": "Password ✓",
+        "passwordOff": "No password",
+        "passkeyOn": "Touch ID ✓",
+        "passkeyOff": "No Touch ID",
+        "secondFactorOn": "Second factor ✓",
+        "secondFactorOff": "No second factor",
+        "settings": "the same in every service"
+      }
+    },
+    "data": {
+      "title": "Data",
+      "description": "One name and one e-mail across all HolyCode services — kept in HolyCode ID",
+      "personal": "Personal data",
+      "salutation": "Addressed as: {name}",
+      "language": "Language: {language}",
+      "avatarNote": "A photo cannot be uploaded yet — the first letter of your name is shown",
+      "form": {
+        "givenName": "First name",
+        "familyName": "Last name",
+        "displayName": "How to address you",
+        "displayNameHint": "What the services call you; empty — first and last name"
+      },
+      "contacts": "Contacts",
+      "email": {
+        "title": "Sign-in e-mail",
+        "verified": "verified",
+        "unverified": "not verified",
+        "change": "Change",
+        "verify": "Verify",
+        "form": {
+          "label": "New e-mail",
+          "hint": "A link is sent to the new address — confirm it there. Your login does not change.",
+          "submit": "Send the link"
+        },
+        "sent": "The link was sent to {email} — open it from there"
+      },
+      "phone": {
+        "title": "Phone",
+        "later": "Comes once HolyCode ID has SMS"
+      },
+      "linked": {
+        "title": "Linked accounts",
+        "hint": "sign in without a password",
+        "linked": "linked",
+        "unlink": "Unlink",
+        "unlinkConfirm": "Unlink {name}? You will no longer be able to sign in with it.",
+        "link": "Link",
+        "none": "No sign-in providers are set up for your organization"
+      },
+      "public": "Public data",
+      "handle": {
+        "subtitle": "Your address in HolyChat: mentions and direct messages",
+        "readOnly": "read only"
+      },
+      "manage": "Data management",
+      "access": {
+        "title": "Data access",
+        "subtitle": "{keys, plural, one {# access key} other {# access keys}} · {orgs, plural, one {# organization} other {# organizations}} through the ID",
+        "unavailable": "access keys and agents — in HolyChat"
+      },
+      "export": {
+        "title": "Export my data",
+        "subtitle": "Archive: profile, messages, tasks"
+      },
+      "delete": {
+        "title": "Delete profile",
+        "subtitle": "7 days to cancel, then deletion in the ID and in every service",
+        "button": "Delete",
+        "confirm": "Your profile and data in every HolyCode service will be deleted in 7 days. Until then you can cancel here. Sign-in e-mail: {email}.",
+        "confirmButton": "Yes, delete",
+        "pending": "Deletion is scheduled for {date}. It can be cancelled until then.",
+        "cancel": "Cancel deletion",
+        "unavailable": "Soon: the deletion route in Daenerys is not connected yet",
+        "transferFirst": "Hand over the organizations that have other members first:",
+        "systemAdmin": "A platform administrator cannot delete their own profile — drop the role first.",
+        "members": "{count, plural, one {# member} other {# members}}"
+      }
+    },
+    "security": {
+      "title": "Security",
+      "description": "Ways to sign in to HolyCode ID, your devices, and what happened to the account",
+      "methods": "Ways to sign in",
+      "password": {
+        "title": "Password",
+        "subtitle": "the usual login and password",
+        "noneHint": "the account has no password — sign in with a provider or Touch ID",
+        "on": "on",
+        "off": "none",
+        "change": "Change",
+        "setByMail": "Set by e-mail"
+      },
+      "passkey": {
+        "title": "Touch ID and passkeys",
+        "subtitle": "one-touch sign-in, counts as a second factor",
+        "add": "Add",
+        "count": "{count, plural, one {# key} other {# keys}}",
+        "remove": "Remove",
+        "removeConfirm": "Remove the key “{name}”? Touch ID sign-in from that device will stop working.",
+        "unnamed": "Passkey",
+        "notAllowed": "turned off in the settings"
+      },
+      "secondFactor": {
+        "title": "Second factor",
+        "subtitle": "Owners and admins sign in with a second factor. Touch ID covers this.",
+        "byPasskey": "Touch ID already counts as a second factor",
+        "on": "on",
+        "off": "none",
+        "covered": "Touch ID",
+        "add": "Add",
+        "disable": "Turn off",
+        "disableConfirm": "Turn off the authenticator app? Password sign-in becomes a single step.",
+        "totp": "authenticator app",
+        "u2f": "{count, plural, one {# hardware key} other {# hardware keys}}",
+        "otpEmail": "code by e-mail",
+        "otpSms": "code by SMS"
+      },
+      "providers": {
+        "title": "Providers",
+        "none": "none linked",
+        "manage": "In “Data”"
+      },
+      "sessions": {
+        "title": "Devices and sessions",
+        "signOutAll": "Sign out everywhere",
+        "signOutAllConfirm": "End every HolyCode service session and sign out of HolyCode ID in this browser? Access keys stay.",
+        "empty": "No active sessions",
+        "note": "Device and city of older sessions appear after the next sign-in"
+      },
+      "session": {
+        "current": "current",
+        "signOut": "Sign out",
+        "revoke": "Revoke",
+        "key": "Key “{name}”",
+        "unknownDevice": "Unknown device",
+        "until": "valid until {date}",
+        "via": {
+          "oidc": "signed in through the ID",
+          "oidcDevice": "signed in through the ID · device",
+          "password": "signed in with a password",
+          "invite": "registered by invitation",
+          "apiKey": "API"
+        }
+      },
+      "activity": {
+        "title": "Activity",
+        "all": "All events ({count}) ›",
+        "less": "Show less",
+        "empty": "No events yet",
+        "notMe": "Not me",
+        "notMeConfirm": "End every HolyCode service session? Change your password afterwards.",
+        "notMeYes": "Yes, end them",
+        "notMeDone": "Every service session has been ended. Change your password, just in case.",
+        "action": {
+          "login": "Sign-in",
+          "logout": "Sign-out",
+          "logoutAll": "Signed out everywhere",
+          "sessionRevoked": "Session ended",
+          "keyCreated": "Access key issued",
+          "keyRevoked": "Access key revoked",
+          "keysRevokedAll": "All access keys revoked",
+          "accountCreated": "Organization created",
+          "deletionScheduled": "Profile deletion scheduled",
+          "deletionCancelled": "Profile deletion cancelled",
+          "passwordChanged": "Password changed"
+        }
+      },
+      "recovery": {
+        "title": "If you forget your password",
+        "has": "yes",
+        "email": {
+          "title": "E-mail to your sign-in address",
+          "subtitle": "{email} — password reset link from HolyCode ID",
+          "works": "works",
+          "off": "off",
+          "send": "Send",
+          "sent": "The link was sent to {email}"
+        },
+        "idp": {
+          "title": "Sign in with {name}",
+          "subtitle": "linked — no password needed"
+        },
+        "passkey": {
+          "title": "Touch ID",
+          "subtitle": "the most reliable backup way in"
+        }
+      },
+      "appPasswords": {
+        "title": "App passwords",
+        "hint": "for mail programs",
+        "row": {
+          "title": "Mailbox in HolyCode",
+          "subtitle": "Passwords for Apple Mail and other programs are issued in the organization's admin"
+        }
+      }
+    },
+    "orgs": {
+      "title": "Organizations",
+      "description": "The teams you belong to. One sign-in, several organizations, each with its own spaces, domains and mail",
+      "mine": "My organizations",
+      "role": {
+        "owner": "owner",
+        "admin": "admin",
+        "member": "member"
+      },
+      "active": "active",
+      "admin": "Admin in HolyChat",
+      "empty": "You are not in any organization yet",
+      "create": {
+        "title": "Create an organization",
+        "subtitle": "A new team with you as the owner: spaces, domains, mail",
+        "button": "Create",
+        "name": "Name",
+        "submit": "Create",
+        "done": "Organization “{name}” created — the session now points at it",
+        "invalidName": "The name is 1 to 80 characters",
+        "tooMany": "No more than 10 owned organizations"
+      },
+      "invites": {
+        "title": "Invitations",
+        "none": {
+          "title": "No new invitations",
+          "subtitle": "When you are invited to an organization, it appears here"
+        }
+      },
+      "switch": {
+        "title": "Another user",
+        "row": {
+          "title": "Switch user",
+          "subtitle": "Sign in with another HolyCode ID account in this browser"
+        },
+        "button": "Switch"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Language and theme are the same in every HolyCode service — kept in HolyCode ID",
+      "language": {
+        "title": "Language",
+        "hint": "E-mails from the ID and the sign-in screens use this language"
+      },
+      "theme": {
+        "title": "Theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System",
+        "hint": "Services pick the theme up at the next sign-in"
+      }
+    },
+    "daenerys": {
+      "unavailable": "Unavailable: the HolyCode management server could not be reached",
+      "unauthorized": "You are signed in to HolyCode ID, but not to the HolyCode services yet",
+      "signIn": "Sign in to the services",
+      "missing": "Soon: this part is not connected on the server yet",
+      "retry": "Retry",
+      "short": "unavailable"
+    },
+    "errors": {
+      "noSession": "The session has expired — sign in again",
+      "failed": "That did not work. Try again",
+      "unknownLanguage": "That language is not in the list",
+      "unknownTheme": "Unknown theme",
+      "invalidEmail": "That does not look like an e-mail address",
+      "sameEmail": "This e-mail is already set and verified",
+      "lastMethod": "This is the only way to sign in — add another one first",
+      "name": {
+        "givenName": "Enter your first name",
+        "familyName": "Enter your last name",
+        "displayName": "Too long"
+      }
+    }
   }
 }

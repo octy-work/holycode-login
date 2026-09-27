@@ -12,6 +12,18 @@ const BASE_DIRECTIVES: Record<string, string[]> = {
 export interface CSPOptions {
   serviceUrl?: string;
   iframeOrigins?: string[] | null;
+  /** Extra origins the page may fetch (HolyCode: the profile talks to Daenerys from the browser). */
+  connectOrigins?: string[];
+}
+
+/** The Daenerys API origin the profile page fetches, for connect-src. */
+export function daenerysConnectOrigin(configured?: string | null): string {
+  const value = (configured ?? "").trim() || "https://daenerys-api.holycode.org";
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "https://daenerys-api.holycode.org";
+  }
 }
 
 export function buildCSP(options: CSPOptions = {}): string {
@@ -20,6 +32,10 @@ export function buildCSP(options: CSPOptions = {}): string {
   if (options.serviceUrl) {
     directives["img-src"] = [...directives["img-src"], options.serviceUrl];
     directives["font-src"] = [...directives["font-src"], options.serviceUrl];
+  }
+
+  if (options.connectOrigins?.length) {
+    directives["connect-src"] = [...directives["connect-src"], ...options.connectOrigins];
   }
 
   if (options.iframeOrigins && options.iframeOrigins.length > 0) {

@@ -88,6 +88,45 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 - Тексты — `loginname.signIn.*`, `loginname.returning.*` в `locales/{ru,en}.json`;
   перекрываются `hosted_login_translation` инстанса, как остальные.
 
+## Профиль — `/me` (27.09.2026)
+
+Решение владельца: профиль пользователя живёт на `id.holycode.org/me`, в том же
+приложении, что и вход. Traefik почтового контура переписывает
+`Host(id.holycode.org) && Path(/me…)` → `/ui/v2/login/me…`; страница работает под
+обоими префиксами (`src/lib/profile.ts`: `resolveProfilePrefix` по заголовку
+`x-replaced-path`, на клиенте — по адресной строке), ссылки между разделами — обычные
+`<a href>` с короткими путями, чтобы `<Link>` не удлинял адрес basePath'ом.
+
+- **Сессия.** `lib/server/profile-session.ts`: самая свежая сессия из cookie `sessions`
+  Login V2, проверенная `isSessionValid` (первичный фактор + второй, если он есть у
+  аккаунта). Без сессии → `/me/enter` (route handler): кладёт cookie `hc_return_to`
+  и уводит на `/loginname`; `resolveRedirectUri` (lib/client.ts) в конце любого
+  потока — входа, passkey, второго фактора, смены пароля, привязки провайдера —
+  возвращает на профиль, если cookie есть (`lib/server/return-to.ts`; значение —
+  только сам профиль на этом хосте, 15 минут, HttpOnly).
+- **Разделы** (`src/app/(login)/me/[[...section]]/page.tsx` → `components/profile/*`):
+  Главная (карточка, «Защита аккаунта», сводка), Данные (имя и «как обращаться» —
+  `UpdateHumanUser`, почта и её смена — `SetEmail` со ссылкой подтверждения,
+  связанные аккаунты — `listIDPLinks`/`removeIDPLink` и привязка через
+  `redirectToIdp` с sessionId, @логин, доступы, удаление профиля), Безопасность
+  (пароль, passkey — `/passkey/set`, второй фактор — `/mfa/set`, провайдеры,
+  устройства и сессии, активность, «Если забудете пароль», пароли приложений),
+  Организации, Настройки (язык — `preferredLanguage`, тема — метаданные пользователя
+  `holycode.theme` = light|dark|system). На телефоне (< 768 px) разделы — вкладки снизу.
+- **Аватар** — только буква: assets API Zitadel принимает загрузку лишь как
+  `/assets/v1/users/me/avatar` токеном самого пользователя, служебному пользователю
+  чужой аватар не залить. Картинка из `profile.avatarUrl`, если она есть, показывается.
+- **Daenerys** (`lib/daenerys.ts`, `components/profile/use-daenerys.ts`): организации,
+  сессии сервисов с устройством, активность, ключи, создание организации и удаление
+  профиля — из браузера напрямую по cookie `.holycode.org` (`credentials: include`,
+  на 401 один `POST /api/auth/refresh`). Без cookie — один тихий вход
+  `oidc/start?prompt=none&return_to=https://id.holycode.org/me` (отметка в
+  sessionStorage), иначе блоки показываются как «недоступно», остальное работает.
+  Контракт — `apps/daenerys-api/docs/profile-api.md` в репозитории holycode.
+  «Выйти везде» = `POST /api/auth/logout-all` + завершение сессий ID этого браузера
+  (`signOutEverywhere`).
+- Тексты — `profile.*` в `locales/{ru,en}.json`, перекрываются `hosted_login_translation`.
+
 ## Переменные окружения (сверх апстримных)
 
 | Переменная | Что делает |
@@ -96,6 +135,9 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 | `HC_MAIL_DOMAINS=oggo.app` | домены для «Завести почту в …» на регистрации; пусто — обычное поле e-mail |
 | `NEXT_PUBLIC_BRAND_WORDMARK=Holy\|Code` | текст знака; часть до `\|` с градиентом; пустая строка — логотип из label policy (сборочная) |
 | `CUSTOM_REQUEST_HEADERS=x-zitadel-instance-host:id.holycode.org,x-zitadel-public-host:id.holycode.org` | только для локального запуска против удалённого инстанса |
+| `NEXT_PUBLIC_DAENERYS_API_URL` | адрес Daenerys для профиля (сборочная); пусто — `https://daenerys-api.holycode.org` |
+| `HC_PROFILE_SERVICES=HolyChat\|https://chat.holycode.org,Build\|https://build.holycode.org,Agent\|https://agent.holycode.org` | ссылки на сервисы в шапке профиля |
+| `HC_PROFILE_ADMIN_URL`, `HC_PROFILE_MAIL_ADMIN_URL`, `HC_PROFILE_KEYS_URL` | кабинет организации, пароли приложений, ключи доступа (по умолчанию — chat.holycode.org/admin, /admin/mail, /settings/security) |
 
 ## Локальный запуск
 

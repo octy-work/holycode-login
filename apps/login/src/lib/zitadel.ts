@@ -1387,6 +1387,113 @@ export async function listAuthenticationMethodTypes({
   });
 }
 
+// ---------------------------------------------------------------------------
+// HolyCode profile (/me): reads and writes of the signed-in person's own account
+// through the service user, like the rest of the login app.
+// ---------------------------------------------------------------------------
+
+export async function listPasskeys({ serviceConfig, userId }: WithServiceConfig<{ userId: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.listPasskeys({ userId }, {});
+}
+
+export async function removePasskey({
+  serviceConfig,
+  userId,
+  passkeyId,
+}: WithServiceConfig<{ userId: string; passkeyId: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.removePasskey({ userId, passkeyId }, {});
+}
+
+export async function listAuthenticationFactors({ serviceConfig, userId }: WithServiceConfig<{ userId: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.listAuthenticationFactors({ userId }, {});
+}
+
+export async function removeTOTP({ serviceConfig, userId }: WithServiceConfig<{ userId: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.removeTOTP({ userId }, {});
+}
+
+export async function removeIDPLink({
+  serviceConfig,
+  userId,
+  idpId,
+  linkedUserId,
+}: WithServiceConfig<{ userId: string; idpId: string; linkedUserId: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.removeIDPLink({ userId, idpId, linkedUserId }, {});
+}
+
+/** Name, display name and language of a human user (other profile fields stay as they are). */
+export async function updateHumanProfile({
+  serviceConfig,
+  userId,
+  profile,
+}: WithServiceConfig<{
+  userId: string;
+  profile: { givenName: string; familyName: string; displayName?: string; nickName?: string; preferredLanguage?: string };
+}>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.updateHumanUser({ userId, profile }, {});
+}
+
+/** Sets a new e-mail and sends the verification link to it; the address counts as unverified until then. */
+export async function setHumanEmail({
+  serviceConfig,
+  userId,
+  email,
+  urlTemplate,
+}: WithServiceConfig<{ userId: string; email: string; urlTemplate: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.setEmail(
+    {
+      userId,
+      email,
+      verification: { case: "sendCode", value: create(SendEmailVerificationCodeSchema, { urlTemplate }) },
+    },
+    {},
+  );
+}
+
+export async function listUserMetadata({ serviceConfig, userId }: WithServiceConfig<{ userId: string }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.listUserMetadata({ userId, filters: [] }, {});
+}
+
+export async function setUserMetadata({
+  serviceConfig,
+  userId,
+  entries,
+}: WithServiceConfig<{ userId: string; entries: { key: string; value: string }[] }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+  const encoder = new TextEncoder();
+
+  return userService.setUserMetadata(
+    { userId, metadata: entries.map((entry) => ({ key: entry.key, value: encoder.encode(entry.value) })) },
+    {},
+  );
+}
+
+export async function deleteUserMetadata({
+  serviceConfig,
+  userId,
+  keys,
+}: WithServiceConfig<{ userId: string; keys: string[] }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.deleteUserMetadata({ userId, keys }, {});
+}
+
 export interface ServiceConfig {
   baseUrl: string;
   instanceHost?: string; // only for multi-tenant
