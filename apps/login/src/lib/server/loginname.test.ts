@@ -272,7 +272,8 @@ describe("sendLoginname", () => {
           loginName: "user@example.com",
         });
 
-        expect(result).toEqual({ redirect: "https://idp.example.com/auth" });
+        // HolyCode: a known account gets the provider as a choice, not a silent redirect.
+        expect(result).toMatchObject({ idpChoice: { url: "https://idp.example.com/auth" } });
         expect(mockListIDPLinks).toHaveBeenCalledWith({
           serviceConfig: { baseUrl: "https://api.example.com" },
           userId: "user123",
@@ -469,7 +470,8 @@ describe("sendLoginname", () => {
           loginName: "user@example.com",
         });
 
-        expect(result).toEqual({ redirect: "https://idp.example.com/auth" });
+        // HolyCode: a known account gets the provider as a choice, not a silent redirect.
+        expect(result).toMatchObject({ idpChoice: { url: "https://idp.example.com/auth" } });
       });
 
       test("should NOT create session when ignoreUnknownUsernames is true", async () => {
@@ -537,7 +539,11 @@ describe("sendLoginname", () => {
           loginName: "user@example.com",
         });
 
-        expect(result).toEqual({ redirect: "https://idp.example.com/auth" });
+        // HolyCode: a choice with the password next to the provider, not a silent redirect.
+        expect(result).toMatchObject({
+          idpChoice: { url: "https://idp.example.com/auth", loginName: "user@example.com" },
+        });
+        expect((result as { idpChoice: { passwordUrl?: string } }).idpChoice.passwordUrl).toMatch(/^\/password\?/);
       });
 
       test("should redirect to password when no passkey or IDP, only password available and allowed", async () => {

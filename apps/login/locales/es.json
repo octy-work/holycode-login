@@ -51,6 +51,13 @@
       "passkeysNotAllowed": "Las passkeys no están permitidas. Contacte con su administrador para más información.",
       "couldNotFindIdentityProvider": "No se pudo encontrar el proveedor de identidad.",
       "userNotActive": "El usuario no está activo. Contacte con su administrador para más información."
+    },
+    "idpOnly": {
+      "description": "The account {loginName} signs in with {provider}.",
+      "continue": "Continue with {provider}",
+      "passkeyHint": "Want to sign in with Touch ID instead? Once signed in, add a passkey in your HolyCode ID settings.",
+      "otherAccount": "Use another account",
+      "usePassword": "Sign in with a password"
     }
   },
   "zitadel": {

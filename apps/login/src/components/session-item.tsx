@@ -93,6 +93,12 @@ export function SessionItem({ session, reload, requestId }: { session: Session; 
                     requestId: requestId,
                   });
 
+                  // The person picked this account themselves: go straight on to
+                  // its provider (the choice screen is for a typed login name).
+                  if (res && "idpChoice" in res && res.idpChoice?.url) {
+                    window.location.href = res.idpChoice.url;
+                    return;
+                  }
                   handleServerActionResponse(res, router, setSamlData, (e) => setError(e));
                 } catch {
                   setError("An internal error occurred");

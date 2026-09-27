@@ -58,6 +58,13 @@
     "invited": {
       "title": "Were you invited?",
       "description": "Open the link from the e-mail or message — it takes you straight to the right account with the right role."
+    },
+    "idpOnly": {
+      "description": "The account {loginName} signs in with {provider}.",
+      "continue": "Continue with {provider}",
+      "passkeyHint": "Want to sign in with Touch ID instead? Once signed in, add a passkey in your HolyCode ID settings.",
+      "otherAccount": "Use another account",
+      "usePassword": "Sign in with a password"
     }
   },
   "zitadel": {

@@ -51,6 +51,13 @@
       "passkeysNotAllowed": "مفاتيح المرور غير مسموح بها! اتصل بالمسؤول لمزيد من المعلومات.",
       "couldNotFindIdentityProvider": "تعذر العثور على مزود الهوية.",
       "userNotActive": "المستخدم غير نشط. اتصل بالمسؤول لمزيد من المعلومات."
+    },
+    "idpOnly": {
+      "description": "The account {loginName} signs in with {provider}.",
+      "continue": "Continue with {provider}",
+      "passkeyHint": "Want to sign in with Touch ID instead? Once signed in, add a passkey in your HolyCode ID settings.",
+      "otherAccount": "Use another account",
+      "usePassword": "Sign in with a password"
     }
   },
   "zitadel": {
