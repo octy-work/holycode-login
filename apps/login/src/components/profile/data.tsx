@@ -25,6 +25,14 @@ import { AvailableIdp, LinkedIdp } from "./types";
 import { fieldClasses, FieldLabel, Group, Note, Panel, Pill, Row, RowButton, RowIcon, RowLink, RowSkeleton } from "./ui";
 import { useDaenerysResource } from "./use-daenerys";
 
+function displayLanguage(code: string, locale: string): string {
+  try {
+    return new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 /** Data: name and salutation, contacts, linked accounts, public handle, data management. */
 export function DataSection({ view, daenerys }: SectionProps) {
   const t = useTranslations("profile");
@@ -32,14 +40,10 @@ export function DataSection({ view, daenerys }: SectionProps) {
   const flow = useFlowStarter();
   const keys = useDaenerysResource(daenerys, (c) => c.apiKeys(), normalizeApiKeys);
 
-  const languageName = (() => {
-    const code = view.user.preferredLanguage || locale;
-    try {
-      return new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code;
-    } catch {
-      return code;
-    }
-  })();
+  // No language in the ID → "not set" (the page itself still follows the browser/cookie locale).
+  const languageName = view.user.preferredLanguage
+    ? displayLanguage(view.user.preferredLanguage, locale)
+    : t("data.languageUnset");
 
   return (
     <div className="flex flex-col">

@@ -587,7 +587,8 @@
         "passkeyOff": "No Touch ID",
         "secondFactorOn": "Second factor ✓",
         "secondFactorOff": "No second factor",
-        "settings": "the same in every service"
+        "settings": "the same in every service",
+        "languageUnset": "Language not set"
       }
     },
     "data": {
@@ -657,7 +658,8 @@
         "transferFirst": "Hand over the organizations that have other members first:",
         "systemAdmin": "A platform administrator cannot delete their own profile — drop the role first.",
         "members": "{count, plural, one {# member} other {# members}}"
-      }
+      },
+      "languageUnset": "not set"
     },
     "security": {
       "title": "Security",
@@ -714,7 +716,7 @@
         "signOut": "Sign out",
         "revoke": "Revoke",
         "key": "Key “{name}”",
-        "unknownDevice": "Unknown device",
+        "unknownDevice": "device unknown",
         "until": "valid until {date}",
         "via": {
           "oidc": "signed in through the ID",

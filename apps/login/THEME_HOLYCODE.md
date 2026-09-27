@@ -100,7 +100,13 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 - **Сессия.** `lib/server/profile-session.ts`: самая свежая сессия из cookie `sessions`
   Login V2, проверенная `isSessionValid` (первичный фактор + второй, если он есть у
   аккаунта). Без сессии → `/me/enter` (route handler): кладёт cookie `hc_return_to`
-  и уводит на `/loginname`; `resolveRedirectUri` (lib/client.ts) в конце любого
+  и уводит на `/loginname`. Первым стоит **гейт в `proxy.ts`** (`lib/profile-gate.ts`):
+  для GET/HEAD `/me*` он читает cookie, спрашивает Zitadel `GetSession` сырым
+  Connect-JSON fetch (в proxy-runtime нет connect-node, как и у security-settings) и без
+  живой сессии отвечает настоящим **303** на `/me/enter` — иначе `redirect()` страницы
+  срабатывал бы за Suspense-границей layout'а и уходил как 200 со стримовым редиректом,
+  которого curl и превью ссылок не видят. Сбой самого запроса к Zitadel гейт пропускает
+  (решает страница), чтобы не выкидывать вошедшего на заминке; `resolveRedirectUri` (lib/client.ts) в конце любого
   потока — входа, passkey, второго фактора, смены пароля, привязки провайдера —
   возвращает на профиль, если cookie есть (`lib/server/return-to.ts`; значение —
   только сам профиль на этом хосте, 15 минут, HttpOnly).

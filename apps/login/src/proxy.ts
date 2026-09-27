@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildCSP, daenerysConnectOrigin } from "./lib/csp";
 import { applyCustomHeaders } from "./lib/custom-headers";
 import { createLogger } from "./lib/logger";
-import { getIframeOrigins } from "./lib/server/security-settings";
-import { getServiceConfig } from "./lib/service-url";
+import { fetchLiveSession, gateReturnTarget, isGatedProfilePath, pickMostRecentSessionCookie } from "./lib/profile-gate";
+import { getPublicHost } from "./lib/server/host";
+import { getIframeOrigins, resolveAuthToken } from "./lib/server/security-settings";
+import { constructUrl, getServiceConfig } from "./lib/service-url";
 
 const logger = createLogger("middleware");
 
@@ -31,6 +33,53 @@ export async function proxy(request: NextRequest) {
 
   const { serviceConfig } = getServiceConfig(request.headers);
   const { baseUrl, publicHost, instanceHost } = serviceConfig;
+
+  // HolyCode profile (/me): without a live session answer a real 303 to
+  // /me/enter here, before the page streams — a redirect() inside the page
+  // lands behind the layout's Suspense boundary and comes out as 200 + a
+  // client-side redirect, which curl and link previews never follow.
+  if ((request.method === "GET" || request.method === "HEAD") && isGatedProfilePath(request.nextUrl.pathname)) {
+    const cookie = pickMostRecentSessionCookie(request.cookies.get("sessions")?.value);
+    let live: boolean | null = cookie ? null : false;
+    if (cookie) {
+      try {
+        const token = await resolveAuthToken();
+        live = await fetchLiveSession({
+          baseUrl,
+          token,
+          instanceHost,
+          publicHost,
+          customHeaders: (set, remove) => applyCustomHeaders({ set, remove }),
+          cookie,
+        });
+      } catch (err) {
+        logger.warn("Profile gate: could not verify the session, leaving it to the page", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+        live = null;
+      }
+    }
+    if (live === false) {
+      // The public origin: the host the person sees and the scheme traefik
+      // terminated (x-forwarded-proto), since between the proxy and this
+      // container the request is plain http.
+      let publicHostName: string | null;
+      try {
+        publicHostName = getPublicHost(request.headers);
+      } catch {
+        publicHostName = null;
+      }
+      const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+      const protocol = forwardedProto ? `${forwardedProto}:` : request.nextUrl.protocol;
+      const publicOrigin = publicHostName ? `${protocol}//${publicHostName}` : "";
+      const target = gateReturnTarget(request.nextUrl.pathname, request.headers.get("x-replaced-path"), publicOrigin);
+      const enterPath = `/me/enter?to=${encodeURIComponent(target)}`;
+      const enter = publicOrigin
+        ? `${publicOrigin}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${enterPath}`
+        : constructUrl(request, enterPath).toString();
+      return NextResponse.redirect(enter, { status: 303, headers: { "Cache-Control": "no-store" } });
+    }
+  }
 
   // Build CSP headers using security settings fetched directly from the
   // ZITADEL API (no self-loopback through the load balancer).

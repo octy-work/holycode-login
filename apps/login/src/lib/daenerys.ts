@@ -189,7 +189,10 @@ export function normalizeDevice(raw: unknown): DeviceInfo | null {
   const d = obj(raw);
   const browser = str(d.browser).trim();
   const os = str(d.os).trim();
-  const kind = str(d.kind).trim();
+  // "unknown" is what Daenerys writes for sessions made before it recorded the
+  // user agent: no information, not a kind of device.
+  const rawKind = str(d.kind).trim();
+  const kind = rawKind.toLowerCase() === "unknown" ? "" : rawKind;
   return browser || os || kind ? { browser, os, kind } : null;
 }
 

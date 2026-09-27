@@ -32,7 +32,7 @@ const cache = new PromiseCache(Number(cacheConfig.maxSize) || 10_000);
  * Resolves an authentication token from available credential sources.
  * Priority: system user JWT > login client key > service account token.
  */
-async function resolveAuthToken(): Promise<string> {
+export async function resolveAuthToken(): Promise<string> {
   const { hasSystemUserCredentials, hasLoginClientKey, hasServiceUserToken } = await import("@/lib/deployment");
 
   if (hasSystemUserCredentials()) {

@@ -243,6 +243,22 @@ export function salutation(profile: { givenName?: string; familyName?: string; d
 
 const NAME_MAX = 200;
 
+const LANGUAGE_TAG_RE = /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i;
+
+/**
+ * The language kept in the ID, or "" when none is set: Zitadel answers "root",
+ * "und" or an empty string for an unset preferredLanguage, and Intl would
+ * happily display "root" as a language name.
+ */
+export function normalizeLanguageTag(raw: string | undefined | null): string {
+  const value = (raw ?? "").trim();
+  const lower = value.toLowerCase();
+  if (!value || lower === "root" || lower === "und" || lower === "unspecified" || !LANGUAGE_TAG_RE.test(value)) {
+    return "";
+  }
+  return value;
+}
+
 /** Validates the name form; returns the trimmed values or the field that is wrong. */
 export function validateNameForm(input: {
   givenName: string;

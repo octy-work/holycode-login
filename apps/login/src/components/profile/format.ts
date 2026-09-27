@@ -33,7 +33,8 @@ export function isJustNow(iso: string | undefined, now = Date.now()): boolean {
 /** "Mac · Safari", "iPhone · Safari", or what is known of the device. */
 export function describeDevice(device: DeviceInfo | null): string {
   if (!device) return "";
-  return [device.os || device.kind, device.browser].filter(Boolean).join(" · ");
+  const kind = device.kind.toLowerCase() === "unknown" ? "" : device.kind;
+  return [device.os || kind, device.browser].filter(Boolean).join(" · ");
 }
 
 /** Joins the non-empty parts with " · ". */

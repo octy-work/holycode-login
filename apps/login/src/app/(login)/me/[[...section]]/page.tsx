@@ -3,6 +3,7 @@ import { AvailableIdp, LinkedIdp, ProfileView, SecondFactorKind, ServiceLink } f
 import { idpTypeToIdentityProviderType } from "@/lib/idp";
 import {
   fullName,
+  normalizeLanguageTag,
   parseProfileSection,
   parseThemePreference,
   PROFILE_SHORT_PREFIX,
@@ -207,7 +208,7 @@ export default async function Page(props: { params: Promise<{ section?: string[]
       email: human.email?.email ?? "",
       emailVerified: !!human.email?.isVerified,
       avatarUrl: human.profile?.avatarUrl ?? "",
-      preferredLanguage: human.profile?.preferredLanguage ?? "",
+      preferredLanguage: normalizeLanguageTag(human.profile?.preferredLanguage),
       organizationId: ctx.organizationId ?? "",
     },
     methods,

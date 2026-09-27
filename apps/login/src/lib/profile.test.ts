@@ -5,6 +5,7 @@ import {
   fullName,
   isPlausibleEmail,
   isProfileReturnTarget,
+  normalizeLanguageTag,
   parseProfileSection,
   parseThemePreference,
   profilePath,
@@ -205,5 +206,18 @@ describe("names", () => {
     expect(isPlausibleEmail("nope")).toBe(false);
     expect(isPlausibleEmail("a@b")).toBe(false);
     expect(isPlausibleEmail("a b@c.d")).toBe(false);
+  });
+});
+
+describe("language kept in the ID", () => {
+  test('an unset language comes back as empty, not as "root"', () => {
+    expect(normalizeLanguageTag("ru")).toBe("ru");
+    expect(normalizeLanguageTag("en-US")).toBe("en-US");
+    expect(normalizeLanguageTag(" de ")).toBe("de");
+    expect(normalizeLanguageTag("root")).toBe("");
+    expect(normalizeLanguageTag("und")).toBe("");
+    expect(normalizeLanguageTag("")).toBe("");
+    expect(normalizeLanguageTag(undefined)).toBe("");
+    expect(normalizeLanguageTag("not a tag!")).toBe("");
   });
 });

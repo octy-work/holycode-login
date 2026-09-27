@@ -39,7 +39,10 @@ export function HomeSection({ view, prefix, daenerys }: SectionProps) {
 
   const themeLabel = view.theme ? t(`settings.theme.${view.theme}`) : t("settings.theme.system");
   const languageName = (() => {
-    const code = view.user.preferredLanguage || locale;
+    const code = view.user.preferredLanguage;
+    if (!code) {
+      return t("home.summary.languageUnset");
+    }
     try {
       return new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code;
     } catch {

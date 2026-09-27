@@ -10,6 +10,7 @@ import {
   normalizeAccounts,
   normalizeActivity,
   normalizeApiKeys,
+  normalizeDevice,
   normalizeSessions,
   normalizeUser,
   planSilentSignIn,
@@ -207,6 +208,14 @@ describe("Daenerys payloads", () => {
     expect(list[1].expiresAt).toBe("2026-12-24T00:00:00Z");
     expect(isKeyEntry(list[2])).toBe(false);
     expect(list[2].city).toBe("Tbilisi");
+  });
+
+  test('a session recorded before Daenerys kept the user agent has no device, not an "unknown" one', () => {
+    const [old] = normalizeSessions({
+      sessions: [{ session_id: "s0", source: "auth.oidc", device: { browser: "", os: "", kind: "unknown" }, api_key: null }],
+    });
+    expect(old.device).toBeNull();
+    expect(normalizeDevice({ browser: "curl", kind: "unknown" })).toEqual({ browser: "curl", os: "", kind: "" });
   });
 
   test("activity page", () => {
