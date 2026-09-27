@@ -38,15 +38,23 @@ export function Group({
   children,
   id,
   className,
+  status,
 }: {
   title: ReactNode;
   aside?: ReactNode;
   children: ReactNode;
   id?: string;
   className?: string;
+  /** The block's load state (Daenerys blocks), readable from the DOM when debugging. */
+  status?: string;
 }) {
   return (
-    <section id={id} className={clsx("scroll-mt-20", className)} aria-labelledby={id ? `${id}-title` : undefined}>
+    <section
+      id={id}
+      className={clsx("scroll-mt-20", className)}
+      aria-labelledby={id ? `${id}-title` : undefined}
+      data-status={status}
+    >
       <h2
         id={id ? `${id}-title` : undefined}
         className="text-hc-text mt-6 mb-2 flex items-center gap-2 text-[15px] font-semibold"

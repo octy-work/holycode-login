@@ -98,6 +98,8 @@ export function ProfileShell({
       <div
         className="mx-auto min-h-[calc(100dvh-3rem)] w-full max-w-[1100px] px-4 pb-24 md:pb-10"
         data-testid="profile-shell"
+        data-daenerys-status={daenerys.status}
+        data-daenerys-failure={daenerys.failure ?? undefined}
       >
         <header className="mb-4 flex min-w-0 items-center gap-3 py-1">
           <a href={profilePath(prefix, "home")} className="flex shrink-0 items-center gap-2" aria-label="HolyCode ID">

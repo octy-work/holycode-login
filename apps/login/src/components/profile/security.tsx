@@ -461,6 +461,7 @@ function SessionsGroup({ daenerys }: Pick<SectionProps, "daenerys">) {
   return (
     <Group
       id="sessions"
+      status={sessions.status}
       title={t("security.sessions.title")}
       aside={
         sessions.status === "ready" && (
@@ -589,6 +590,7 @@ function ActivityGroup({ daenerys, onChangePassword }: Pick<SectionProps, "daene
   return (
     <Group
       id="activity"
+      status={activity.status}
       title={t("security.activity.title")}
       aside={
         entries.length > 6 && (

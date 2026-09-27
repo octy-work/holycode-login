@@ -133,6 +133,10 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
   промиса или ответ, который нормализатор не смог прочитать, заканчиваются состоянием
   «недоступно» с причиной (таймаут / ответ не разобран / сеть) и строкой
   `[profile] daenerys/<блок>: …` в консоли — скелетон никогда не остаётся навсегда.
+  Состояние видно и в DOM: `data-daenerys-status`/`data-daenerys-failure` на
+  `[data-testid=profile-shell]`, `data-status` на `#sessions` и `#activity`.
+  Короткий и длинный адреса для клиента равнозначны: от пути зависят только ссылки
+  (`profilePrefixFromPathname`), не загрузка данных — `shell.test.tsx` проверяет оба.
   «Выйти везде» = `POST /api/auth/logout-all` + завершение сессий ID этого браузера
   (`signOutEverywhere`).
 - Тексты — `profile.*` в `locales/{ru,en}.json`, перекрываются `hosted_login_translation`.
