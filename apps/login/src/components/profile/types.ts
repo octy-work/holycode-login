@@ -1,4 +1,5 @@
 import { AuthMethodsSummary, ProfileSection, Recommendation, ThemePreference } from "@/lib/profile";
+import { ServiceEntry } from "@/lib/services";
 import { IdentityProviderType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 
 /** A provider linked to the account (Zitadel IDPLink + the provider's name/type). */
@@ -20,8 +21,6 @@ export type AvailableIdp = {
 export type PasskeyView = { id: string; name: string };
 
 export type SecondFactorKind = "totp" | "u2f" | "otpEmail" | "otpSms";
-
-export type ServiceLink = { name: string; url: string };
 
 /**
  * Everything the profile screens show, resolved on the server and handed to the
@@ -66,7 +65,8 @@ export type ProfileView = {
   sessionId: string;
   daenerysUrl: string;
   links: {
-    services: ServiceLink[];
+    /** The switcher's fallback list (HC_PROFILE_SERVICES / production addresses) until Daenerys answers `GET /api/services`. */
+    services: ServiceEntry[];
     adminUrl: string;
     mailAdminUrl: string;
     keysUrl: string;

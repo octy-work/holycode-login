@@ -139,6 +139,25 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
   (`profilePrefixFromPathname`), не загрузка данных — `shell.test.tsx` проверяет оба.
   «Выйти везде» = `POST /api/auth/logout-all` + завершение сессий ID этого браузера
   (`signOutEverywhere`).
+- **Переключатель сервисов** (28.09.2026, решения владельца о переходах между
+  сервисами): в шапке профиля слева от знака — кнопка-сетка (девять точек), как в
+  чате; меню — плитки HolyCode (чат), HolyBuild, HolyAgent, Панель (только если
+  сервер её отдал — владельцам и админам), Профиль («вы здесь»), Почта; под плиткой
+  `status.text` от сервера, иначе подсказка по ключу. Ниже — «Админка организации —
+  домены · почта · люди» (владельцам и админам, → `HC_PROFILE_ADMIN_URL` с той же
+  организацией) и «Тема и язык — из профиля ID» (→ `/me/settings`, справа «тёмная ·
+  RU»). Список — Daenerys `GET /api/services` тем же клиентом (cookie, один refresh на
+  401; контракт — `apps/daenerys-api/docs/services-api.md` в репозитории holycode);
+  без сессии или при ошибке — запасной список из `HC_PROFILE_SERVICES` или прод-адреса
+  без панели, организация для ссылок — из `/api/auth/me`, если он ответил. Ссылка
+  плитки — `url?org=<account_id>&return_to=<адрес профиля>` (`lib/services.ts`,
+  логика 1:1 с `apps/holychat-web/src/switcher/href.js` чата). На телефоне (< 768 px)
+  сетки нет: аватар в шапке открывает меню (`avatar-menu.tsx`) — «Мои данные», раздел
+  «Другие сервисы» теми же плитками (плюс «Админка» владельцам и админам), «Сменить
+  пользователя»; на широких экранах аватар остаётся ссылкой на «Данные». Разметка и
+  SVG-значки — из `switcher/` чата на токенах `hc-*` (`service-switcher.tsx`); тексты —
+  `profile.switcher.*`. Состояние в DOM: `data-services-source=server|fallback` на
+  `[data-testid=profile-shell]`.
 - Тексты — `profile.*` в `locales/{ru,en}.json`, перекрываются `hosted_login_translation`.
 
 ## Переменные окружения (сверх апстримных)
@@ -150,7 +169,7 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 | `NEXT_PUBLIC_BRAND_WORDMARK=Holy\|Code` | текст знака; часть до `\|` с градиентом; пустая строка — логотип из label policy (сборочная) |
 | `CUSTOM_REQUEST_HEADERS=x-zitadel-instance-host:id.holycode.org,x-zitadel-public-host:id.holycode.org` | только для локального запуска против удалённого инстанса |
 | `NEXT_PUBLIC_DAENERYS_API_URL` | адрес Daenerys для профиля (сборочная); пусто — `https://daenerys-api.holycode.org` |
-| `HC_PROFILE_SERVICES=HolyChat\|https://chat.holycode.org,Build\|https://build.holycode.org,Agent\|https://agent.holycode.org` | ссылки на сервисы в шапке профиля |
+| `HC_PROFILE_SERVICES=chat\|HolyCode\|https://chat.holycode.org,build\|HolyBuild\|https://build.holycode.org,…` | запасной список переключателя сервисов, пока Daenerys не ответил `GET /api/services`: `key\|Имя\|url[\|icon[\|kind]]` через запятую, либо JSON-массив как у `DAENERYS_SERVICES`; старая форма `Имя\|url` тоже читается (ключ — по хосту: `chat.` → chat, `id.` → profile). Пусто — прод-адреса без панели |
 | `HC_PROFILE_ADMIN_URL`, `HC_PROFILE_MAIL_ADMIN_URL`, `HC_PROFILE_KEYS_URL` | кабинет организации, пароли приложений, ключи доступа (по умолчанию — chat.holycode.org/admin, /admin/mail, /settings/security) |
 
 ## Локальный запуск

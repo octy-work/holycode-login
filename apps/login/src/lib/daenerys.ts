@@ -305,6 +305,8 @@ export function createDaenerysClient({ baseUrl, fetchImpl }: { baseUrl?: string;
 
   return {
     me: () => call<unknown>("/api/auth/me"),
+    /** The directory of HolyCode services for the switcher (`lib/services.ts`): list, addresses, the active organization and the person's role in it. */
+    services: () => call<unknown>("/api/services"),
     accounts: () => call<unknown>("/api/auth/accounts"),
     /** 201 with the new organization; the answer rotates the session cookies (the session now points at it). */
     createAccount: (name: string) => call<unknown>("/api/auth/accounts", { method: "POST", body: { name } }),

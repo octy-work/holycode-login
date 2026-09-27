@@ -7,6 +7,7 @@ import { usePageChrome } from "@/components/page-chrome-context";
 import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
 import { PROFILE_SECTIONS, profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
+import { canOpenAdmin } from "@/lib/services";
 import {
   AdjustmentsHorizontalIcon,
   BuildingOffice2Icon,
@@ -16,15 +17,19 @@ import {
 } from "@heroicons/react/24/outline";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { clsx } from "clsx";
+import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { ComponentType, useEffect, useState } from "react";
+import { AvatarMenu } from "./avatar-menu";
 import { DataSection } from "./data";
 import { HomeSection } from "./home";
 import { OrgsSection } from "./orgs";
 import { SecuritySection } from "./security";
+import { ServiceSwitcher } from "./service-switcher";
 import { SettingsSection } from "./settings";
 import { ProfileView } from "./types";
 import { useDaenerys } from "./use-daenerys";
+import { useServices } from "./use-services";
 
 const ICONS: Record<ProfileSection, ComponentType<{ className?: string }>> = {
   home: HomeIcon,
@@ -41,9 +46,11 @@ export type SectionProps = {
 };
 
 /**
- * The profile frame (id.holycode.org/me): header with the brand, links back to
- * the services and the avatar; five sections in a sidebar on wide screens and
- * as tabs along the bottom on phones; one section rendered at a time.
+ * The profile frame (id.holycode.org/me): header with the service switcher
+ * (the grid button next to the brand, from 768 px), the brand and the avatar —
+ * on phones the avatar opens a menu with the same services; five sections in a
+ * sidebar on wide screens and as tabs along the bottom on phones; one section
+ * rendered at a time.
  *
  * Section links are plain anchors with the SHORT public path (/me/security),
  * never <Link>: Next would prepend the basePath and lengthen the address bar.
@@ -60,9 +67,15 @@ export function ProfileShell({
   counters: Partial<Record<ProfileSection, number>>;
 }) {
   const chrome = usePageChrome();
+  const t = useTranslations("profile");
+  const locale = useLocale();
   const { setTheme } = useTheme();
   const [prefix, setPrefix] = useState(view.prefix);
   const daenerys = useDaenerys(view.daenerysUrl);
+  const directory = useServices(daenerys, view.links.services);
+  const adminAllowed = canOpenAdmin(directory.org?.role);
+  // "тёмная · RU" on the switcher's last row: what the ID keeps for every service (short labels — the row is narrow).
+  const prefsSummary = `${t(`switcher.theme.${view.theme ?? "system"}`)} · ${locale.toUpperCase()}`;
 
   useEffect(() => {
     const actual = profilePrefixFromPathname(window.location.pathname, view.basePath);
@@ -100,8 +113,19 @@ export function ProfileShell({
         data-testid="profile-shell"
         data-daenerys-status={daenerys.status}
         data-daenerys-failure={daenerys.failure ?? undefined}
+        data-services-source={directory.source}
       >
         <header className="mb-4 flex min-w-0 items-center gap-3 py-1">
+          <ServiceSwitcher
+            className="hidden md:block"
+            services={directory.services}
+            org={directory.org}
+            current="profile"
+            adminUrl={view.links.adminUrl}
+            canOpenAdmin={adminAllowed}
+            prefsSummary={prefsSummary}
+            prefsHref={profilePath(prefix, "settings")}
+          />
           <a href={profilePath(prefix, "home")} className="flex shrink-0 items-center gap-2" aria-label="HolyCode ID">
             <BrandMark branding={branding} />
             <span className="rounded-md bg-linear-to-br from-[#7c3aed] to-[#06b6d4] px-1.5 py-0.5 text-[10px] font-extrabold tracking-[0.08em] text-white">
@@ -109,25 +133,17 @@ export function ProfileShell({
             </span>
           </a>
           <span className="flex-1" />
-          {view.links.services.length > 0 && (
-            <nav className="hidden items-center gap-1.5 sm:flex" aria-label="HolyCode">
-              {view.links.services.map((service) => (
-                <a
-                  key={service.url}
-                  href={service.url}
-                  className="border-hc-border text-hc-muted hover:text-hc-text hover:border-hc-p500 rounded-full border px-2.5 py-1 text-xs transition-colors"
-                >
-                  {service.name}
-                </a>
-              ))}
-            </nav>
-          )}
           {showLanguages && (
             <div className="hidden md:block">
               <LanguageSwitcher languages={chrome.languages} />
             </div>
           )}
-          <a href={profilePath(prefix, "data")} className="shrink-0" aria-label={view.user.fullName}>
+          <a
+            href={profilePath(prefix, "data")}
+            className="hidden shrink-0 md:block"
+            aria-label={view.user.fullName}
+            data-testid="avatar-link"
+          >
             <Avatar
               size="small"
               name={view.user.fullName}
@@ -135,6 +151,15 @@ export function ProfileShell({
               imageUrl={view.user.avatarUrl || undefined}
             />
           </a>
+          <AvatarMenu
+            className="md:hidden"
+            view={view}
+            dataHref={profilePath(prefix, "data")}
+            services={directory.services}
+            org={directory.org}
+            adminUrl={view.links.adminUrl}
+            canOpenAdmin={adminAllowed}
+          />
         </header>
 
         <div className="grid gap-4 md:grid-cols-[210px_minmax(0,1fr)]">

@@ -1,5 +1,6 @@
 import { summarizeAuthMethods } from "@/lib/profile";
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { fallbackServices } from "@/lib/services";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ProfileShell } from "./shell";
 import { ProfileView } from "./types";
@@ -95,10 +96,30 @@ const ACTIVITY = {
   next_before: "2026-09-27T18:47:55.794Z",
 };
 
+/** GET /api/services as production Daenerys answers an owner: the panel is in the list. */
+const SERVICES_OWNER = {
+  ok: true,
+  services: [
+    { key: "chat", name: "HolyCode", url: "https://chat.holycode.org", icon: "chat", kind: "app", visible: true },
+    { key: "build", name: "HolyBuild", url: "https://build.holycode.org", icon: "build", kind: "app", visible: true },
+    { key: "agent", name: "HolyAgent", url: "https://agent.holycode.org", icon: "agent", kind: "app", visible: true },
+    { key: "panel", name: "Панель", url: "https://daenerys.holycode.org", icon: "panel", kind: "app", visible: true },
+    { key: "profile", name: "Профиль", url: "https://id.holycode.org/me", icon: "profile", kind: "profile", visible: true },
+    { key: "mail", name: "Почта", url: "https://mail.holycode.org", icon: "mail", kind: "mail", visible: true },
+  ],
+  org: { account_id: "org-1", name: "Event74", role: "owner" },
+};
+/** The same for a member: no panel, and the role does not open the admin. */
+const SERVICES_MEMBER = {
+  ...SERVICES_OWNER,
+  services: SERVICES_OWNER.services.filter((s) => s.key !== "panel"),
+  org: { account_id: "org-1", name: "Event74", role: "member" },
+};
+
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-function installFetch() {
+function installFetch(services: Response | (() => Response) = () => json(404, { error: "not_found" })) {
   const urls: string[] = [];
   const impl = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -106,6 +127,7 @@ function installFetch() {
     if (url.endsWith("/api/auth/me")) return json(200, ME);
     if (url.includes("/api/auth/sessions")) return json(200, SESSIONS);
     if (url.includes("/api/auth/activity")) return json(200, ACTIVITY);
+    if (url.endsWith("/api/services")) return typeof services === "function" ? services() : services;
     return json(404, { error: "not_found" });
   });
   vi.stubGlobal("fetch", impl);
@@ -150,7 +172,12 @@ function viewAt(prefix: string): ProfileView {
     theme: null,
     sessionId: "s1",
     daenerysUrl: "",
-    links: { services: [], adminUrl: "https://chat.test/admin", mailAdminUrl: "https://chat.test/admin/mail", keysUrl: "" },
+    links: {
+      services: fallbackServices(""),
+      adminUrl: "https://chat.test/admin",
+      mailAdminUrl: "https://chat.test/admin/mail",
+      keysUrl: "",
+    },
   };
 }
 
@@ -170,7 +197,9 @@ describe("the profile at its short public address (traefik rewrite) and at the l
   test("/me/security: short links, and the Daenerys blocks load like anywhere else", async () => {
     window.history.replaceState({}, "", "/me/security");
     const urls = installFetch();
-    const { container, findByTestId, findAllByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    const { container, findByTestId, findAllByTestId, getByTestId } = render(
+      <ProfileShell view={viewAt("/me")} counters={{}} />,
+    );
 
     expect(navHrefs(container)).toEqual(["/me", "/me/data", "/me/security", "/me/orgs", "/me/settings"]);
     await findByTestId("session-sess_now");
@@ -184,8 +213,91 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     expect(urls.filter((u) => u.includes("/api/auth/me"))).toHaveLength(1);
     expect(urls.filter((u) => u.includes("/api/auth/sessions"))).toHaveLength(1);
     expect(urls.filter((u) => u.includes("/api/auth/activity?limit=50"))).toHaveLength(1);
+    expect(urls.filter((u) => u.endsWith("/api/services"))).toHaveLength(1);
     // no silent sign-in was attempted: the session was there
     expect(window.sessionStorage.getItem("hc_profile_sso_silent")).toBeNull();
+
+    // the directory route is not there (404): the switcher shows the fallback — no panel, no admin,
+    // but the links still carry the active organization of the session and the way back
+    await waitFor(() =>
+      expect(container.querySelector("[data-testid=profile-shell]")?.getAttribute("data-services-source")).toBe("fallback"),
+    );
+    expect(container.querySelector("nav[aria-label=HolyCode]")).toBeNull();
+    fireEvent.click(getByTestId("service-switcher-trigger"));
+    const keys = Array.from(container.querySelectorAll("[data-testid^=service-tile-]")).map((el) =>
+      el.getAttribute("data-service"),
+    );
+    expect(keys).toEqual(["chat", "build", "agent", "profile", "mail"]);
+    const chat = new URL(getByTestId("service-tile-chat").getAttribute("href")!);
+    expect(chat.origin).toBe("https://chat.holycode.org");
+    expect(chat.searchParams.get("org")).toBe("org-1");
+    expect(chat.searchParams.get("return_to")).toBe(window.location.href);
+    expect(container.querySelector("[data-testid=service-menu-admin]")).not.toBeNull(); // owner of org-1 by the session
+    expect(getByTestId("service-menu-prefs")).toHaveAttribute("href", "/me/settings");
+    expect(getByTestId("service-menu-prefs")).toHaveTextContent("switcher.theme.system · RU");
+  });
+
+  test("the directory from Daenerys: an owner gets the panel tile and the admin row, in the switcher and in the avatar menu", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    installFetch(json(200, SERVICES_OWNER));
+    const { container, getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() =>
+      expect(container.querySelector("[data-testid=profile-shell]")?.getAttribute("data-services-source")).toBe("server"),
+    );
+    fireEvent.click(getByTestId("service-switcher-trigger"));
+    expect(getByTestId("service-menu")).toHaveTextContent("title · Event74");
+    const panel = getByTestId("service-tile-panel");
+    const href = new URL(panel.getAttribute("href")!);
+    expect(href.origin).toBe("https://daenerys.holycode.org");
+    expect(href.searchParams.get("org")).toBe("org-1");
+    expect(getByTestId("service-tile-profile")).toHaveAttribute("aria-current", "page");
+    const admin = new URL(getByTestId("service-menu-admin").getAttribute("href")!);
+    expect(admin.origin + admin.pathname).toBe("https://chat.test/admin");
+    expect(admin.searchParams.get("org")).toBe("org-1");
+
+    // the phone: the avatar opens a menu with the same services
+    fireEvent.click(getByTestId("avatar-menu-trigger"));
+    const links = Array.from(container.querySelectorAll("[data-testid^=service-link-]")).map((el) =>
+      el.getAttribute("data-service"),
+    );
+    expect(links).toEqual(["chat", "build", "agent", "panel", "profile", "mail", "admin"]);
+    expect(getByTestId("avatar-menu-data")).toHaveAttribute("href", "/me/data");
+    expect(getByTestId("avatar-menu-switch-user")).toHaveAttribute("href", "/accounts");
+  });
+
+  test("the directory from Daenerys: a member gets neither the panel nor the admin", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    installFetch(json(200, SERVICES_MEMBER));
+    const { container, getByTestId, queryByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() =>
+      expect(container.querySelector("[data-testid=profile-shell]")?.getAttribute("data-services-source")).toBe("server"),
+    );
+    fireEvent.click(getByTestId("service-switcher-trigger"));
+    expect(queryByTestId("service-tile-panel")).toBeNull();
+    expect(queryByTestId("service-menu-admin")).toBeNull();
+    expect(getByTestId("service-tile-build")).toHaveAttribute("href", expect.stringContaining("org=org-1"));
+    fireEvent.click(getByTestId("avatar-menu-trigger"));
+    expect(queryByTestId("service-link-panel")).toBeNull();
+    expect(queryByTestId("service-link-admin")).toBeNull();
+  });
+
+  test("no Daenerys session at all (401 everywhere): the fallback list, without an organization in the links", async () => {
+    window.history.replaceState({}, "", "/me/security?sso_error=login_required");
+    const impl = vi.fn(async () => json(401, { error: "unauthorized" }));
+    vi.stubGlobal("fetch", impl);
+    const { container, getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() =>
+      expect(container.querySelector("[data-testid=profile-shell]")?.getAttribute("data-daenerys-status")).toBe(
+        "unauthorized",
+      ),
+    );
+    expect(container.querySelector("[data-testid=profile-shell]")?.getAttribute("data-services-source")).toBe("fallback");
+    fireEvent.click(getByTestId("service-switcher-trigger"));
+    const chat = new URL(getByTestId("service-tile-chat").getAttribute("href")!);
+    expect(chat.searchParams.get("org")).toBeNull();
+    expect(chat.searchParams.get("return_to")).toBe(window.location.href);
+    expect(container.querySelector("[data-testid=service-tile-panel]")).toBeNull();
+    expect(container.querySelector("[data-testid=service-menu-admin]")).toBeNull();
   });
 
   test("/ui/v2/login/me/security: long links, same blocks", async () => {

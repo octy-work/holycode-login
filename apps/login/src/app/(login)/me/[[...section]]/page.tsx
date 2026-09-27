@@ -1,5 +1,5 @@
 import { ProfileShell } from "@/components/profile/shell";
-import { AvailableIdp, LinkedIdp, ProfileView, SecondFactorKind, ServiceLink } from "@/components/profile/types";
+import { AvailableIdp, LinkedIdp, ProfileView, SecondFactorKind } from "@/components/profile/types";
 import { idpTypeToIdentityProviderType } from "@/lib/idp";
 import {
   fullName,
@@ -20,6 +20,7 @@ import {
 import { getPublicHost, getPublicHostWithProtocol } from "@/lib/server/host";
 import { loadProfileSession } from "@/lib/server/profile-session";
 import { getServiceConfig } from "@/lib/service-url";
+import { fallbackServices } from "@/lib/services";
 import {
   getActiveIdentityProviders,
   getBrandingSettings,
@@ -45,22 +46,6 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("profile");
   return { title: t("title") };
-}
-
-const DEFAULT_SERVICES =
-  "HolyChat|https://chat.holycode.org,Build|https://build.holycode.org,Agent|https://agent.holycode.org";
-
-/** HC_PROFILE_SERVICES="HolyChat|https://chat.holycode.org,Build|https://…" — the links back to the services in the header. */
-function serviceLinks(): ServiceLink[] {
-  return (process.env.HC_PROFILE_SERVICES ?? DEFAULT_SERVICES)
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((entry) => {
-      const [name, url] = entry.split("|", 2).map((p) => p.trim());
-      return { name, url };
-    })
-    .filter((link) => link.name && /^https?:\/\//.test(link.url));
 }
 
 function secondFactorKinds(types: SecondFactorType[] | undefined): SecondFactorKind[] {
@@ -233,7 +218,7 @@ export default async function Page(props: { params: Promise<{ section?: string[]
     sessionId: ctx.sessionCookie.id,
     daenerysUrl: process.env.NEXT_PUBLIC_DAENERYS_API_URL ?? "",
     links: {
-      services: serviceLinks(),
+      services: fallbackServices(process.env.HC_PROFILE_SERVICES),
       adminUrl: process.env.HC_PROFILE_ADMIN_URL ?? "https://chat.holycode.org/admin",
       mailAdminUrl: process.env.HC_PROFILE_MAIL_ADMIN_URL ?? "https://chat.holycode.org/admin/mail",
       keysUrl: process.env.HC_PROFILE_KEYS_URL ?? "https://chat.holycode.org/settings/security",

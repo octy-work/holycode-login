@@ -831,6 +831,50 @@
         "hint": "Сервисы прочитают тему при следующем входе"
       }
     },
+    "switcher": {
+      "trigger": "Сервисы HolyCode",
+      "title": "Сервисы HolyCode",
+      "otherServices": "Другие сервисы",
+      "youAreHere": "вы здесь",
+      "orgAdmin": "Админка организации",
+      "orgAdminHint": "домены · почта · люди",
+      "prefsFromId": "Тема и язык — из профиля ID",
+      "theme": {
+        "dark": "тёмная",
+        "light": "светлая",
+        "system": "системная"
+      },
+      "name": {
+        "chat": "HolyCode",
+        "build": "HolyBuild",
+        "agent": "HolyAgent",
+        "panel": "Панель",
+        "profile": "Профиль",
+        "mail": "Почта"
+      },
+      "hint": {
+        "chat": "чат",
+        "build": "сборки, задачи",
+        "agent": "агент на ваших машинах",
+        "panel": "организации, пайплайны",
+        "profile": "HolyCode ID",
+        "mail": "mail.holycode.org"
+      },
+      "short": {
+        "chat": "HolyCode",
+        "build": "Build",
+        "agent": "Agent",
+        "panel": "Панель",
+        "profile": "Профиль",
+        "mail": "Почта",
+        "admin": "Админка"
+      },
+      "menu": {
+        "open": "Меню профиля",
+        "data": "Мои данные",
+        "switchUser": "Сменить пользователя"
+      }
+    },
     "daenerys": {
       "unavailable": "Недоступно: не удалось связаться с сервером управления HolyCode",
       "unauthorized": "Вы вошли в HolyCode ID, но ещё не в сервисы HolyCode",

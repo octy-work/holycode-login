@@ -831,6 +831,50 @@
         "hint": "Services pick the theme up at the next sign-in"
       }
     },
+    "switcher": {
+      "trigger": "HolyCode services",
+      "title": "HolyCode services",
+      "otherServices": "Other services",
+      "youAreHere": "you are here",
+      "orgAdmin": "Organization admin",
+      "orgAdminHint": "domains · mail · people",
+      "prefsFromId": "Theme and language — from your ID profile",
+      "theme": {
+        "dark": "dark",
+        "light": "light",
+        "system": "system"
+      },
+      "name": {
+        "chat": "HolyCode",
+        "build": "HolyBuild",
+        "agent": "HolyAgent",
+        "panel": "Panel",
+        "profile": "Profile",
+        "mail": "Mail"
+      },
+      "hint": {
+        "chat": "chat",
+        "build": "builds, tasks",
+        "agent": "agent on your machines",
+        "panel": "organizations, pipelines",
+        "profile": "HolyCode ID",
+        "mail": "mail.holycode.org"
+      },
+      "short": {
+        "chat": "HolyCode",
+        "build": "Build",
+        "agent": "Agent",
+        "panel": "Panel",
+        "profile": "Profile",
+        "mail": "Mail",
+        "admin": "Admin"
+      },
+      "menu": {
+        "open": "Profile menu",
+        "data": "My data",
+        "switchUser": "Switch user"
+      }
+    },
     "daenerys": {
       "unavailable": "Unavailable: the HolyCode management server could not be reached",
       "unauthorized": "You are signed in to HolyCode ID, but not to the HolyCode services yet",
