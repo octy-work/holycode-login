@@ -38,7 +38,7 @@ export function DataSection({ view, daenerys }: SectionProps) {
   const t = useTranslations("profile");
   const locale = useLocale();
   const flow = useFlowStarter();
-  const keys = useDaenerysResource(daenerys, (c) => c.apiKeys(), normalizeApiKeys);
+  const keys = useDaenerysResource(daenerys, (c) => c.apiKeys(), normalizeApiKeys, { label: "api-keys" });
 
   // No language in the ID → "not set" (the page itself still follows the browser/cookie locale).
   const languageName = view.user.preferredLanguage

@@ -50,7 +50,13 @@ export function OrgsSection({ view, daenerys }: SectionProps) {
       <Group id="list" title={t("orgs.mine")}>
         {daenerys.status === "loading" && <RowSkeleton rows={2} />}
         {(daenerys.status === "unauthorized" || daenerys.status === "unavailable") && (
-          <DaenerysNotice daenerys={daenerys} status={daenerys.status} onRetry={daenerys.reload} />
+          <DaenerysNotice
+            daenerys={daenerys}
+            status={daenerys.status}
+            failure={daenerys.failure}
+            message={daenerys.message}
+            onRetry={daenerys.reload}
+          />
         )}
         {daenerys.status === "ready" && list.length === 0 && <Note tone="info">{t("orgs.empty")}</Note>}
         {daenerys.status === "ready" &&

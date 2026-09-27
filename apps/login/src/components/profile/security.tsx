@@ -408,7 +408,9 @@ function SessionsGroup({ daenerys }: Pick<SectionProps, "daenerys">) {
   const t = useTranslations("profile");
   const locale = useLocale();
   const router = useRouter();
-  const sessions = useDaenerysResource<ServiceSession[]>(daenerys, (c) => c.sessions(), normalizeSessions);
+  const sessions = useDaenerysResource<ServiceSession[]>(daenerys, (c) => c.sessions(), normalizeSessions, {
+    label: "sessions",
+  });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [confirmAll, setConfirmAll] = useState(false);
@@ -485,7 +487,13 @@ function SessionsGroup({ daenerys }: Pick<SectionProps, "daenerys">) {
       )}
       {sessions.status === "loading" && <RowSkeleton rows={2} />}
       {(sessions.status === "unauthorized" || sessions.status === "unavailable" || sessions.status === "missing") && (
-        <DaenerysNotice daenerys={daenerys} status={sessions.status} message={sessions.message} onRetry={sessions.reload} />
+        <DaenerysNotice
+          daenerys={daenerys}
+          status={sessions.status}
+          failure={sessions.failure}
+          message={sessions.message}
+          onRetry={sessions.reload}
+        />
       )}
       {sessions.status === "ready" && sessions.data && sessions.data.length === 0 && (
         <Note tone="info">{t("security.sessions.empty")}</Note>
@@ -546,7 +554,9 @@ function SessionsGroup({ daenerys }: Pick<SectionProps, "daenerys">) {
 function ActivityGroup({ daenerys, onChangePassword }: Pick<SectionProps, "daenerys"> & { onChangePassword: () => void }) {
   const t = useTranslations("profile");
   const locale = useLocale();
-  const activity = useDaenerysResource<ActivityPage>(daenerys, (c) => c.activity({ limit: 50 }), normalizeActivity);
+  const activity = useDaenerysResource<ActivityPage>(daenerys, (c) => c.activity({ limit: 50 }), normalizeActivity, {
+    label: "activity",
+  });
   const [expanded, setExpanded] = useState(false);
   const [notMe, setNotMe] = useState<ActivityEntry | null>(null);
   const [busy, setBusy] = useState(false);
@@ -590,7 +600,13 @@ function ActivityGroup({ daenerys, onChangePassword }: Pick<SectionProps, "daene
     >
       {activity.status === "loading" && <RowSkeleton rows={2} />}
       {(activity.status === "unauthorized" || activity.status === "unavailable" || activity.status === "missing") && (
-        <DaenerysNotice daenerys={daenerys} status={activity.status} message={activity.message} onRetry={activity.reload} />
+        <DaenerysNotice
+          daenerys={daenerys}
+          status={activity.status}
+          failure={activity.failure}
+          message={activity.message}
+          onRetry={activity.reload}
+        />
       )}
       {activity.status === "ready" && entries.length === 0 && <Note tone="info">{t("security.activity.empty")}</Note>}
       {done && (

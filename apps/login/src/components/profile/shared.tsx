@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ReactNode, useCallback, useState } from "react";
 import { Note, RowButton, RowLink } from "./ui";
-import { DaenerysState, ResourceStatus } from "./use-daenerys";
+import { DaenerysBlockFailure, DaenerysState, ResourceStatus } from "./use-daenerys";
 
 /** Starts one of the login app's flows (passkey, second factor, password, e-mail) from the profile. */
 export function useFlowStarter() {
@@ -89,11 +89,13 @@ export function useRunner() {
 export function DaenerysNotice({
   daenerys,
   status,
+  failure,
   message,
   onRetry,
 }: {
   daenerys: DaenerysState;
   status: ResourceStatus | "unauthorized" | "unavailable";
+  failure?: DaenerysBlockFailure | null;
   message?: string;
   onRetry?: () => void;
 }) {
@@ -118,8 +120,9 @@ export function DaenerysNotice({
   return (
     <Note tone="warn">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="flex-1">
+        <span className="flex-1" data-testid="daenerys-unavailable" data-failure={failure ?? undefined}>
           {t("unavailable")}
+          {failure === "timeout" ? ` — ${t("timeout")}` : failure === "payload" ? ` — ${t("badPayload")}` : ""}
           {message ? ` (${message})` : ""}
         </span>
         {onRetry && <RowButton onClick={onRetry}>{t("retry")}</RowButton>}

@@ -129,6 +129,10 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
   `oidc/start?prompt=none&return_to=https://id.holycode.org/me` (отметка в
   sessionStorage), иначе блоки показываются как «недоступно», остальное работает.
   Контракт — `apps/daenerys-api/docs/profile-api.md` в репозитории holycode.
+  Каждый вызов идёт с дедлайном 20 с (`withDeadline`): ответ, который не пришёл, отказ
+  промиса или ответ, который нормализатор не смог прочитать, заканчиваются состоянием
+  «недоступно» с причиной (таймаут / ответ не разобран / сеть) и строкой
+  `[profile] daenerys/<блок>: …` в консоли — скелетон никогда не остаётся навсегда.
   «Выйти везде» = `POST /api/auth/logout-all` + завершение сессий ID этого браузера
   (`signOutEverywhere`).
 - Тексты — `profile.*` в `locales/{ru,en}.json`, перекрываются `hosted_login_translation`.

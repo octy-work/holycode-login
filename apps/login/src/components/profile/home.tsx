@@ -30,7 +30,9 @@ export function HomeSection({ view, prefix, daenerys }: SectionProps) {
   const t = useTranslations("profile");
   const locale = useLocale();
   const flow = useFlowStarter();
-  const sessions = useDaenerysResource<ServiceSession[]>(daenerys, (c) => c.sessions(), normalizeSessions);
+  const sessions = useDaenerysResource<ServiceSession[]>(daenerys, (c) => c.sessions(), normalizeSessions, {
+    label: "sessions",
+  });
 
   const activeOrg = daenerys.orgs.find((o) => o.active) ?? daenerys.orgs[0];
   const recommends = (r: Recommendation) => view.recommendations.includes(r);

@@ -837,7 +837,9 @@
       "signIn": "Sign in to the services",
       "missing": "Soon: this part is not connected on the server yet",
       "retry": "Retry",
-      "short": "unavailable"
+      "short": "unavailable",
+      "timeout": "the server did not answer within 20 seconds",
+      "badPayload": "the server's answer could not be read"
     },
     "errors": {
       "noSession": "The session has expired — sign in again",
