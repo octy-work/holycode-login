@@ -4,9 +4,6 @@ export type ServerActionResponse =
   | { redirect: string }
   | { error: string }
   | { samlData: { url: string; fields: Record<string, string> } }
-  // HolyCode: a known account whose way in is a linked provider — the form
-  // shows it as a choice (username-form); nothing to do here.
-  | { redirect?: undefined; idpChoice: { url: string } }
   | undefined
   | null;
 

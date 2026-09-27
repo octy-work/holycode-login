@@ -51,13 +51,6 @@
       "passkeysNotAllowed": "不允许使用 Passkey！请联系管理员了解更多信息。",
       "couldNotFindIdentityProvider": "找不到身份提供者。",
       "userNotActive": "用户未激活。请联系管理员了解更多信息。"
-    },
-    "idpOnly": {
-      "description": "The account {loginName} signs in with {provider}.",
-      "continue": "Continue with {provider}",
-      "passkeyHint": "Want to sign in with Touch ID instead? Once signed in, add a passkey in your HolyCode ID settings.",
-      "otherAccount": "Use another account",
-      "usePassword": "Sign in with a password"
     }
   },
   "zitadel": {

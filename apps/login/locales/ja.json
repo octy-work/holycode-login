@@ -51,13 +51,6 @@
       "passkeysNotAllowed": "パスキーは許可されていません！詳細については管理者にお問い合わせください。",
       "couldNotFindIdentityProvider": "IDプロバイダーが見つかりませんでした。",
       "userNotActive": "ユーザーはアクティブではありません。詳細については管理者にお問い合わせください。"
-    },
-    "idpOnly": {
-      "description": "The account {loginName} signs in with {provider}.",
-      "continue": "Continue with {provider}",
-      "passkeyHint": "Want to sign in with Touch ID instead? Once signed in, add a passkey in your HolyCode ID settings.",
-      "otherAccount": "Use another account",
-      "usePassword": "Sign in with a password"
     }
   },
   "password": {

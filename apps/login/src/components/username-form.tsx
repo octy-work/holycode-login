@@ -7,10 +7,8 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { IdentityProviderType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 import { Alert } from "./alert";
 import { AutoSubmitForm } from "./auto-submit-form";
-import { detectIdpBrand, IdpIcon } from "./idps/idp-icons";
 import { Button, ButtonVariants } from "./button";
 import { TextInput } from "./input";
 import { Spinner } from "./spinner";
@@ -60,14 +58,6 @@ export function UsernameForm({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [samlData, setSamlData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
-  // A known account whose only way in is a linked provider (see sendLoginname).
-  const [idpChoice, setIdpChoice] = useState<{
-    url: string;
-    name: string;
-    type: IdentityProviderType;
-    loginName: string;
-    passwordUrl?: string;
-  } | null>(null);
 
   const submitLoginName = useCallback(
     async (values: Inputs, organization?: string) => {
@@ -82,10 +72,6 @@ export function UsernameForm({
           suffix,
         });
 
-        if (res && typeof res === "object" && "idpChoice" in res && res.idpChoice) {
-          setIdpChoice(res.idpChoice as NonNullable<typeof idpChoice>);
-          return res;
-        }
         handleServerActionResponse(res, router, setSamlData, setError);
         return res;
       } catch {
@@ -111,46 +97,6 @@ export function UsernameForm({
     inputLabel = t("labels.usernameOrPhoneNumber");
   } else if (loginSettings?.disableLoginWithPhone) {
     inputLabel = t("labels.usernameOrEmail");
-  }
-
-  if (idpChoice) {
-    const brand = detectIdpBrand(idpChoice.type, idpChoice.name);
-    return (
-      <div className="w-full" data-testid="idp-choice">
-        <div className="bg-hc-soft border-hc-p500/35 text-hc-text-2 rounded-[14px] border px-3.5 py-3 text-left text-[14px] leading-snug">
-          {t("idpOnly.description", { loginName: idpChoice.loginName, provider: idpChoice.name })}
-        </div>
-        <a
-          href={idpChoice.url}
-          className="hc-btn-primary mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-semibold text-white"
-          data-testid="idp-choice-continue"
-        >
-          <IdpIcon brand={brand} name={idpChoice.name} />
-          {t("idpOnly.continue", { provider: idpChoice.name })}
-        </a>
-        {idpChoice.passwordUrl ? (
-          <Button
-            type="button"
-            className="mt-3"
-            variant={ButtonVariants.Secondary}
-            onClick={() => router.push(idpChoice.passwordUrl as string)}
-            data-testid="idp-choice-password"
-          >
-            {t("idpOnly.usePassword")}
-          </Button>
-        ) : (
-          <p className="text-hc-muted mt-3 text-center text-xs leading-5">{t("idpOnly.passkeyHint", { provider: idpChoice.name })}</p>
-        )}
-        <button
-          type="button"
-          className="text-hc-p400 mt-2 h-9 w-full text-sm font-medium"
-          onClick={() => setIdpChoice(null)}
-          data-testid="idp-choice-other"
-        >
-          {t("idpOnly.otherAccount")}
-        </button>
-      </div>
-    );
   }
 
   return (

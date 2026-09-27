@@ -51,13 +51,6 @@
       "passkeysNotAllowed": "Passkeys niet toegestaan! Neem contact op met jouw beheerder voor meer informatie.",
       "couldNotFindIdentityProvider": "Kon identiteitsprovider niet vinden.",
       "userNotActive": "Gebruiker is niet actief. Neem contact op met jouw beheerder voor meer informatie."
-    },
-    "idpOnly": {
-      "description": "The account {loginName} signs in with {provider}.",
-      "continue": "Continue with {provider}",
-      "passkeyHint": "Want to sign in with Touch ID instead? Once signed in, add a passkey in your HolyCode ID settings.",
-      "otherAccount": "Use another account",
-      "usePassword": "Sign in with a password"
     }
   },
   "zitadel": {

@@ -119,9 +119,7 @@ export async function sendLoginname(command: SendLoginnameCommand) {
   // login name back together for the checks below and for the IdP login hint.
   const concatLoginname = command.suffix ? `${command.loginName}@${command.suffix}` : command.loginName;
 
-  // passwordUrl: the account can also sign in with a password here — the
-  // provider choice then offers it too (HolyCode, see idpChoice below).
-  const redirectUserToIDP = async (userId?: string, organization?: string, passwordUrl?: string) => {
+  const redirectUserToIDP = async (userId?: string, organization?: string) => {
     // If userId is provided, check for user-specific IDP links first
     let identityProviders: IDPLink[] = [];
     if (userId) {
@@ -243,25 +241,6 @@ export async function sendLoginname(command: SendLoginnameCommand) {
 
       if (response.fields) {
         return { samlData: { url: response.url, fields: response.fields } };
-      }
-
-      // HolyCode: a known user whose only way in is a linked provider is not
-      // sent there silently — after typing an e-mail, landing on Apple's page
-      // looks like a mistake. The form shows "this account signs in with
-      // Apple" and a button; the flow behind it is the same.
-      if (userId) {
-        return {
-          // Keeps "redirect" in the union so callers that only look at it
-          // (and upstream tests) still type-check; the form handles idpChoice.
-          redirect: undefined,
-          idpChoice: {
-            url: response.url,
-            name: idp.name,
-            type: identityProviderType,
-            loginName: concatLoginname,
-            ...(passwordUrl ? { passwordUrl } : {}),
-          },
-        };
       }
 
       return { redirect: response.url };
@@ -423,7 +402,7 @@ export async function sendLoginname(command: SendLoginnameCommand) {
           if (!userLoginSettings?.allowLocalAuthentication) {
             // Check if user has IDPs available as alternative, that could eventually be used to register/link.
             const idpResp = await redirectUserToIDP(userId, organization);
-            if (idpResp?.redirect || (idpResp && "idpChoice" in idpResp && idpResp.idpChoice)) {
+            if (idpResp?.redirect) {
               return idpResp;
             }
 
@@ -511,18 +490,7 @@ export async function sendLoginname(command: SendLoginnameCommand) {
 
         return { redirect: "/passkey?" + passkeyParams };
       } else if (methods.authMethodTypes.includes(AuthenticationMethodType.IDP)) {
-        let passwordUrl: string | undefined;
-        if (methods.authMethodTypes.includes(AuthenticationMethodType.PASSWORD) && userLoginSettings?.allowLocalAuthentication) {
-          const paramsPasswordAlt = new URLSearchParams({ loginName: redirectLoginName });
-          if (command.requestId) {
-            paramsPasswordAlt.append("requestId", command.requestId);
-          }
-          if (organization) {
-            paramsPasswordAlt.append("organization", organization);
-          }
-          passwordUrl = "/password?" + paramsPasswordAlt;
-        }
-        return redirectUserToIDP(userId, organization, passwordUrl);
+        return redirectUserToIDP(userId, organization);
       } else if (methods.authMethodTypes.includes(AuthenticationMethodType.PASSWORD)) {
         // Check if password authentication is allowed
         if (!userLoginSettings?.allowLocalAuthentication) {

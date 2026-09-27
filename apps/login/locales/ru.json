@@ -58,13 +58,6 @@
     "invited": {
       "title": "Вас пригласили?",
       "description": "Откройте ссылку из письма или сообщения — она сама приведёт в нужный аккаунт с нужной ролью."
-    },
-    "idpOnly": {
-      "description": "Аккаунт {loginName} входит через {provider}.",
-      "continue": "Продолжить с {provider}",
-      "passkeyHint": "Хотите входить по Touch ID без {provider}? После входа добавьте passkey в настройках HolyCode ID.",
-      "otherAccount": "Другой аккаунт",
-      "usePassword": "Войти по паролю"
     }
   },
   "zitadel": {
