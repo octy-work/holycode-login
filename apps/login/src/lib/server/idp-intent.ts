@@ -426,6 +426,7 @@ async function handleExplicitLinking(ctx: IDPHandlerContext): Promise<IDPHandler
           idpIntentId: ctx.params.id,
           idpIntentToken: ctx.params.token,
         },
+        idpId: ctx.intent.idpInformation?.idpId,
         requestId: ctx.params.requestId,
         organization: ctx.params.organization,
       });
@@ -494,6 +495,7 @@ async function handleUserExists(ctx: IDPHandlerContext): Promise<IDPHandlerResul
         idpIntentId: ctx.params.id,
         idpIntentToken: ctx.params.token,
       },
+      idpId: ctx.intent.idpInformation?.idpId,
       requestId: ctx.params.requestId,
       organization: ctx.params.organization,
     });
@@ -593,6 +595,7 @@ async function handleAutoLinking(ctx: IDPHandlerContext): Promise<IDPHandlerResu
             idpIntentId: ctx.params.id,
             idpIntentToken: ctx.params.token,
           },
+          idpId: ctx.intent.idpInformation?.idpId,
           requestId: ctx.params.requestId,
           organization: ctx.params.organization,
         });
@@ -696,6 +699,7 @@ async function handleAutoCreation(ctx: IDPHandlerContext): Promise<IDPHandlerRes
           idpIntentId: ctx.params.id,
           idpIntentToken: ctx.params.token,
         },
+        idpId: ctx.intent.idpInformation?.idpId,
         requestId: ctx.params.requestId,
         organization: ctx.params.organization,
       });

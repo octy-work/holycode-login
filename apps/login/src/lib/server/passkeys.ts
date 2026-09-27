@@ -26,6 +26,7 @@ import { checkEmailVerification } from "../verify-helper";
 import { createSessionAndUpdateCookie } from "./cookie";
 import { getEnrollmentAuthorizationError } from "./enrollment-guard";
 import { getPublicHost } from "./host";
+import { rememberLastLogin } from "./last-login";
 import { updateOrCreateSession } from "./session";
 
 const logger = createLogger("passkeys");
@@ -279,6 +280,21 @@ export async function sendPasskey(command: SendPasskeyCommand) {
 
   if (!userResponse.user) {
     return { error: t("verify.errors.userNotFound") };
+  }
+
+  // HolyCode: a passkey that was the way in (not a second factor after a password
+  // or a provider) is remembered for the next visit (hc_last_login).
+  if (
+    checks?.webAuthN &&
+    session.factors?.webAuthN?.verifiedAt &&
+    !session.factors?.password?.verifiedAt &&
+    !session.factors?.intent?.verifiedAt
+  ) {
+    await rememberLastLogin({
+      loginName: session.factors?.user?.loginName,
+      displayName: session.factors?.user?.displayName,
+      method: "passkey",
+    });
   }
 
   const humanUser = userResponse.user.type.case === "human" ? userResponse.user.type.value : undefined;

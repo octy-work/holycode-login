@@ -1,13 +1,11 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
-import { Note } from "@/components/invite-note";
-import { RegisterLink } from "@/components/register-link";
-import { SignInWithIdp } from "@/components/sign-in-with-idp";
-import { Translated } from "@/components/translated";
-import { UsernameForm } from "@/components/username-form";
+import { SignInForm } from "@/components/sign-in-form";
+import { resolveRememberedView, sameLoginName } from "@/lib/last-login";
+import { readLastLogin } from "@/lib/server/last-login";
 import { getServiceConfig } from "@/lib/service-url";
 import { getActiveIdentityProviders, getBrandingSettings, getDefaultOrg, getLoginSettings } from "@/lib/zitadel";
-import { EnvelopeOpenIcon } from "@heroicons/react/24/outline";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
+import { PasskeysType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
@@ -17,6 +15,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title") };
 }
 
+/**
+ * HolyCode: the one sign-in screen — login and password together, providers below,
+ * and "welcome back" for the account this browser signed in with last time
+ * (see SignInForm, lib/last-login.ts). The /password step stays for other entries
+ * (passkey "use password", account picker fallbacks).
+ */
 export default async function Page(props: { searchParams: Promise<Record<string | number | symbol, string | undefined>> }) {
   const searchParams = await props.searchParams;
 
@@ -25,11 +29,6 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const organization = searchParams?.organization;
   const orgDomain = searchParams?.orgDomain;
   const submit: boolean = searchParams?.submit === "true";
-
-  // With an org domain suffix the login name may only be the local part (the
-  // form shows the suffix separately), so put it back together for the IdP
-  // login hint the same way sendLoginname does for the username form.
-  const idpLoginHint = loginName && orgDomain && !loginName.includes("@") ? `${loginName}@${orgDomain}` : loginName;
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
@@ -53,55 +52,39 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
 
-  const showIdps = !!loginSettings?.allowExternalIdp && !!identityProviders?.length;
-  const t = await getTranslations("loginname");
-  const showInvitedNote = t.has("invited.title");
+  const offeredIdps = loginSettings?.allowExternalIdp && identityProviders?.length ? identityProviders : [];
+
+  // With an org domain suffix the login name may only be the local part.
+  const fullLoginName = loginName && orgDomain && !loginName.includes("@") ? `${loginName}@${orgDomain}` : loginName;
+
+  // A login_hint from the request wins over what this browser remembers: the
+  // remembered account is used only without a hint or when the hint is that account.
+  const lastLogin = await readLastLogin();
+  const remembered =
+    lastLogin &&
+    (!loginName || sameLoginName(fullLoginName, lastLogin.loginName) || sameLoginName(loginName, lastLogin.loginName))
+      ? resolveRememberedView(lastLogin, {
+          allowLocalAuthentication: !!loginSettings?.allowLocalAuthentication,
+          passkeysAllowed: loginSettings?.passkeysType !== PasskeysType.NOT_ALLOWED,
+          identityProviders: offeredIdps,
+        })
+      : null;
 
   return (
     <DynamicTheme branding={branding}>
-      <div className="flex flex-col space-y-1">
-        <h1>
-          <Translated i18nKey="title" namespace="loginname" />
-        </h1>
-        <p className="ztdl-p">
-          <Translated i18nKey="description" namespace="loginname" />
-        </p>
-      </div>
-
-      <div className="flex w-full flex-col gap-4">
-        {loginSettings?.allowLocalAuthentication && (
-          <UsernameForm
-            loginName={loginName}
-            requestId={requestId}
-            organization={organization} // stick to "organization" as we still want to do user discovery based on the searchParams not the default organization, later the organization is determined by the found user
-            defaultOrganization={defaultOrganization}
-            loginSettings={loginSettings}
-            suffix={orgDomain}
-            hideSuffix={branding?.hideLoginNameSuffix}
-            submit={submit}
-            allowRegister={!!loginSettings?.allowRegister}
-          ></UsernameForm>
-        )}
-
-        {showIdps && (
-          <SignInWithIdp
-            identityProviders={identityProviders}
-            requestId={requestId}
-            organization={organization}
-            postErrorRedirectUrl="/loginname"
-            loginHint={idpLoginHint}
-            showLabel={loginSettings?.allowLocalAuthentication}
-          ></SignInWithIdp>
-        )}
-
-        {loginSettings?.allowRegister && <RegisterLink organization={organization} requestId={requestId} />}
-
-        {showInvitedNote && (
-          <Note title={<Translated i18nKey="invited.title" namespace="loginname" />} icon={<EnvelopeOpenIcon />}>
-            <Translated i18nKey="invited.description" namespace="loginname" />
-          </Note>
-        )}
-      </div>
+      <SignInForm
+        loginName={loginName}
+        requestId={requestId}
+        organization={organization} // stick to "organization" as we still want to do user discovery based on the searchParams not the default organization, later the organization is determined by the found user
+        defaultOrganization={defaultOrganization}
+        loginSettings={loginSettings}
+        suffix={orgDomain}
+        hideSuffix={branding?.hideLoginNameSuffix}
+        submit={submit}
+        identityProviders={offeredIdps}
+        allowRegister={!!loginSettings?.allowRegister}
+        remembered={remembered}
+      />
     </DynamicTheme>
   );
 }

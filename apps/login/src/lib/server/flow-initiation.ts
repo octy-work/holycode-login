@@ -5,6 +5,7 @@ import { getLanguageCookie, setLanguageCookie, type Cookie } from "@/lib/cookies
 import { shouldUILocalesOverrideCookie } from "@/lib/i18n";
 import { idpTypeToSlug } from "@/lib/idp";
 import { createLogger } from "@/lib/logger";
+import { passwordStepToSignInScreen } from "@/lib/one-screen";
 import { sendLoginname } from "@/lib/server/loginname";
 import { constructUrl } from "@/lib/service-url";
 import { findValidSession } from "@/lib/session";
@@ -169,9 +170,13 @@ const resolveLoginHint = async ({
       loginName: loginHint,
       requestId,
       organization: organization || undefined,
+      preferPassword: true,
     });
 
     if (res && "redirect" in res && res.redirect) {
+      // HolyCode: the password is asked on the one sign-in screen (/loginname,
+      // prefilled), not on a separate /password step.
+      res.redirect = passwordStepToSignInScreen(res.redirect);
       // sendLoginname can return an absolute URL, e.g. the IdP authorize
       // endpoint when domain discovery resolves to an org that auto-redirects
       // to its external IdP. Only relative paths may be resolved against the

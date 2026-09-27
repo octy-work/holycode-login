@@ -540,6 +540,42 @@ describe("sendLoginname", () => {
         expect(result).toEqual({ redirect: "https://idp.example.com/auth" });
       });
 
+      test("HolyCode preferPassword: password + linked IDP asks for the password instead of leaving for the IDP", async () => {
+        mockListAuthenticationMethodTypes.mockResolvedValue({
+          authMethodTypes: [AuthenticationMethodType.PASSWORD, AuthenticationMethodType.IDP],
+        });
+        mockListIDPLinks.mockResolvedValue({ result: [{ idpId: "idp123" }] });
+        mockStartIdentityProviderFlow.mockResolvedValue({ url: "https://idp.example.com/auth" });
+
+        const result = await sendLoginname({
+          loginName: "user@example.com",
+          requestId: "oidc_1",
+          preferPassword: true,
+        });
+
+        expect((result as any).redirect).toMatch(/^\/password\?/);
+        expect((result as any).redirect).toContain("requestId=oidc_1");
+        expect(mockStartIdentityProviderFlow).not.toHaveBeenCalled();
+      });
+
+      test("HolyCode preferPassword: a passkey still comes first, and an IDP-only account still goes to its IDP", async () => {
+        mockListAuthenticationMethodTypes.mockResolvedValueOnce({
+          authMethodTypes: [
+            AuthenticationMethodType.PASSWORD,
+            AuthenticationMethodType.PASSKEY,
+            AuthenticationMethodType.IDP,
+          ],
+        });
+        const withPasskey = await sendLoginname({ loginName: "user@example.com", preferPassword: true });
+        expect((withPasskey as any).redirect).toMatch(/^\/passkey\?/);
+
+        mockListAuthenticationMethodTypes.mockResolvedValueOnce({ authMethodTypes: [AuthenticationMethodType.IDP] });
+        mockListIDPLinks.mockResolvedValue({ result: [{ idpId: "idp123" }] });
+        mockStartIdentityProviderFlow.mockResolvedValue({ url: "https://idp.example.com/auth" });
+        const idpOnly = await sendLoginname({ loginName: "user@example.com", preferPassword: true });
+        expect(idpOnly).toEqual({ redirect: "https://idp.example.com/auth" });
+      });
+
       test("should redirect to password when no passkey or IDP, only password available and allowed", async () => {
         mockListAuthenticationMethodTypes.mockResolvedValue({
           authMethodTypes: [AuthenticationMethodType.PASSWORD],

@@ -85,7 +85,7 @@ describe("loginWithOIDCAndSession", () => {
   it("should redirect to re-authenticate when session is invalid", async () => {
     vi.mocked(sessionModule.isSessionValid).mockResolvedValue(false);
     vi.mocked(loginnameModule.sendLoginname).mockResolvedValue({
-      redirect: "/password",
+      redirect: "/password?loginName=test%40example.com&requestId=oidc_auth-request-123",
     });
 
     const result = await loginWithOIDCAndSession({
@@ -96,11 +96,13 @@ describe("loginWithOIDCAndSession", () => {
       sessionCookies: mockCookies,
     });
 
-    expect(result).toEqual({ redirect: "/password" });
+    // HolyCode: the password is asked on the one sign-in screen.
+    expect(result).toEqual({ redirect: "/loginname?loginName=test%40example.com&requestId=oidc_auth-request-123" });
     expect(loginnameModule.sendLoginname).toHaveBeenCalledWith({
       loginName: "test@example.com",
       organization: "org-123",
       requestId: `oidc_${mockAuthRequest}`,
+      preferPassword: true,
     });
   });
 

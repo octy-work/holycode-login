@@ -1,6 +1,7 @@
 "use client";
 
 import { handleServerActionResponse } from "@/lib/client-utils";
+import { passwordStepToSignInScreen } from "@/lib/one-screen";
 import { sendLoginname } from "@/lib/server/loginname";
 import { clearSession, continueWithSession, ContinueWithSessionCommand } from "@/lib/server/session";
 import { XCircleIcon } from "@heroicons/react/24/outline";
@@ -91,8 +92,13 @@ export function SessionItem({ session, reload, requestId }: { session: Session; 
                     loginName: session.factors?.user?.loginName,
                     organization: session.factors.user.organizationId,
                     requestId: requestId,
+                    preferPassword: true,
                   });
 
+                  // HolyCode: a password is entered on the one sign-in screen.
+                  if (res && "redirect" in res && res.redirect) {
+                    res.redirect = passwordStepToSignInScreen(res.redirect);
+                  }
                   handleServerActionResponse(res, router, setSamlData, (e) => setError(e));
                 } catch {
                   setError("An internal error occurred");

@@ -280,8 +280,9 @@ describe("handleOIDCFlowInitiation — org-scoped session filtering", () => {
     );
 
     const location = res.headers.get("location") ?? "";
-    expect(location).toContain("/password");
-    expect(location).not.toContain("/loginname");
+    // HolyCode: the password is asked on the one sign-in screen, prefilled with the hint.
+    expect(location).toContain("/loginname?loginName=");
+    expect(location).not.toContain("/password");
     expect(location).not.toContain("/accounts");
   });
 
@@ -361,8 +362,9 @@ describe("handleOIDCFlowInitiation — org-scoped session filtering", () => {
     );
 
     const location = res.headers.get("location") ?? "";
-    expect(location).toContain("/password");
-    expect(location).not.toContain("/loginname");
+    // HolyCode: the password is asked on the one sign-in screen, prefilled with the hint.
+    expect(location).toContain("/loginname?loginName=");
+    expect(location).not.toContain("/password");
     expect(location).not.toContain("/accounts");
   });
 
@@ -478,8 +480,9 @@ describe("handleOIDCFlowInitiation — org-scoped session filtering", () => {
     const res = await handleOIDCFlowInitiation(makeBaseParams({ sessions: [] }));
 
     const location = res.headers.get("location") ?? "";
-    expect(location).toContain("/password");
-    expect(location).not.toContain("/loginname");
+    // HolyCode: the password is asked on the one sign-in screen, prefilled with the hint.
+    expect(location).toContain("/loginname?loginName=");
+    expect(location).not.toContain("/password");
   });
 
   test("should prefill /loginname WITHOUT submit=true when there are no sessions and loginHint cannot be resolved", async () => {
@@ -526,6 +529,7 @@ describe("handleOIDCFlowInitiation — org-scoped session filtering", () => {
     expect(mockSendLoginname).toHaveBeenCalledWith(
       expect.objectContaining({
         loginName: "unknown@example.com",
+        preferPassword: true,
       }),
     );
     expect(mockSendLoginname).not.toHaveBeenCalledWith(
@@ -535,8 +539,9 @@ describe("handleOIDCFlowInitiation — org-scoped session filtering", () => {
     );
 
     const location = res.headers.get("location") ?? "";
-    expect(location).toContain("/password");
-    expect(location).not.toContain("/loginname");
+    // HolyCode: the password is asked on the one sign-in screen, prefilled with the hint.
+    expect(location).toContain("/loginname?loginName=");
+    expect(location).not.toContain("/password");
   });
 
   test("should redirect to an absolute IdP URL as-is without prepending the base path (domain discovery auto-redirect)", async () => {
@@ -737,7 +742,7 @@ describe("handleOIDCFlowInitiation — stale session cookie fallback (#12252)", 
     const res = await handleOIDCFlowInitiation(makeBaseParams({ sessions: [], sessionCookies: [staleOrgCookie] }));
 
     const location = res.headers.get("location") ?? "";
-    expect(location).toContain("/password");
+    expect(location).toContain("/loginname?requestId=oidc_abc123");
     expect(location).not.toContain("/accounts");
   });
 

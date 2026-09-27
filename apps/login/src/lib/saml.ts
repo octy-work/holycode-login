@@ -1,6 +1,7 @@
 import { isSafeRedirectUri } from "@/lib/client-utils";
 import { Cookie } from "@/lib/cookies";
 import { isClassifiedError } from "@/lib/grpc/interceptors/error-classification";
+import { passwordStepToSignInScreen } from "@/lib/one-screen";
 import { sendLoginname, SendLoginnameCommand } from "@/lib/server/loginname";
 import { createResponse, getLoginSettings, ServiceConfig } from "@/lib/zitadel";
 import { Code, create } from "@zitadel/client";
@@ -39,12 +40,14 @@ export async function loginWithSAMLAndSession({
         loginName: selectedSession.factors.user?.loginName,
         organization: selectedSession.factors?.user?.organizationId,
         requestId: `saml_${samlRequest}`,
+        preferPassword: true,
       };
 
       const res = await sendLoginname(command);
 
       if (res && "redirect" in res && res?.redirect) {
-        return { redirect: res.redirect };
+        // HolyCode: the password is asked on the one sign-in screen.
+        return { redirect: passwordStepToSignInScreen(res.redirect) };
       }
 
       if (res && "samlData" in res && res?.samlData) {

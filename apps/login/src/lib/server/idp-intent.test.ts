@@ -327,6 +327,7 @@ describe("processIDPCallback", () => {
           idpIntentId: "intent123",
           idpIntentToken: "token123",
         },
+        idpId: "idp123",
         requestId: "req123",
         organization: "org123",
       });
@@ -787,6 +788,7 @@ describe("processIDPCallback", () => {
           idpIntentId: "intent123",
           idpIntentToken: "token123",
         },
+        idpId: "idp123",
         requestId: "req123",
         organization: "org123",
       });
@@ -903,6 +905,7 @@ describe("processIDPCallback", () => {
           idpIntentId: "intent123",
           idpIntentToken: "token123",
         },
+        idpId: "idp123",
         requestId: "req123",
         organization: "org123",
       });

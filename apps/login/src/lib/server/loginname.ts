@@ -36,6 +36,12 @@ export type SendLoginnameCommand = {
   organization?: string;
   defaultOrganization?: string;
   suffix?: string;
+  /**
+   * HolyCode (one-screen sign-in): an account with both a password and a linked
+   * provider is asked for the password (the providers are on the same screen)
+   * instead of being sent to the provider. Only changes which way is suggested.
+   */
+  preferPassword?: boolean;
 };
 
 const ORG_SUFFIX_REGEX = /(?<=@)(.+)/;
@@ -489,6 +495,24 @@ export async function sendLoginname(command: SendLoginnameCommand) {
         }
 
         return { redirect: "/passkey?" + passkeyParams };
+      } else if (
+        command.preferPassword &&
+        methods.authMethodTypes.includes(AuthenticationMethodType.PASSWORD) &&
+        userLoginSettings?.allowLocalAuthentication
+      ) {
+        const paramsPasswordPreferred = new URLSearchParams({
+          loginName: redirectLoginName,
+        });
+
+        if (command.requestId) {
+          paramsPasswordPreferred.append("requestId", command.requestId);
+        }
+
+        if (organization) {
+          paramsPasswordPreferred.append("organization", organization);
+        }
+
+        return { redirect: "/password?" + paramsPasswordPreferred };
       } else if (methods.authMethodTypes.includes(AuthenticationMethodType.IDP)) {
         return redirectUserToIDP(userId, organization);
       } else if (methods.authMethodTypes.includes(AuthenticationMethodType.PASSWORD)) {

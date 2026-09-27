@@ -2,12 +2,11 @@
 
 import { isClassifiedError } from "@/lib/grpc/interceptors/error-classification";
 import { createLogger } from "@/lib/logger";
-import { recordAuthAttempt, recordAuthFailure, recordAuthSuccess } from "@/lib/metrics";
+import { recordAuthAttempt, recordAuthFailure } from "@/lib/metrics";
 import { createSessionAndUpdateCookie, setSessionAndUpdateCookie } from "@/lib/server/cookie";
 import {
   getLockoutSettings,
   getLoginSettings,
-  getPasswordExpirySettings,
   getSession,
   getUserByID,
   listAuthenticationMethodTypes,
@@ -23,16 +22,11 @@ import { User, UserState } from "@zitadel/proto/zitadel/user/v2/user_pb";
 import { SetPasswordRequestSchema } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
-import { completeFlowOrGetUrl } from "../client";
 import { getSessionCookieById, getSessionCookieByLoginName } from "../cookies";
 import { getServiceConfig } from "../service-url";
-import {
-  checkEmailVerification,
-  checkMFAFactors,
-  checkPasswordChangeRequired,
-  checkUserVerification,
-} from "../verify-helper";
+import { checkUserVerification } from "../verify-helper";
 import { getPublicHostWithProtocol } from "./host";
+import { finishPasswordLogin } from "./password-continue";
 
 const logger = createLogger("password");
 
@@ -315,134 +309,21 @@ export async function sendPassword(
     }
   }
 
-  if (!session?.factors?.user?.id) {
-    recordAuthFailure("password", "session_invalid", command.organization);
-    if (loginSettingsByContext?.ignoreUnknownUsernames) {
-      return { error: t("errors.failedToAuthenticateNoLimit") };
-    }
-    return { error: t("errors.couldNotCreateSessionForUser") };
-  }
-
-  if (!user) {
-    const userResponse = await getUserByID({ serviceConfig, userId: session?.factors?.user?.id });
-    if (!userResponse.user) {
-      recordAuthFailure("password", "user_not_found", command.organization);
-      return { error: t("errors.userNotFound") };
-    }
-    user = userResponse.user;
-  }
-
-  if (!session?.factors?.user?.id || !sessionCookie) {
-    recordAuthFailure("password", "session_invalid", command.organization);
-    if (loginSettingsByContext?.ignoreUnknownUsernames) {
-      return { error: t("errors.failedToAuthenticateNoLimit") };
-    }
-    return { error: t("errors.couldNotCreateSessionForUser") };
-  }
-
-  if (!loginSettingsByUser) {
-    loginSettingsByUser = await getLoginSettings({
-      serviceConfig,
-      organization: command.organization ?? session.factors?.user?.organizationId ?? command.defaultOrganization,
-    });
-  }
-
-  const humanUser = user.type.case === "human" ? user.type.value : undefined;
-
-  const expirySettings = await getPasswordExpirySettings({
+  // HolyCode: the rest (password change, e-mail verification, second factor,
+  // completing the request) is shared with the one-screen sign-in.
+  return finishPasswordLogin({
     serviceConfig,
-    orgId: command.organization ?? session.factors?.user?.organizationId,
-  });
-
-  // check if the user has to change password first
-  const passwordChangedCheck = checkPasswordChangeRequired(
-    expirySettings,
+    t,
     session,
-    humanUser,
-    command.organization,
-    command.requestId,
-  );
-
-  if (passwordChangedCheck?.redirect) {
-    return passwordChangedCheck;
-  }
-
-  // throw error if user is in initial state here and do not continue
-  if (user.state === UserState.INITIAL) {
-    recordAuthFailure("password", "user_initial_state", command.organization);
-    return { error: t("errors.initialUserNotSupported") };
-  }
-
-  // check to see if user was verified
-  const emailVerificationCheck = await checkEmailVerification(session, humanUser, command.organization, command.requestId);
-
-  if (emailVerificationCheck?.redirect) {
-    return emailVerificationCheck;
-  }
-
-  // if password, check if user has MFA methods
-  let authMethods;
-  if (command.checks && command.checks.password && session.factors?.user?.id) {
-    const response = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id });
-    if (response.authMethodTypes && response.authMethodTypes.length) {
-      authMethods = response.authMethodTypes;
-    }
-  }
-
-  if (!authMethods) {
-    recordAuthFailure("password", "no_auth_methods", command.organization);
-    return { error: t("errors.couldNotVerifyPassword") };
-  }
-
-  const mfaFactorCheck = await checkMFAFactors(
-    serviceConfig,
-    session,
+    sessionCookie,
+    user,
+    loginSettingsByContext,
     loginSettingsByUser,
-    authMethods,
-    command.organization,
-    command.requestId,
-  );
-
-  if (mfaFactorCheck?.redirect) {
-    return mfaFactorCheck;
-  }
-
-  let result: Awaited<ReturnType<typeof completeFlowOrGetUrl>>;
-
-  if (command.requestId && session.id) {
-    // OIDC/SAML flow
-    logger.info("Password auth: OIDC/SAML flow with requestId:", { requestId: command.requestId, sessionId: session.id });
-    result = await completeFlowOrGetUrl(
-      {
-        sessionId: session.id,
-        requestId: command.requestId,
-        organization: command.organization ?? session.factors?.user?.organizationId,
-      },
-      loginSettingsByUser?.defaultRedirectUri,
-    );
-  } else {
-    // Regular flow (no requestId)
-    logger.info("Password auth: Regular flow with loginName:", { loginName: session.factors.user.loginName });
-    result = await completeFlowOrGetUrl(
-      {
-        loginName: session.factors.user.loginName,
-        organization: session.factors?.user?.organizationId,
-      },
-      loginSettingsByUser?.defaultRedirectUri,
-    );
-  }
-
-  if (result && typeof result === "object") {
-    if ("redirect" in result) {
-      recordAuthSuccess("password", command.organization);
-    } else if ("error" in result) {
-      recordAuthFailure("password", "flow_error", command.organization);
-    }
-    return result;
-  }
-
-  recordAuthFailure("password", "navigation_failed", command.organization);
-  return { error: "Authentication completed but navigation failed" };
+    passwordChecked: !!command.checks?.password,
+    organization: command.organization,
+    defaultOrganization: command.defaultOrganization,
+    requestId: command.requestId,
+  });
 }
 
 // this function lets users with code set a password or users with valid User Verification Check

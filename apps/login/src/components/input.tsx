@@ -19,6 +19,8 @@ export type TextInputProps = DetailedHTMLProps<InputHTMLAttributes<HTMLInputElem
   inputClassName?: string;
   /** Hide the reserved error line below the field. */
   hideErrorLine?: boolean;
+  /** Keep the label for screen readers only (the form draws its own label row, e.g. "Password · Forgot?"). */
+  hideLabel?: boolean;
 };
 
 const styles = (error: boolean, disabled: boolean, hasTrailing: boolean, roundnessClasses: string = "rounded-xl") =>
@@ -49,6 +51,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       roundness,
       inputClassName,
       hideErrorLine,
+      hideLabel,
       type,
       className,
       ...props
@@ -61,7 +64,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
 
     return (
       <label className={clsx("relative flex w-full flex-col text-left", className)}>
-        <span className={clsx("mb-1.5 text-[12.5px] leading-4 font-semibold", error ? "text-hc-err" : "text-hc-text-2")}>
+        <span
+          className={clsx(
+            hideLabel ? "sr-only" : "mb-1.5 text-[12.5px] leading-4 font-semibold",
+            error ? "text-hc-err" : "text-hc-text-2",
+          )}
+        >
           {label}
           {required && " *"}
         </span>

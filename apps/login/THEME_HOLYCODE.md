@@ -42,10 +42,51 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
   встроенные провайдеры по типу, generic OAuth/OIDC/JWT — по имени
   (`Yandex`, `Telegram`, `VK` → свои иконки, иначе первая буква).
 - `form-actions.tsx` — низ формы: основная кнопка, под ней вторичные ссылки.
+- `sign-in-form.tsx`, `idp-sign-in-button.tsx`, `use-passkey-sign-in.ts` — экран входа
+  (см. «Вход — один экран»).
 - `invite-banner.tsx` — плашка приглашения на регистрации; данные пока из
   query `hc_inviter`, `hc_org`, `hc_role`, `hc_until` (место под Daenerys).
 - `register-form.tsx` — выбор почты «завести у нас / своя», включается
   переменной `HC_MAIL_DOMAINS`; согласие с условиями — текстом, не чекбоксами.
+
+## Вход — один экран (27.09.2026)
+
+Решение владельца: логин → «аккаунт входит через Apple» → пароль — это бред; вход —
+один экран. `/loginname` рисует `sign-in-form.tsx`:
+
+- **Первый вход**: «Логин или e-mail», «Пароль · Забыли?», «Войти», «или» и плитки
+  провайдеров из login policy, «Нет аккаунта? Создать».
+- **С паролем** — server action `signIn` (`lib/server/sign-in.ts`): одна сессия с
+  проверками user + password, дальше те же ветки, что у `/password`
+  (`lib/server/password-continue.ts`, вынесено из `sendPassword` без изменений):
+  смена пароля, подтверждение почты, второй фактор, завершение
+  `requestId`/default redirect. Неверная пара и незнакомый логин при
+  `ignoreUnknownUsernames` отвечают одинаково («Неверный логин или пароль»).
+- **Без пароля** (или у аккаунта его нет) — прежний шаг логина `sendLoginname` с
+  `preferPassword`: только провайдер → сразу к нему (экрана выбора нет); passkey →
+  кнопка passkey на этом же экране; есть пароль → «Введите пароль» и фокус в поле.
+  Ответ `/password?…` апстрима превращается в фокус на поле, а там, где он уходит
+  редиректом (login_hint в `flow-initiation`, выбор аккаунта, повторный вход по
+  истёкшей сессии в `oidc.ts`/`saml.ts`), — в `/loginname?…` с теми же параметрами
+  (`lib/one-screen.ts`). Страница `/password` осталась только как запасной путь
+  («Войти по паролю» со страницы passkey).
+- **«С возвращением»**: cookie `hc_last_login` (HttpOnly, SameSite=Lax, Secure в
+  проде, 180 дней, path `/`) — `{v,l: loginName, n: имя, m: способ, o: прошлые способы}`,
+  способ `password` | `passkey` | `idp:<idpId>`. Пишется только сервером после
+  успешного входа: пароль (`finishPasswordLogin`), IdP-колбэк
+  (`createNewSessionFromIdpIntent`), passkey как первый фактор (`sendPasskey`).
+  Экран: карточка «кто» и «Не я» (стирает cookie, пустая форма), первым — последний
+  способ (поле пароля в фокусе / кнопка провайдера / кнопка passkey), остальные ниже.
+  `login_hint` из запроса важнее cookie. Cookie — только подсказка интерфейса:
+  ничему в потоке она не доверяет.
+- **Passkey без логина невозможен в Zitadel v4.19**: `CreateWebAuthNChallenge`
+  строит вызов по ключам пользователя сессии и без проверки user отвечает
+  `Errors.User.UserIDMissing` (`internal/command/session_webauhtn.go`,
+  `session.go`), так что discoverable credentials / conditional UI в поле почты
+  не сделать без правки API. Кнопка passkey появляется, когда аккаунт известен:
+  после ввода логина (если у него есть passkey) или на экране «С возвращением».
+- Тексты — `loginname.signIn.*`, `loginname.returning.*` в `locales/{ru,en}.json`;
+  перекрываются `hosted_login_translation` инстанса, как остальные.
 
 ## Переменные окружения (сверх апстримных)
 

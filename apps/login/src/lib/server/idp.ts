@@ -18,6 +18,7 @@ import { getServiceConfig } from "../service-url";
 import { checkEmailVerification, checkMFAFactors } from "../verify-helper";
 import { createSessionForIdpAndUpdateCookie } from "./cookie";
 import { getPublicHost } from "./host";
+import { rememberLastLogin } from "./last-login";
 
 export type RedirectToIdpState =
   { error?: string | null; samlData?: { url: string; fields: Record<string, string> } } | undefined;
@@ -138,6 +139,8 @@ export type CreateNewSessionCommand = {
   password?: string;
   organization?: string;
   requestId?: string;
+  /** HolyCode: the provider used, remembered for the next visit (hc_last_login). */
+  idpId?: string;
 };
 
 export async function createNewSessionFromIdpIntent(command: CreateNewSessionCommand) {
@@ -166,6 +169,16 @@ export async function createNewSessionFromIdpIntent(command: CreateNewSessionCom
 
   if (!session || !session.factors?.user) {
     return { error: "Could not create session" };
+  }
+
+  // HolyCode: the provider sign-in succeeded — remember the account and the
+  // provider, so the next visit leads with "Continue with …" (hc_last_login).
+  if (command.idpId) {
+    await rememberLastLogin({
+      loginName: session.factors.user.loginName,
+      displayName: session.factors.user.displayName,
+      method: `idp:${command.idpId}`,
+    });
   }
 
   const humanUser = userResponse.user.type.case === "human" ? userResponse.user.type.value : undefined;

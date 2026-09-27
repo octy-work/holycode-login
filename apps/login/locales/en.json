@@ -58,6 +58,24 @@
     "invited": {
       "title": "Were you invited?",
       "description": "Open the link from the e-mail or message — it takes you straight to the right account with the right role."
+    },
+    "signIn": {
+      "submit": "Sign in",
+      "or": "or",
+      "forgotPassword": "Forgot?",
+      "passwordRequired": "Enter your password to sign in.",
+      "passkey": "Sign in with a passkey",
+      "continueWith": "Continue with {provider}",
+      "errors": {
+        "invalidCredentials": "Wrong login or password."
+      }
+    },
+    "returning": {
+      "title": "Welcome back",
+      "description": "Sign in the same way as last time",
+      "notMe": "Not me",
+      "usePassword": "Sign in with a password",
+      "hint": "The default is the way you signed in last time"
     }
   },
   "zitadel": {

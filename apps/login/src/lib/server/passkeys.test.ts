@@ -51,6 +51,10 @@ vi.mock("../client", () => ({
   completeFlowOrGetUrl: vi.fn(),
 }));
 
+vi.mock("./last-login", () => ({
+  rememberLastLogin: vi.fn(),
+}));
+
 // Mock translations - returns the key itself for testing
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(() => (key: string) => key),
@@ -330,6 +334,44 @@ describe("sendPasskey", () => {
       expect(result).toEqual({
         redirect: "/dashboard",
       });
+    });
+
+    test("HolyCode: remembers a passkey that was the way in (hc_last_login)", async () => {
+      const { rememberLastLogin } = await import("./last-login");
+      mockSetSessionAndUpdateCookie.mockResolvedValue({
+        id: "session-123",
+        factors: {
+          user: { id: "user-123", loginName: "test@example.com", displayName: "Test" },
+          webAuthN: { verifiedAt: { seconds: BigInt(1) }, userVerified: true },
+        },
+      });
+      mockCompleteFlowOrGetUrl.mockResolvedValue({ redirect: "/dashboard" });
+
+      await sendPasskey({ sessionId: "session-123", checks: { webAuthN: { credentialAssertionData: {} } } as any });
+
+      expect(vi.mocked(rememberLastLogin)).toHaveBeenCalledWith({
+        loginName: "test@example.com",
+        displayName: "Test",
+        method: "passkey",
+      });
+    });
+
+    test("HolyCode: a security key after a password (second factor) is not remembered as the way in", async () => {
+      const { rememberLastLogin } = await import("./last-login");
+      vi.mocked(rememberLastLogin).mockClear();
+      mockSetSessionAndUpdateCookie.mockResolvedValue({
+        id: "session-123",
+        factors: {
+          user: { id: "user-123", loginName: "test@example.com" },
+          password: { verifiedAt: { seconds: BigInt(1) } },
+          webAuthN: { verifiedAt: { seconds: BigInt(2) }, userVerified: false },
+        },
+      });
+      mockCompleteFlowOrGetUrl.mockResolvedValue({ redirect: "/dashboard" });
+
+      await sendPasskey({ sessionId: "session-123", checks: { webAuthN: { credentialAssertionData: {} } } as any });
+
+      expect(vi.mocked(rememberLastLogin)).not.toHaveBeenCalled();
     });
 
     test("should redirect on successful verification with requestId", async () => {
