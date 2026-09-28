@@ -21,7 +21,7 @@ import {
   startIdentityProviderFlow,
 } from "@/lib/zitadel";
 import { create } from "@zitadel/client";
-import { Prompt } from "@zitadel/proto/zitadel/oidc/v2/authorization_pb";
+import { AuthorizationErrorSchema, ErrorReason, Prompt } from "@zitadel/proto/zitadel/oidc/v2/authorization_pb";
 import { CreateCallbackRequestSchema, SessionSchema } from "@zitadel/proto/zitadel/oidc/v2/oidc_service_pb";
 import { CreateResponseRequestSchema } from "@zitadel/proto/zitadel/saml/v2/saml_service_pb";
 import { Session } from "@zitadel/proto/zitadel/session/v2/session_pb";
@@ -249,6 +249,43 @@ export interface FlowInitiationParams {
 /**
  * Handle OIDC flow initiation
  */
+// prompt=none без годной сессии: по OIDC — ответ приложению error=login_required
+// на его redirect_uri, без интерфейса. Приложение (Daenerys) тогда тихо показывает
+// свою форму входа. JSON 400 — только если Zitadel не отдал адрес возврата
+// (HolyCode, 28.09.2026: раньше здесь был JSON 400 или даже страница логина).
+async function promptNoneLoginRequired({
+  serviceConfig,
+  requestId,
+  securitySettings,
+}: {
+  serviceConfig: FlowInitiationParams["serviceConfig"];
+  requestId: string;
+  securitySettings?: SecuritySettings;
+}): Promise<NextResponse> {
+  try {
+    const { callbackUrl } = await createCallback({
+      serviceConfig,
+      req: create(CreateCallbackRequestSchema, {
+        authRequestId: requestId.replace("oidc_", ""),
+        callbackKind: {
+          case: "error",
+          value: create(AuthorizationErrorSchema, { error: ErrorReason.LOGIN_REQUIRED }),
+        },
+      }),
+    });
+    if (callbackUrl && isSafeRedirectUri(callbackUrl)) {
+      const errorResponse = NextResponse.redirect(callbackUrl);
+      setCSPHeaders(errorResponse, serviceConfig, securitySettings);
+      return errorResponse;
+    }
+  } catch (err) {
+    logger.warn("prompt=none: could not return login_required to the application", { error: err });
+  }
+  const fallback = NextResponse.json({ error: "No active session found" }, { status: 400 });
+  setCSPHeaders(fallback, serviceConfig, securitySettings);
+  return fallback;
+}
+
 export async function handleOIDCFlowInitiation(params: FlowInitiationParams): Promise<NextResponse> {
   const { serviceConfig, requestId, sessions, sessionCookies, request } = params;
 
@@ -433,17 +470,16 @@ export async function handleOIDCFlowInitiation(params: FlowInitiationParams): Pr
       }
       const selectedSession = await findValidSession({ serviceConfig, sessions, authRequest, organization });
 
-      const noSessionResponse = NextResponse.json({ error: "No active session found" }, { status: 400 });
-      setCSPHeaders(noSessionResponse, serviceConfig, securitySettings);
+      const noSessionResponse = () => promptNoneLoginRequired({ serviceConfig, requestId, securitySettings });
 
       if (!selectedSession || !selectedSession.id) {
-        return noSessionResponse;
+        return noSessionResponse();
       }
 
       const cookie = sessionCookies.find((cookie) => cookie.id === selectedSession.id);
 
       if (!cookie || !cookie.id || !cookie.token) {
-        return noSessionResponse;
+        return noSessionResponse();
       }
 
       const session = {
@@ -577,6 +613,18 @@ export async function handleOIDCFlowInitiation(params: FlowInitiationParams): Pr
         organization,
         orgDomain,
       });
+    }
+
+    // prompt=none must never render UI: without any live session the answer to
+    // the application is login_required (HolyCode, 28.09.2026).
+    if (authRequest?.prompt.includes(Prompt.NONE)) {
+      let securitySettings: SecuritySettings | undefined;
+      try {
+        securitySettings = await getSecuritySettings({ serviceConfig });
+      } catch {
+        securitySettings = undefined;
+      }
+      return promptNoneLoginRequired({ serviceConfig, requestId, securitySettings });
     }
 
     // No session: resolve a login_hint straight to the next step if we can.

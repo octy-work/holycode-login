@@ -11,7 +11,7 @@ import {
   listAuthenticationMethodTypes,
   listUsers,
 } from "@/lib/zitadel";
-import { Code, create, Duration } from "@zitadel/client";
+import { Code, create, Duration, Timestamp, timestampDate } from "@zitadel/client";
 import { Challenges, RequestChallenges } from "@zitadel/proto/zitadel/session/v2/challenge_pb";
 import { Session } from "@zitadel/proto/zitadel/session/v2/session_pb";
 import { Checks, ChecksSchema } from "@zitadel/proto/zitadel/session/v2/session_service_pb";
@@ -26,6 +26,7 @@ import {
 } from "../cookies";
 import { getServiceConfig } from "../service-url";
 import { isSessionValid } from "../session";
+import { checkMFAFactors } from "../verify-helper";
 import { getPublicHost } from "./host";
 import { sendLoginname } from "./loginname";
 
@@ -73,6 +74,20 @@ export async function skipMFAAndContinueWithNextUrl({
   return { error: "Could not skip MFA and continue" };
 }
 
+// Первый фактор сессии ещё действует по сроку политики: пароль —
+// passwordCheckLifetime, провайдер — externalLoginCheckLifetime.
+export function firstFactorStillValid(session: Session, loginSettings?: { passwordCheckLifetime?: Duration; externalLoginCheckLifetime?: Duration }) {
+  const within = (verifiedAt: Timestamp | undefined, lifetime?: Duration) => {
+    if (!verifiedAt || !lifetime || !lifetime.seconds) return false;
+    const checkedAt = timestampDate(verifiedAt).getTime();
+    return Date.now() - checkedAt < Number(lifetime.seconds) * 1000;
+  };
+  return (
+    within(session.factors?.password?.verifiedAt, loginSettings?.passwordCheckLifetime) ||
+    within(session.factors?.intent?.verifiedAt, loginSettings?.externalLoginCheckLifetime)
+  );
+}
+
 export type ContinueWithSessionCommand = Session & { requestId?: string };
 
 export async function continueWithSession({ requestId, ...session }: ContinueWithSessionCommand) {
@@ -95,11 +110,32 @@ export async function continueWithSession({ requestId, ...session }: ContinueWit
       sessionId: session.id,
     });
 
-    // Redirect user to re-authenticate (will route to MFA page if password is still valid)
+    // Первый фактор (пароль или вход через провайдера) ещё в пределах срока
+    // политики, а не хватает только второго — сразу на ввод кода. Раньше вход
+    // начинался заново, и при привязанном Apple/Google уводил к провайдеру
+    // (HolyCode, 28.09.2026: «в уже залогиненной сессии ведёт на Apple»).
+    if (firstFactorStillValid(session as Session, loginSettings)) {
+      const methods = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id });
+      const mfaStep = await checkMFAFactors(
+        serviceConfig,
+        session as Session,
+        loginSettings,
+        methods.authMethodTypes,
+        session.factors.user.organizationId,
+        requestId,
+      );
+      if (mfaStep && "redirect" in mfaStep && mfaStep.redirect) {
+        return { redirect: mfaStep.redirect };
+      }
+    }
+
+    // Иначе вход заново — тем же способом, что и в прошлый раз: входил паролем —
+    // пароль, а не провайдер, который апстрим предпочитает при нескольких способах.
     const res = await sendLoginname({
       loginName: session.factors.user.loginName,
       organization: session.factors.user.organizationId,
       requestId: requestId,
+      preferPassword: Boolean(session.factors.password?.verifiedAt) && !session.factors.intent?.verifiedAt,
     });
 
     if (res && "redirect" in res && res.redirect) {
@@ -204,11 +240,17 @@ export async function updateOrCreateSession(options: UpdateSessionCommand) {
   const loginSettings = await getLoginSettings({ serviceConfig, organization });
 
   if (!lifetime) {
+    // Срок сессии — по политике входа для той проверки, что прошла сейчас; TOTP
+    // раньше сюда не попадал и получал 24 часа по умолчанию (HolyCode, 28.09.2026).
     lifetime = checks?.webAuthN
       ? loginSettings?.multiFactorCheckLifetime // TODO different lifetime for webauthn u2f/passkey
-      : checks?.otpEmail || checks?.otpSms
+      : checks?.otpEmail || checks?.otpSms || checks?.totp
         ? loginSettings?.secondFactorCheckLifetime
-        : undefined;
+        : checks?.password
+          ? loginSettings?.passwordCheckLifetime
+          : checks?.idpIntent
+            ? loginSettings?.externalLoginCheckLifetime
+            : undefined;
   }
 
   if (!lifetime || !lifetime.seconds) {

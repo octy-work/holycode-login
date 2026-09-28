@@ -756,6 +756,34 @@ describe("handleOIDCFlowInitiation — stale session cookie fallback (#12252)", 
     expect(location).not.toContain("/accounts");
   });
 
+  test("prompt=none without a valid session returns login_required to the application (HolyCode)", async () => {
+    const { Prompt } = await import("@zitadel/proto/zitadel/oidc/v2/authorization_pb");
+    const zitadel = await import("@/lib/zitadel");
+    authRequestWith({ prompt: [Prompt.NONE] });
+    vi.mocked(zitadel.createCallback).mockResolvedValue({
+      callbackUrl: "https://daenerys-api.holycode.org/api/auth/oidc/callback?error=login_required&state=s1",
+    } as any);
+
+    const res = await handleOIDCFlowInitiation(makeBaseParams({ sessions: [], sessionCookies: [] }));
+
+    expect(vi.mocked(zitadel.createCallback)).toHaveBeenCalledTimes(1);
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe(
+      "https://daenerys-api.holycode.org/api/auth/oidc/callback?error=login_required&state=s1",
+    );
+  });
+
+  test("prompt=none falls back to JSON 400 when Zitadel gives no callback URL", async () => {
+    const { Prompt } = await import("@zitadel/proto/zitadel/oidc/v2/authorization_pb");
+    const zitadel = await import("@/lib/zitadel");
+    authRequestWith({ prompt: [Prompt.NONE] });
+    vi.mocked(zitadel.createCallback).mockRejectedValue(new Error("boom"));
+
+    const res = await handleOIDCFlowInitiation(makeBaseParams({ sessions: [], sessionCookies: [] }));
+
+    expect(res.status).toBe(400);
+  });
+
   test("should redirect to /loginname when the cookie account belongs to a different org than the org scope", async () => {
     authRequestWith({ scope: ["urn:zitadel:iam:org:id:111111"] });
 
