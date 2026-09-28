@@ -10,7 +10,7 @@ import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { getServiceConfig } from "@/lib/service-url";
 import { getAllowedLanguages, getLegalAndSupportSettings } from "@/lib/zitadel";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Inter } from "next/font/google";
 import { headers } from "next/headers";
@@ -24,6 +24,14 @@ const inter = Inter({
 });
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+// viewport-fit=cover: without it iOS reports env(safe-area-inset-*) as 0 and the
+// profile's bottom bar would sit under the home indicator.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("common");

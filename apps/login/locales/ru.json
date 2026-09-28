@@ -539,8 +539,7 @@
         "home": "Главная",
         "data": "Данные",
         "security": "Защита",
-        "orgs": "Команды",
-        "settings": "Ещё"
+        "orgs": "Команды"
       }
     },
     "common": {
@@ -834,7 +833,6 @@
     "switcher": {
       "trigger": "Сервисы HolyCode",
       "title": "Сервисы HolyCode",
-      "otherServices": "Другие сервисы",
       "youAreHere": "вы здесь",
       "orgAdmin": "Админка организации",
       "orgAdminHint": "домены · почта · люди",
@@ -859,21 +857,17 @@
         "panel": "организации, пайплайны",
         "profile": "HolyCode ID",
         "mail": "mail.holycode.org"
-      },
-      "short": {
-        "chat": "HolyCode",
-        "build": "Build",
-        "agent": "Agent",
-        "panel": "Панель",
-        "profile": "Профиль",
-        "mail": "Почта",
-        "admin": "Админка"
-      },
-      "menu": {
-        "open": "Меню профиля",
-        "data": "Мои данные",
-        "switchUser": "Сменить пользователя"
       }
+    },
+    "mobileNav": {
+      "label": "Разделы",
+      "services": "Сервисы",
+      "more": "Ещё в Профиле",
+      "account": "Аккаунт",
+      "org": "Организация",
+      "close": "Закрыть",
+      "admin": "Админка",
+      "switchUser": "Сменить пользователя"
     },
     "daenerys": {
       "unavailable": "Недоступно: не удалось связаться с сервером управления HolyCode",

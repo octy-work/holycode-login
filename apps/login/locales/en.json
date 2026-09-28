@@ -539,8 +539,7 @@
         "home": "Home",
         "data": "Data",
         "security": "Security",
-        "orgs": "Teams",
-        "settings": "More"
+        "orgs": "Teams"
       }
     },
     "common": {
@@ -834,7 +833,6 @@
     "switcher": {
       "trigger": "HolyCode services",
       "title": "HolyCode services",
-      "otherServices": "Other services",
       "youAreHere": "you are here",
       "orgAdmin": "Organization admin",
       "orgAdminHint": "domains · mail · people",
@@ -859,21 +857,17 @@
         "panel": "organizations, pipelines",
         "profile": "HolyCode ID",
         "mail": "mail.holycode.org"
-      },
-      "short": {
-        "chat": "HolyCode",
-        "build": "Build",
-        "agent": "Agent",
-        "panel": "Panel",
-        "profile": "Profile",
-        "mail": "Mail",
-        "admin": "Admin"
-      },
-      "menu": {
-        "open": "Profile menu",
-        "data": "My data",
-        "switchUser": "Switch user"
       }
+    },
+    "mobileNav": {
+      "label": "Sections",
+      "services": "Services",
+      "more": "More in Profile",
+      "account": "Account",
+      "org": "Organization",
+      "close": "Close",
+      "admin": "Admin",
+      "switchUser": "Switch user"
     },
     "daenerys": {
       "unavailable": "Unavailable: the HolyCode management server could not be reached",

@@ -12,6 +12,14 @@ import { AuthenticationMethodType } from "@zitadel/proto/zitadel/user/v2/user_se
 export const PROFILE_SECTIONS = ["home", "data", "security", "orgs", "settings"] as const;
 export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
 
+/**
+ * The phone's bottom bar (< 768 px, owner's decision of 28.09.2026 — one bar in
+ * every HolyCode service): four sections, then the "Services" button. What does
+ * not fit goes to "More in Profile" in the services sheet.
+ */
+export const MOBILE_NAV_SECTIONS = ["home", "data", "security", "orgs"] as const satisfies readonly ProfileSection[];
+export const MOBILE_MORE_SECTIONS = ["settings"] as const satisfies readonly ProfileSection[];
+
 /** The public address of the profile: traefik rewrites id.holycode.org/me → <basePath>/me. */
 export const PROFILE_SHORT_PREFIX = "/me";
 

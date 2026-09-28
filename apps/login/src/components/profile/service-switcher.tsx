@@ -3,7 +3,7 @@
 import { buildServiceHref, SERVICE_KEYS, ServiceEntry, ServiceOrg } from "@/lib/services";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
-import { ReactNode, RefObject, useCallback, useEffect, useId, useRef, useState } from "react";
+import { MouseEvent, ReactNode, RefObject, useCallback, useEffect, useId, useRef, useState } from "react";
 
 /**
  * The HolyCode service switcher of the profile: the grid button (nine dots)
@@ -18,8 +18,8 @@ import { ReactNode, RefObject, useCallback, useEffect, useId, useRef, useState }
  * "Theme and language — from your ID profile". A tile is a plain link in the
  * same tab: `<url>?org=<organization>&return_to=<where we are>`.
  *
- * On phones (< 768 px) there is no grid button: the same services are in the
- * avatar menu as `ServiceLinks`.
+ * On phones (< 768 px) there is no grid button: the same tiles are in the
+ * services sheet of the bottom bar (`mobile-nav.tsx`).
  */
 
 // ---------------------------------------------------------------------------
@@ -156,11 +156,6 @@ export function serviceName(service: Pick<ServiceEntry, "key" | "name">, t: Swit
   return KNOWN.has(service.key) ? t(`name.${service.key}`) : service.key;
 }
 
-/** The short name for the phone menu. */
-export function serviceShortName(service: Pick<ServiceEntry, "key" | "name">, t: SwitcherT): string {
-  return KNOWN.has(service.key) ? t(`short.${service.key}`) : serviceName(service, t);
-}
-
 /** Under the tile: "you are here" for the current service, else status.text from the server, else the hint by key. */
 export function serviceHint(service: Pick<ServiceEntry, "key" | "status">, t: SwitcherT, current = false): string {
   if (current) return t("youAreHere");
@@ -210,13 +205,13 @@ export function defaultReturnTo(): string {
   }
 }
 
-function orgIdOf(org: ServiceOrg | string | null | undefined): string {
+export function orgIdOf(org: ServiceOrg | string | null | undefined): string {
   if (!org) return "";
   if (typeof org === "string") return org.trim();
   return String(org.account_id ?? "").trim();
 }
 
-function orgNameOf(org: ServiceOrg | string | null | undefined): string {
+export function orgNameOf(org: ServiceOrg | string | null | undefined): string {
   if (!org || typeof org !== "object") return "";
   return String(org.name ?? "").trim();
 }
@@ -226,16 +221,37 @@ function orgNameOf(org: ServiceOrg | string | null | undefined): string {
 // ---------------------------------------------------------------------------
 
 const tileClasses =
-  "border-hc-border bg-hc-card-2 flex min-h-[78px] min-w-0 flex-col items-center justify-start rounded-[11px] border px-1.5 pt-[9px] pb-2 text-center text-inherit no-underline transition-colors focus-visible:ring-hc-ring focus-visible:ring-[3px] focus-visible:outline-none";
+  "border-hc-border bg-hc-card-2 flex min-w-0 flex-col items-center justify-start border text-center text-inherit no-underline transition-colors focus-visible:ring-hc-ring focus-visible:ring-[3px] focus-visible:outline-none";
 
-/** One tile: a link into the service, or (the current service) a button that says "you are here". */
+/** The header menu's tile (switcher.css) and the phone sheet's, a little larger (mobile-nav.css `.hcm-tile`). */
+const TILE = {
+  menu: {
+    box: "min-h-[78px] rounded-[11px] px-1.5 pt-[9px] pb-2",
+    icon: "mb-[5px] h-[30px] w-[30px] rounded-[9px]",
+    iconSize: 16,
+    name: "text-[12px]",
+    hint: "mt-px",
+  },
+  sheet: {
+    box: "min-h-[84px] rounded-[13px] px-1.5 pt-2.5 pb-[9px]",
+    icon: "mb-1.5 h-8 w-8 rounded-[10px]",
+    iconSize: 18,
+    name: "text-[12.5px]",
+    hint: "mt-0.5",
+  },
+} as const;
+
+/**
+ * One tile: a link into the service, or (the current service) a button that says "you are here".
+ * `variant` — "menu": the header menu (`role="menuitem"`); "sheet": the phone's services sheet (a dialog).
+ */
 export function ServiceTile({
   service,
   current = false,
   href = "",
   name,
   hint,
-  compact = false,
+  variant = "menu",
   onSelect,
   testId,
 }: {
@@ -244,28 +260,25 @@ export function ServiceTile({
   href?: string;
   name: string;
   hint: string;
-  compact?: boolean;
-  onSelect?: () => void;
+  variant?: keyof typeof TILE;
+  onSelect?: (event: MouseEvent<HTMLElement>) => void;
   testId?: string;
 }) {
+  const size = TILE[variant];
+  const role = variant === "menu" ? "menuitem" : undefined;
   const inner = (
     <>
-      <span
-        className={clsx(
-          "text-hc-p400 flex items-center justify-center",
-          compact ? "h-[18px] w-[18px]" : "bg-hc-soft mb-[5px] h-[30px] w-[30px] rounded-[9px]",
-        )}
-      >
-        <ServiceIcon service={service} size={16} />
+      <span className={clsx("text-hc-p400 bg-hc-soft flex items-center justify-center", size.icon)}>
+        <ServiceIcon service={service} size={size.iconSize} />
       </span>
-      <span className={clsx("block max-w-full truncate", compact ? "text-[11px] font-semibold" : "text-[12px] font-bold")}>
-        {name}
-      </span>
+      <span className={clsx("block max-w-full truncate font-bold", size.name)}>{name}</span>
       {hint ? (
         <span
           className={clsx(
-            "mt-px line-clamp-2 max-w-full text-[10.5px] leading-[1.25] [overflow-wrap:anywhere]",
+            "line-clamp-2 max-w-full text-[10.5px] leading-[1.25] [overflow-wrap:anywhere]",
+            size.hint,
             current ? "text-hc-p400" : "text-hc-muted",
+            current && variant === "sheet" && "font-semibold",
           )}
         >
           {hint}
@@ -275,17 +288,18 @@ export function ServiceTile({
   );
   const classes = clsx(
     tileClasses,
-    compact && "min-h-0 flex-row justify-center gap-1 px-0.5 py-[7px]",
+    size.box,
     current ? "border-hc-p500 bg-hc-soft cursor-default" : "hover:border-hc-p500 hover:bg-hc-soft cursor-pointer",
+    current && variant === "sheet" && "shadow-[inset_0_0_0_1px_var(--hc-p500)]",
   );
   if (current || !href) {
     return (
       <button
         type="button"
-        role="menuitem"
+        role={role}
         className={classes}
         aria-current={current ? "page" : undefined}
-        onClick={() => onSelect?.()}
+        onClick={(event) => onSelect?.(event)}
         data-testid={testId}
         data-service={service.key}
       >
@@ -295,10 +309,10 @@ export function ServiceTile({
   }
   return (
     <a
-      role="menuitem"
+      role={role}
       className={classes}
       href={href}
-      onClick={() => onSelect?.()}
+      onClick={(event) => onSelect?.(event)}
       data-testid={testId}
       data-service={service.key}
       data-href={href}
@@ -352,7 +366,7 @@ function MenuRow({
 }
 
 /** Which services the switcher lists: those with a key and an address. */
-function listOf(services: ServiceEntry[] | undefined | null): ServiceEntry[] {
+export function listOf(services: ServiceEntry[] | undefined | null): ServiceEntry[] {
   return Array.isArray(services) ? services.filter((item) => item && item.key && item.url) : [];
 }
 
@@ -500,75 +514,6 @@ export function ServiceSwitcher({
           ) : null}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// "Other services" for the avatar menu on phones
-// ---------------------------------------------------------------------------
-
-export function ServiceLinks({
-  services,
-  org,
-  current = "profile",
-  getReturnTo = defaultReturnTo,
-  adminUrl = "",
-  canOpenAdmin = false,
-  onSelect,
-  className,
-}: {
-  services: ServiceEntry[];
-  org: ServiceOrg | null;
-  current?: string;
-  getReturnTo?: () => string;
-  adminUrl?: string;
-  canOpenAdmin?: boolean;
-  onSelect?: () => void;
-  className?: string;
-}) {
-  const t = useTranslations("profile.switcher");
-  const orgId = orgIdOf(org);
-  const list = listOf(services);
-  const returnTo = String(getReturnTo?.() ?? "");
-  const adminHref = canOpenAdmin && adminUrl ? buildServiceHref(adminUrl, { org: orgId, returnTo }) : "";
-  const admin: ServiceEntry = { key: "admin", name: t("short.admin"), url: adminHref, icon: "admin", kind: "admin" };
-
-  return (
-    <div className={clsx("block text-[13px]", className)} data-testid="service-links">
-      <div className="text-hc-muted truncate px-2 pt-1 pb-1.5 text-[10.5px] font-semibold tracking-[0.1em] uppercase">
-        {t("otherServices")}
-      </div>
-      <div className="grid grid-cols-3 gap-1 pb-0.5" role="group" aria-label={t("otherServices")}>
-        {list.map((service) => {
-          const isCurrent = service.key === current;
-          const href = isCurrent ? "" : buildServiceHref(service.url, { org: orgId, returnTo });
-          return (
-            <ServiceTile
-              key={service.key}
-              service={service}
-              current={isCurrent}
-              href={href}
-              name={serviceShortName(service, t)}
-              hint=""
-              compact
-              onSelect={onSelect}
-              testId={`service-link-${service.key}`}
-            />
-          );
-        })}
-        {adminHref ? (
-          <ServiceTile
-            service={admin}
-            href={adminHref}
-            name={t("short.admin")}
-            hint=""
-            compact
-            onSelect={onSelect}
-            testId="service-link-admin"
-          />
-        ) : null}
-      </div>
     </div>
   );
 }

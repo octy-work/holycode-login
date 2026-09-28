@@ -183,6 +183,8 @@ function viewAt(prefix: string): ProfileView {
 
 const navHrefs = (container: HTMLElement) =>
   Array.from(container.querySelectorAll("[data-testid=profile-nav] a")).map((a) => a.getAttribute("href"));
+const barHrefs = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll("[data-testid=mobile-nav] a")).map((a) => a.getAttribute("href"));
 
 describe("the profile at its short public address (traefik rewrite) and at the long one", () => {
   beforeEach(() => {
@@ -202,6 +204,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     );
 
     expect(navHrefs(container)).toEqual(["/me", "/me/data", "/me/security", "/me/orgs", "/me/settings"]);
+    expect(barHrefs(container)).toEqual(["/me", "/me/data", "/me/security", "/me/orgs"]);
     await findByTestId("session-sess_now");
     expect(await findByTestId("session-sess_old")).toHaveTextContent("security.session.unknownDevice");
     expect(await findAllByTestId("activity-entry")).toHaveLength(1);
@@ -237,7 +240,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     expect(getByTestId("service-menu-prefs")).toHaveTextContent("switcher.theme.system · RU");
   });
 
-  test("the directory from Daenerys: an owner gets the panel tile and the admin row, in the switcher and in the avatar menu", async () => {
+  test("the directory from Daenerys: an owner gets the panel tile and the admin row, in the switcher and in the phone's sheet", async () => {
     window.history.replaceState({}, "", "/me/security");
     installFetch(json(200, SERVICES_OWNER));
     const { container, getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
@@ -255,14 +258,21 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     expect(admin.origin + admin.pathname).toBe("https://chat.test/admin");
     expect(admin.searchParams.get("org")).toBe("org-1");
 
-    // the phone: the avatar opens a menu with the same services
-    fireEvent.click(getByTestId("avatar-menu-trigger"));
-    const links = Array.from(container.querySelectorAll("[data-testid^=service-link-]")).map((el) =>
+    fireEvent.keyDown(window, { key: "Escape" });
+
+    // the phone: the bottom bar's "Services" opens the sheet with the same services; the avatar goes to "Data"
+    expect(getByTestId("avatar-link")).toHaveAttribute("href", "/me/data");
+    expect(container.querySelector("[data-testid=avatar-menu-trigger]")).toBeNull();
+    fireEvent.click(getByTestId("mobile-nav-services"));
+    const sheetTiles = Array.from(container.querySelectorAll("[data-testid^=sheet-tile-]")).map((el) =>
       el.getAttribute("data-service"),
     );
-    expect(links).toEqual(["chat", "build", "agent", "panel", "profile", "mail", "admin"]);
-    expect(getByTestId("avatar-menu-data")).toHaveAttribute("href", "/me/data");
-    expect(getByTestId("avatar-menu-switch-user")).toHaveAttribute("href", "/accounts");
+    expect(sheetTiles).toEqual(["chat", "build", "agent", "panel", "profile", "mail", "admin"]);
+    expect(getByTestId("sheet-tile-profile")).toHaveAttribute("aria-current", "page");
+    expect(getByTestId("services-sheet")).toHaveTextContent("title · Event74");
+    expect(getByTestId("sheet-account-org")).toHaveTextContent("Event74");
+    expect(getByTestId("sheet-account-data")).toHaveAttribute("href", "/me/data");
+    expect(getByTestId("sheet-switch-user")).toHaveAttribute("href", "/ui/v2/login/accounts");
   });
 
   test("the directory from Daenerys: a member gets neither the panel nor the admin", async () => {
@@ -276,9 +286,11 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     expect(queryByTestId("service-tile-panel")).toBeNull();
     expect(queryByTestId("service-menu-admin")).toBeNull();
     expect(getByTestId("service-tile-build")).toHaveAttribute("href", expect.stringContaining("org=org-1"));
-    fireEvent.click(getByTestId("avatar-menu-trigger"));
-    expect(queryByTestId("service-link-panel")).toBeNull();
-    expect(queryByTestId("service-link-admin")).toBeNull();
+    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.click(getByTestId("mobile-nav-services"));
+    expect(getByTestId("services-sheet")).toBeInTheDocument();
+    expect(queryByTestId("sheet-tile-panel")).toBeNull();
+    expect(queryByTestId("sheet-tile-admin")).toBeNull();
   });
 
   test("no Daenerys session at all (401 everywhere): the fallback list, without an organization in the links", async () => {
@@ -313,6 +325,12 @@ describe("the profile at its short public address (traefik rewrite) and at the l
       "/ui/v2/login/me/security",
       "/ui/v2/login/me/orgs",
       "/ui/v2/login/me/settings",
+    ]);
+    expect(barHrefs(container)).toEqual([
+      "/ui/v2/login/me",
+      "/ui/v2/login/me/data",
+      "/ui/v2/login/me/security",
+      "/ui/v2/login/me/orgs",
     ]);
     await findByTestId("session-sess_now");
     expect(await findAllByTestId("activity-entry")).toHaveLength(1);

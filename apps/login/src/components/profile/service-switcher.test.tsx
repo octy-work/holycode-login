@@ -1,7 +1,7 @@
 import { fallbackServices, ServiceEntry } from "@/lib/services";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { ServiceLinks, ServiceSwitcher } from "./service-switcher";
+import { ServiceSwitcher } from "./service-switcher";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
@@ -156,54 +156,5 @@ describe("the service switcher in the profile header", () => {
     // a tile click closes it (the browser then follows the link)
     fireEvent.click(getByTestId("service-tile-chat"));
     expect(container.querySelector("[data-testid=service-menu]")).toBeNull();
-  });
-});
-
-describe("'Other services' for the avatar menu on phones", () => {
-  afterEach(() => {
-    cleanup();
-  });
-
-  test("the same services as short tiles, plus 'Admin' for owners and admins", () => {
-    const onSelect = vi.fn();
-    const { container, getByTestId } = render(
-      <ServiceLinks
-        services={OWNER_SERVICES}
-        org={ORG}
-        getReturnTo={() => PROFILE}
-        adminUrl="https://chat.holycode.org/admin"
-        canOpenAdmin
-        onSelect={onSelect}
-      />,
-    );
-    const keys = Array.from(container.querySelectorAll("[data-testid^=service-link-]")).map((el) =>
-      el.getAttribute("data-service"),
-    );
-    expect(keys).toEqual(["chat", "build", "agent", "panel", "profile", "mail", "admin"]);
-    expect(getByTestId("service-link-build")).toHaveTextContent("short.build");
-    expect(getByTestId("service-link-build")).not.toHaveTextContent("3 сборки идут");
-    const build = new URL(getByTestId("service-link-build").getAttribute("href")!);
-    expect(build.searchParams.get("org")).toBe("acct-event74");
-    expect(build.searchParams.get("return_to")).toBe(PROFILE);
-    expect(getByTestId("service-link-profile").tagName).toBe("BUTTON");
-    expect(getByTestId("service-link-admin")).toHaveTextContent("short.admin");
-    fireEvent.click(getByTestId("service-link-chat"));
-    expect(onSelect).toHaveBeenCalledTimes(1);
-  });
-
-  test("a member: no panel, no admin", () => {
-    const { container } = render(
-      <ServiceLinks
-        services={MEMBER_SERVICES}
-        org={{ ...ORG, role: "member" }}
-        getReturnTo={() => PROFILE}
-        adminUrl="https://chat.holycode.org/admin"
-        canOpenAdmin={false}
-      />,
-    );
-    const keys = Array.from(container.querySelectorAll("[data-testid^=service-link-]")).map((el) =>
-      el.getAttribute("data-service"),
-    );
-    expect(keys).toEqual(["chat", "build", "agent", "profile", "mail"]);
   });
 });

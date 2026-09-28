@@ -8,36 +8,22 @@ import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
 import { PROFILE_SECTIONS, profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
 import { canOpenAdmin } from "@/lib/services";
-import {
-  AdjustmentsHorizontalIcon,
-  BuildingOffice2Icon,
-  HomeIcon,
-  IdentificationIcon,
-  ShieldCheckIcon,
-} from "@heroicons/react/24/outline";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { clsx } from "clsx";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { ComponentType, useEffect, useState } from "react";
-import { AvatarMenu } from "./avatar-menu";
+import { useEffect, useState } from "react";
 import { DataSection } from "./data";
 import { HomeSection } from "./home";
+import { MobileNav } from "./mobile-nav";
 import { OrgsSection } from "./orgs";
+import { SECTION_ICONS } from "./section-icons";
 import { SecuritySection } from "./security";
 import { ServiceSwitcher } from "./service-switcher";
 import { SettingsSection } from "./settings";
 import { ProfileView } from "./types";
 import { useDaenerys } from "./use-daenerys";
 import { useServices } from "./use-services";
-
-const ICONS: Record<ProfileSection, ComponentType<{ className?: string }>> = {
-  home: HomeIcon,
-  data: IdentificationIcon,
-  security: ShieldCheckIcon,
-  orgs: BuildingOffice2Icon,
-  settings: AdjustmentsHorizontalIcon,
-};
 
 export type SectionProps = {
   view: ProfileView;
@@ -47,10 +33,11 @@ export type SectionProps = {
 
 /**
  * The profile frame (id.holycode.org/me): header with the service switcher
- * (the grid button next to the brand, from 768 px), the brand and the avatar —
- * on phones the avatar opens a menu with the same services; five sections in a
- * sidebar on wide screens and as tabs along the bottom on phones; one section
- * rendered at a time.
+ * (the grid button next to the brand, from 768 px), the brand and the avatar
+ * (a link to "Data"); five sections in a sidebar on wide screens; on phones the
+ * bottom bar of every HolyCode service — four sections and "Services", whose
+ * sheet holds the services, "More in Profile" and the account
+ * (`mobile-nav.tsx`); one section rendered at a time.
  *
  * Section links are plain anchors with the SHORT public path (/me/security),
  * never <Link>: Next would prepend the basePath and lengthen the address bar.
@@ -109,7 +96,7 @@ export function ProfileShell({
     <ThemeWrapper branding={branding}>
       {/* min-height keeps short sections at the top: the root layout centers its children vertically. */}
       <div
-        className="mx-auto min-h-[calc(100dvh-3rem)] w-full max-w-[1100px] px-4 pb-24 md:pb-10"
+        className="mx-auto min-h-[calc(100dvh-3rem)] w-full max-w-[1100px] pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(88px+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] md:pb-10"
         data-testid="profile-shell"
         data-daenerys-status={daenerys.status}
         data-daenerys-failure={daenerys.failure ?? undefined}
@@ -140,7 +127,7 @@ export function ProfileShell({
           )}
           <a
             href={profilePath(prefix, "data")}
-            className="hidden shrink-0 md:block"
+            className="focus-visible:ring-hc-ring block shrink-0 rounded-full focus-visible:ring-[3px] focus-visible:outline-none"
             aria-label={view.user.fullName}
             data-testid="avatar-link"
           >
@@ -151,15 +138,6 @@ export function ProfileShell({
               imageUrl={view.user.avatarUrl || undefined}
             />
           </a>
-          <AvatarMenu
-            className="md:hidden"
-            view={view}
-            dataHref={profilePath(prefix, "data")}
-            services={directory.services}
-            org={directory.org}
-            adminUrl={view.links.adminUrl}
-            canOpenAdmin={adminAllowed}
-          />
         </header>
 
         <div className="grid gap-4 md:grid-cols-[210px_minmax(0,1fr)]">
@@ -173,7 +151,7 @@ export function ProfileShell({
                 <Translated i18nKey="title" namespace="profile" />
               </div>
               {PROFILE_SECTIONS.map((section) => {
-                const Icon = ICONS[section];
+                const Icon = SECTION_ICONS[section];
                 const active = section === view.section;
                 return (
                   <a
@@ -234,33 +212,18 @@ export function ProfileShell({
         </footer>
       </div>
 
-      <nav
-        className="border-hc-border bg-hc-card/95 fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t px-1 pt-1.5 pb-[max(6px,env(safe-area-inset-bottom))] backdrop-blur md:hidden"
-        aria-label="HolyCode ID"
-        data-testid="profile-dock"
-      >
-        {PROFILE_SECTIONS.map((section) => {
-          const Icon = ICONS[section];
-          const active = section === view.section;
-          return (
-            <a
-              key={section}
-              href={profilePath(prefix, section)}
-              aria-current={active ? "page" : undefined}
-              className={clsx(
-                "relative flex flex-col items-center gap-0.5 rounded-lg py-1 text-[10.5px] leading-tight",
-                active ? "text-hc-text font-semibold" : "text-hc-muted",
-              )}
-            >
-              <Icon className={clsx("h-5 w-5", active ? "text-hc-p400" : "")} />
-              <Translated i18nKey={`nav.short.${section}`} namespace="profile" />
-              {counters[section] ? (
-                <span className="bg-hc-warn absolute top-0.5 right-[22%] h-1.5 w-1.5 rounded-full" aria-hidden="true" />
-              ) : null}
-            </a>
-          );
-        })}
-      </nav>
+      <MobileNav
+        section={view.section}
+        prefix={prefix}
+        basePath={view.basePath}
+        counters={counters}
+        services={directory.services}
+        org={directory.org}
+        current="profile"
+        adminUrl={view.links.adminUrl}
+        canOpenAdmin={adminAllowed}
+        user={view.user}
+      />
     </ThemeWrapper>
   );
 }
