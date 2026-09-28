@@ -51,7 +51,7 @@ describe("the directory: Daenerys' answer and the fallback list", () => {
         { key: "CHAT", name: "HolyCode", url: "https://chat.holycode.org/", icon: "chat", kind: "app" },
         { key: "build", name: "HolyBuild", url: "https://build.holycode.org/", status: { text: "3 сборки идут" } },
         { key: "build", name: "Дубль", url: "https://other.example/" },
-        { key: "panel", name: "Панель", url: "ftp://daenerys.holycode.org/" },
+        { key: "panel", name: "Daenerys", url: "ftp://daenerys.holycode.org/" },
         { key: "mail", url: "" },
         { key: "bad key!", url: "https://x.example/" },
         null,
@@ -77,7 +77,7 @@ describe("the directory: Daenerys' answer and the fallback list", () => {
     const owner = normalizeServices({
       services: [
         { key: "chat", name: "HolyCode", url: "https://chat.holycode.org/" },
-        { key: "panel", name: "Панель", url: "https://daenerys.holycode.org/" },
+        { key: "panel", name: "Daenerys", url: "https://daenerys.holycode.org/" },
       ],
       org: { account_id: "acct-1", name: "Event74", role: "owner" },
     });

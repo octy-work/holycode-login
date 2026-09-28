@@ -103,7 +103,7 @@ const SERVICES_OWNER = {
     { key: "chat", name: "HolyCode", url: "https://chat.holycode.org", icon: "chat", kind: "app", visible: true },
     { key: "build", name: "HolyBuild", url: "https://build.holycode.org", icon: "build", kind: "app", visible: true },
     { key: "agent", name: "HolyAgent", url: "https://agent.holycode.org", icon: "agent", kind: "app", visible: true },
-    { key: "panel", name: "Панель", url: "https://daenerys.holycode.org", icon: "panel", kind: "app", visible: true },
+    { key: "panel", name: "Daenerys", url: "https://daenerys.holycode.org", icon: "panel", kind: "app", visible: true },
     { key: "profile", name: "Профиль", url: "https://id.holycode.org/me", icon: "profile", kind: "profile", visible: true },
     { key: "mail", name: "Почта", url: "https://mail.holycode.org", icon: "mail", kind: "mail", visible: true },
   ],

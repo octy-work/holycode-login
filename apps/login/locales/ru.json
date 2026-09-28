@@ -847,7 +847,7 @@
         "chat": "HolyCode",
         "build": "HolyBuild",
         "agent": "HolyAgent",
-        "panel": "Панель",
+        "panel": "Daenerys",
         "profile": "Профиль",
         "mail": "Почта"
       },
@@ -855,7 +855,7 @@
         "chat": "чат",
         "build": "сборки, задачи",
         "agent": "агент на ваших машинах",
-        "panel": "организации, пайплайны",
+        "panel": "сборки, агенты, доступы",
         "profile": "HolyCode ID",
         "mail": "mail.holycode.org"
       }

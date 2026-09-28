@@ -23,7 +23,7 @@ const OWNER_SERVICES: ServiceEntry[] = [
     status: { text: "3 сборки идут" },
   },
   { key: "agent", name: "HolyAgent", url: "https://agent.holycode.org/", icon: "agent", kind: "app" },
-  { key: "panel", name: "Панель", url: "https://daenerys.holycode.org/", icon: "panel", kind: "app" },
+  { key: "panel", name: "Daenerys", url: "https://daenerys.holycode.org/", icon: "panel", kind: "app" },
   { key: "profile", name: "Профиль", url: "https://id.holycode.org/me", icon: "profile", kind: "profile" },
   { key: "mail", name: "Почта", url: "https://mail.holycode.org/", icon: "mail", kind: "mail" },
 ];
