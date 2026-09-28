@@ -4,7 +4,7 @@ import { handleServerActionResponse } from "@/lib/client-utils";
 import { RememberedPrimary, RememberedView } from "@/lib/last-login";
 import { resetPassword } from "@/lib/server/password";
 import { forgetLastLogin, PasskeyOffer, signIn } from "@/lib/server/sign-in";
-import { FingerPrintIcon } from "@heroicons/react/24/outline";
+import { FingerPrintIcon } from "@heroicons/react/24/solid";
 import { IdentityProvider, LoginSettings } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";

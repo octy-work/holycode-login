@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { Button, ButtonVariants } from "./button";
 import { Translated } from "./translated";

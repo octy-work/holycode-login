@@ -14,7 +14,7 @@ import {
   KeyIcon,
   LinkIcon,
   TrashIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { useLocale, useTranslations } from "next-intl";
 import { FormEvent, useActionState, useState } from "react";
 import { AutoSubmitForm } from "../auto-submit-form";

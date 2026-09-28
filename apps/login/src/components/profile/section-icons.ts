@@ -6,7 +6,7 @@ import {
   IdentificationIcon,
   KeyIcon,
   ShieldCheckIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { ComponentType } from "react";
 
 /** One icon per profile section: the sidebar, the phone's bottom bar and "More in Profile". */

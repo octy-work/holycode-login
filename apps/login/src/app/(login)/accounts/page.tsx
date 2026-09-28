@@ -4,7 +4,7 @@ import { Translated } from "@/components/translated";
 import { getAllSessions } from "@/lib/cookies";
 import { getServiceConfig } from "@/lib/service-url";
 import { getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
-import { UserPlusIcon } from "@heroicons/react/24/outline";
+import { UserPlusIcon } from "@heroicons/react/24/solid";
 import { create } from "@zitadel/client";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Session, SessionSchema } from "@zitadel/proto/zitadel/session/v2/session_pb";

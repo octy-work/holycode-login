@@ -1,7 +1,7 @@
 "use client";
 
 import { normalizeAccounts, Organization } from "@/lib/daenerys";
-import { ArrowsRightLeftIcon, EnvelopeOpenIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, EnvelopeOpenIcon, PlusIcon } from "@heroicons/react/24/solid";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { FormEvent, useState } from "react";

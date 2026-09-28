@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import { ChangeEvent, DetailedHTMLProps, forwardRef, InputHTMLAttributes, ReactNode, useState } from "react";
 

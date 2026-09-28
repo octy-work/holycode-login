@@ -1,6 +1,6 @@
 "use client";
 
-import { ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/24/solid";
 import { ThemeMode } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import clsx from "clsx";
 import { useTheme } from "next-themes";

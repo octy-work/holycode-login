@@ -23,7 +23,7 @@ import {
   LockClosedIcon,
   ShieldCheckIcon,
   UserIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";

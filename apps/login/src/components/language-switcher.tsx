@@ -3,7 +3,7 @@
 import { setLanguageCookie } from "@/lib/cookies";
 import { Lang } from "@/lib/i18n";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "@headlessui/react";
-import { CheckIcon, ChevronDownIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronDownIcon, GlobeAltIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";

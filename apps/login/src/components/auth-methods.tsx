@@ -5,7 +5,7 @@ import {
   FingerPrintIcon,
   KeyIcon,
   LockClosedIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import { ReactNode } from "react";
 import { OptionCard, OptionCardLink } from "./option-card";

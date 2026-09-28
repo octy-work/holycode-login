@@ -4,7 +4,7 @@ import { handleServerActionResponse } from "@/lib/client-utils";
 import { passwordStepToSignInScreen } from "@/lib/one-screen";
 import { sendLoginname } from "@/lib/server/loginname";
 import { clearSession, continueWithSession, ContinueWithSessionCommand } from "@/lib/server/session";
-import { XCircleIcon } from "@heroicons/react/24/outline";
+import { XCircleIcon } from "@heroicons/react/24/solid";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Timestamp, timestampDate } from "@zitadel/client";
 import { Session } from "@zitadel/proto/zitadel/session/v2/session_pb";

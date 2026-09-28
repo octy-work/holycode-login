@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import Link from "next/link";
 import { ComponentProps, ReactNode } from "react";

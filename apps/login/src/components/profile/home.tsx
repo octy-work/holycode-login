@@ -11,7 +11,7 @@ import {
   FingerPrintIcon,
   IdentificationIcon,
   ShieldCheckIcon,
-} from "@heroicons/react/24/outline";
+} from "@heroicons/react/24/solid";
 import { useLocale, useTranslations } from "next-intl";
 import { ReactNode } from "react";
 import { useFlowStarter } from "./shared";

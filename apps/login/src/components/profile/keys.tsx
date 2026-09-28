@@ -12,7 +12,7 @@ import {
   takeKeyDraft,
 } from "@/lib/daenerys";
 import { profilePath } from "@/lib/profile";
-import { KeyIcon } from "@heroicons/react/24/outline";
+import { KeyIcon } from "@heroicons/react/24/solid";
 import { useLocale, useTranslations } from "next-intl";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { dots, formatWhen } from "./format";

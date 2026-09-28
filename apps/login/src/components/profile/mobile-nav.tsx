@@ -3,7 +3,7 @@
 import { Avatar } from "@/components/avatar";
 import { MOBILE_MORE_SECTIONS, MOBILE_NAV_SECTIONS, profilePath, ProfileSection } from "@/lib/profile";
 import { buildServiceHref, ServiceEntry, ServiceOrg } from "@/lib/services";
-import { ArrowsRightLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
 import { MouseEvent, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";

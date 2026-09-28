@@ -1,6 +1,6 @@
 "use client";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
-import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
+import { QuestionMarkCircleIcon } from "@heroicons/react/24/solid";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";

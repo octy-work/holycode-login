@@ -1,7 +1,7 @@
 "use client";
 
 import { Label, Radio, RadioGroup } from "@headlessui/react";
-import { FingerPrintIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { FingerPrintIcon, LockClosedIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import { optionCardClasses } from "./option-card";
 import { OptionalTranslated } from "./optional-translated";

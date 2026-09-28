@@ -3,7 +3,7 @@
 import { usePageChrome } from "@/components/page-chrome-context";
 import { THEME_PREFERENCES, ThemePreference } from "@/lib/profile";
 import { saveLanguage, saveTheme } from "@/lib/server/profile";
-import { ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { ComputerDesktopIcon, MoonIcon, SunIcon } from "@heroicons/react/24/solid";
 import { clsx } from "clsx";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
