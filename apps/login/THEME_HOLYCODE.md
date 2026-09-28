@@ -185,7 +185,7 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 | `CUSTOM_REQUEST_HEADERS=x-zitadel-instance-host:id.holycode.org,x-zitadel-public-host:id.holycode.org` | только для локального запуска против удалённого инстанса |
 | `NEXT_PUBLIC_DAENERYS_API_URL` | адрес Daenerys для профиля (сборочная); пусто — `https://daenerys-api.holycode.org` |
 | `HC_PROFILE_SERVICES=chat\|HolyCode\|https://chat.holycode.org,build\|HolyBuild\|https://build.holycode.org,…` | запасной список переключателя сервисов, пока Daenerys не ответил `GET /api/services`: `key\|Имя\|url[\|icon[\|kind]]` через запятую, либо JSON-массив как у `DAENERYS_SERVICES`; старая форма `Имя\|url` тоже читается (ключ — по хосту: `chat.` → chat, `id.` → profile). Пусто — прод-адреса без панели |
-| `HC_PROFILE_ADMIN_URL`, `HC_PROFILE_MAIL_ADMIN_URL`, `HC_PROFILE_KEYS_URL` | кабинет организации, пароли приложений, ключи доступа (по умолчанию — chat.holycode.org/admin, /admin/mail, /settings/security) |
+| `HC_PROFILE_ADMIN_URL`, `HC_PROFILE_MAIL_ADMIN_URL`, `HC_PROFILE_KEYS_URL` | кабинет организации и пароли приложений (по умолчанию — app.holycode.org/admin, /admin/mail); ключи доступа — пусто = свой раздел профиля `/me/keys` (28.09.2026: раньше вёл в настройки чата, а чат с профилем ID шлёт обратно — круг) |
 
 ## Локальный запуск
 
@@ -219,3 +219,19 @@ pnpm nx run @zitadel/login:test-unit
 
 Тег апстрима должен совпадать с версией `zitadel-api` на сервере: Login V2
 и API ходят по одной версии proto.
+
+## Ключи доступа — раздел `/me/keys` (28.09.2026)
+
+Владелец: ссылка «Ключи доступа (API)» из карточки пользователя и «Доступ к
+данным · Открыть» вели по кругу (профиль → настройки чата → профиль), выпустить
+персональный ключ было негде. Теперь это раздел профиля (`keys` в
+`PROFILE_SECTIONS`, на телефоне — в «Ещё»): список ключей Daenerys
+(`GET /api/auth/api-keys`), выпуск (`POST`, название и срок 30/90/365/бессрочно,
+токен показывается один раз) и отзыв (`DELETE`). Daenerys выпускает ключ только
+после свежего входа в ID (≤ 10 минут): на `403 reauth_required, reauth: "id"`
+профиль сохраняет черновик во вкладке (`hc_profile_key_draft`), ведёт через
+Daenerys `oidc/start?prompt=login` и, вернувшись на `/me/keys`, выпускает ключ сам.
+Карточка пользователя во всех сервисах (holycode `switcher/account.js`) ведёт
+сюда путём `/me/keys`, «Вход и безопасность» — `/me/security` (якоря `#…`
+профиль не понимает).
+

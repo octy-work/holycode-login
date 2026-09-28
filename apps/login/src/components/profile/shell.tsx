@@ -15,6 +15,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { DataSection } from "./data";
 import { HomeSection } from "./home";
+import { KeysSection } from "./keys";
 import { MobileNav } from "./mobile-nav";
 import { OrgsSection } from "./orgs";
 import { SECTION_ICONS } from "./section-icons";
@@ -86,6 +87,7 @@ export function ProfileShell({
     home: HomeSection,
     data: DataSection,
     security: SecuritySection,
+    keys: KeysSection,
     orgs: OrgsSection,
     settings: SettingsSection,
   }[view.section];

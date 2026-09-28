@@ -203,7 +203,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
       <ProfileShell view={viewAt("/me")} counters={{}} />,
     );
 
-    expect(navHrefs(container)).toEqual(["/me", "/me/data", "/me/security", "/me/orgs", "/me/settings"]);
+    expect(navHrefs(container)).toEqual(["/me", "/me/data", "/me/security", "/me/keys", "/me/orgs", "/me/settings"]);
     expect(barHrefs(container)).toEqual(["/me", "/me/data", "/me/security", "/me/orgs"]);
     await findByTestId("session-sess_now");
     expect(await findByTestId("session-sess_old")).toHaveTextContent("security.session.unknownDevice");
@@ -323,6 +323,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
       "/ui/v2/login/me",
       "/ui/v2/login/me/data",
       "/ui/v2/login/me/security",
+      "/ui/v2/login/me/keys",
       "/ui/v2/login/me/orgs",
       "/ui/v2/login/me/settings",
     ]);

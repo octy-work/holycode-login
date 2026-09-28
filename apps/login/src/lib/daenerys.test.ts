@@ -309,3 +309,52 @@ describe("silent sign-in into Daenerys", () => {
     expect(stripSsoMarker("https://id.holycode.org/me/security?sso=1&x=2#sessions")).toBe("/me/security?x=2#sessions");
   });
 });
+
+describe("access keys in the profile (/me/keys)", () => {
+  test("reads the list: active first, newest first, limits with defaults", async () => {
+    const { normalizeApiKeyList } = await import("./daenerys");
+    const list = normalizeApiKeyList({
+      items: [
+        { key_id: "k1", name: "old", token_preview: "dny_pat_a…", status: "revoked", created_at: "2026-09-01T00:00:00Z", revoked_at: "2026-09-20T00:00:00Z" },
+        { key_id: "k2", name: "ci", token_preview: "dny_pat_b…", status: "active", created_at: "2026-09-10T00:00:00Z", expires_at: "2026-12-09T00:00:00Z", scopes: ["repo"] },
+        { key_id: "k3", name: "agent", status: "active", created_at: "2026-09-25T00:00:00Z", is_current: true },
+        { name: "no id" },
+      ],
+      limits: { max_active: 20, default_expires_days: 90, max_expires_days: 365 },
+    });
+    expect(list.items.map((k) => k.keyId)).toEqual(["k3", "k2", "k1"]);
+    expect(list.items[1]).toMatchObject({ name: "ci", preview: "dny_pat_b…", scopes: ["repo"], expiresAt: "2026-12-09T00:00:00Z" });
+    expect(list.items[0].current).toBe(true);
+    expect(normalizeApiKeyList({}).maxActive).toBe(20);
+  });
+
+  test("sends the term the way Daenerys takes it", async () => {
+    const { apiKeyCreateBody } = await import("./daenerys");
+    expect(apiKeyCreateBody("  ci  ", 90)).toEqual({ name: "ci", expires_days: 90 });
+    expect(apiKeyCreateBody("ci", "never")).toEqual({ name: "ci", expires_days: "never" });
+    expect(apiKeyCreateBody("ci", "garbage")).toEqual({ name: "ci" });
+  });
+
+  test("keeps the draft for the fresh sign-in, once and not for long", async () => {
+    const { saveKeyDraft, takeKeyDraft, KEY_DRAFT_TTL_MS } = await import("./daenerys");
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+    };
+    saveKeyDraft(storage, { name: "ci", expiry: 365 }, 1000);
+    expect(takeKeyDraft(storage, 2000)).toEqual({ name: "ci", expiry: 365 });
+    expect(takeKeyDraft(storage, 2000)).toBeNull();
+    saveKeyDraft(storage, { name: "ci", expiry: 30 }, 1000);
+    expect(takeKeyDraft(storage, 1000 + KEY_DRAFT_TTL_MS + 1)).toBeNull();
+  });
+
+  test("sends a fresh sign-in through Daenerys back to /me/keys", async () => {
+    const { buildReauthUrl } = await import("./daenerys");
+    const url = new URL(buildReauthUrl(undefined, "https://id.holycode.org/me/keys"));
+    expect(url.origin + url.pathname).toBe("https://daenerys-api.holycode.org/api/auth/oidc/start");
+    expect(url.searchParams.get("prompt")).toBe("login");
+    expect(url.searchParams.get("return_to")).toBe("https://id.holycode.org/me/keys");
+  });
+});

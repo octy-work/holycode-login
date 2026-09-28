@@ -9,7 +9,12 @@
 
 import { AuthenticationMethodType } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 
-export const PROFILE_SECTIONS = ["home", "data", "security", "orgs", "settings"] as const;
+/**
+ * `keys` — access keys (dny_pat_…): the list, issuing and revoking (owner's
+ * decision of 28.09.2026: the account card of every service links here as
+ * "Access keys (API)"; before, the link went round in a circle to the chat).
+ */
+export const PROFILE_SECTIONS = ["home", "data", "security", "keys", "orgs", "settings"] as const;
 export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
 
 /**
@@ -18,7 +23,7 @@ export type ProfileSection = (typeof PROFILE_SECTIONS)[number];
  * not fit goes to "More in Profile" in the services sheet.
  */
 export const MOBILE_NAV_SECTIONS = ["home", "data", "security", "orgs"] as const satisfies readonly ProfileSection[];
-export const MOBILE_MORE_SECTIONS = ["settings"] as const satisfies readonly ProfileSection[];
+export const MOBILE_MORE_SECTIONS = ["keys", "settings"] as const satisfies readonly ProfileSection[];
 
 /** The public address of the profile: traefik rewrites id.holycode.org/me → <basePath>/me. */
 export const PROFILE_SHORT_PREFIX = "/me";

@@ -4,7 +4,7 @@ import { Avatar } from "@/components/avatar";
 import { detectIdpBrand, IdpIcon } from "@/components/idps/idp-icons";
 import { blockingAccounts, normalizeApiKeys, normalizePendingDeletion, PendingDeletion } from "@/lib/daenerys";
 import { idpTypeToSlug } from "@/lib/idp";
-import { canRemoveSignInMethod } from "@/lib/profile";
+import { canRemoveSignInMethod, profilePath } from "@/lib/profile";
 import { beginProviderLink, changeEmail, saveName, unlinkProvider } from "@/lib/server/profile";
 import {
   ArrowDownTrayIcon,
@@ -34,7 +34,7 @@ function displayLanguage(code: string, locale: string): string {
 }
 
 /** Data: name and salutation, contacts, linked accounts, public handle, data management. */
-export function DataSection({ view, daenerys }: SectionProps) {
+export function DataSection({ view, prefix, daenerys }: SectionProps) {
   const t = useTranslations("profile");
   const locale = useLocale();
   const flow = useFlowStarter();
@@ -114,7 +114,7 @@ export function DataSection({ view, daenerys }: SectionProps) {
                 ? "…"
                 : t("data.access.unavailable")
           }
-          trailing={<RowLink href={view.links.keysUrl}>{t("common.open")}</RowLink>}
+          trailing={<RowLink href={view.links.keysUrl || profilePath(prefix, "keys")}>{t("common.open")}</RowLink>}
         />
         <Row
           icon={

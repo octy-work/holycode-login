@@ -533,6 +533,7 @@
       "home": "Home",
       "data": "Data",
       "security": "Security",
+      "keys": "Access keys",
       "orgs": "Organizations",
       "settings": "Settings",
       "short": {
@@ -639,7 +640,7 @@
       "access": {
         "title": "Data access",
         "subtitle": "{keys, plural, one {# access key} other {# access keys}} · {orgs, plural, one {# organization} other {# organizations}} through the ID",
-        "unavailable": "access keys and agents — in HolyChat"
+        "unavailable": "access keys — in “Access keys”"
       },
       "export": {
         "title": "Export my data",
@@ -891,6 +892,62 @@
         "givenName": "Enter your first name",
         "familyName": "Enter your last name",
         "displayName": "Too long"
+      }
+    },
+    "keys": {
+      "title": "Access keys",
+      "description": "Personal keys for the API and the CLI (dny_pat_…): they act as you in every HolyCode service and outlive signing out. Issuing one needs a fresh sign-in at the ID.",
+      "created": {
+        "title": "Key “{name}” issued",
+        "once": "Copy it now — it is not shown again.",
+        "copy": "Copy",
+        "copied": "Copied",
+        "copyFailed": "Could not copy — select the key and copy it by hand.",
+        "done": "Done"
+      },
+      "issue": {
+        "title": "Issue a key",
+        "name": "Name",
+        "namePlaceholder": "For example: laptop, CI, script",
+        "term": "Valid for",
+        "button": "Issue key",
+        "note": "The key gets your rights. Keep it like a password; revoke it when it is no longer needed."
+      },
+      "expiry": {
+        "days": "{n} days",
+        "year": "1 year",
+        "never": "No expiry"
+      },
+      "reauth": {
+        "question": "To issue a key, sign in at HolyCode ID once more — that confirms it is you. After signing in the key is issued by itself.",
+        "go": "Sign in and issue"
+      },
+      "list": {
+        "title": "Your keys",
+        "count": "{active} of {max} active",
+        "empty": "No keys yet.",
+        "created": "created {date}",
+        "until": "until {date}",
+        "forever": "no expiry",
+        "revokedAt": "revoked {date}",
+        "lastUsed": "last used {date}",
+        "neverUsed": "not used yet",
+        "revoke": "Revoke",
+        "revokeConfirm": "Revoke the key “{name}”? Programs using it lose access at once."
+      },
+      "status": {
+        "active": "active",
+        "expired": "expired",
+        "revoked": "revoked"
+      },
+      "errors": {
+        "invalid_name": "Name the key: up to 80 characters.",
+        "duplicate_name": "A key with this name already exists.",
+        "invalid_expires_days": "This term is not allowed.",
+        "too_many_api_keys": "Too many active keys — revoke the ones you do not need.",
+        "api_key_requires_interactive_session": "Only a person signed in can issue keys, not another key.",
+        "generic": "Did not work: {message}",
+        "unknown": "Did not work, try again."
       }
     }
   }

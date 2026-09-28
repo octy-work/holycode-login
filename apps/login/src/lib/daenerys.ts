@@ -287,6 +287,119 @@ export function normalizeApiKeys(data: unknown): ApiKeysSummary {
   return { total: items.length, active: items.filter((k) => str(k.status) === "active").length };
 }
 
+/**
+ * Access keys (dny_pat_…) in the profile's "Access keys" section (owner's
+ * decision of 28.09.2026: keys live in the ID, not in one service): the list
+ * as GET /api/auth/api-keys gives it, newest first, and the limits.
+ */
+export type ApiKeyItem = {
+  keyId: string;
+  name: string;
+  preview: string;
+  scopes: string[];
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+  lastUsedAt: string;
+  revokedAt: string;
+  current: boolean;
+};
+
+export type ApiKeyList = { items: ApiKeyItem[]; maxActive: number; defaultExpiresDays: number; maxExpiresDays: number };
+
+export function normalizeApiKeyList(data: unknown): ApiKeyList {
+  const d = obj(data);
+  const limits = obj(d.limits);
+  const items = arr(d.items)
+    .map(obj)
+    .filter((k) => str(k.key_id))
+    .map((k) => ({
+      keyId: str(k.key_id),
+      name: str(k.name),
+      preview: str(k.token_preview),
+      scopes: arr(k.scopes).map((s) => str(s)).filter(Boolean),
+      status: str(k.status) || "active",
+      createdAt: str(k.created_at),
+      expiresAt: str(k.expires_at),
+      lastUsedAt: str(k.last_used_at),
+      revokedAt: str(k.revoked_at),
+      current: k.is_current === true,
+    }))
+    .sort((a, b) => {
+      const rank = (k: ApiKeyItem) => (k.status === "active" ? 0 : 1);
+      return rank(a) - rank(b) || b.createdAt.localeCompare(a.createdAt);
+    });
+  return {
+    items,
+    maxActive: Number(limits.max_active) || 20,
+    defaultExpiresDays: Number(limits.default_expires_days) || 90,
+    maxExpiresDays: Number(limits.max_expires_days) || 365,
+  };
+}
+
+/** Terms offered when a key is issued; 90 days by default, as in the services. */
+export const API_KEY_EXPIRY_CHOICES = [30, 90, 365, "never"] as const;
+export type ApiKeyExpiry = (typeof API_KEY_EXPIRY_CHOICES)[number];
+export const API_KEY_DEFAULT_EXPIRY: ApiKeyExpiry = 90;
+
+export function apiKeyCreateBody(name: string, expiry: ApiKeyExpiry | string | number): Record<string, unknown> {
+  const body: Record<string, unknown> = { name: String(name || "").trim() };
+  if (expiry === "never") body.expires_days = "never";
+  else if (Number.isInteger(Number(expiry)) && Number(expiry) > 0) body.expires_days = Number(expiry);
+  return body;
+}
+
+/**
+ * Issuing a key needs a fresh sign-in at the ID (Daenerys answers 403
+ * reauth_required with reauth: "id" when the last one is older than 10
+ * minutes): the profile keeps the draft in this tab, sends the person through
+ * Daenerys with prompt=login and, back on /me/keys, issues the key itself.
+ */
+export const KEY_DRAFT_KEY = "hc_profile_key_draft";
+export const KEY_DRAFT_TTL_MS = 10 * 60 * 1000;
+
+export type KeyDraft = { name: string; expiry: ApiKeyExpiry };
+
+export function saveKeyDraft(storage: StorageLike | null, draft: KeyDraft, now = Date.now()): void {
+  try {
+    storage?.setItem(KEY_DRAFT_KEY, JSON.stringify({ ...draft, at: now }));
+  } catch {
+    // no storage — the person presses "Issue" once more after coming back
+  }
+}
+
+export function takeKeyDraft(
+  storage: (StorageLike & { removeItem(key: string): void }) | null,
+  now = Date.now(),
+): KeyDraft | null {
+  let raw: string | null = null;
+  try {
+    raw = storage?.getItem(KEY_DRAFT_KEY) ?? null;
+    storage?.removeItem(KEY_DRAFT_KEY);
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  try {
+    const d = JSON.parse(raw) as { name?: unknown; expiry?: unknown; at?: unknown };
+    const at = Number(d.at);
+    if (!Number.isFinite(at) || now - at > KEY_DRAFT_TTL_MS || at - now > 60_000) return null;
+    const name = typeof d.name === "string" ? d.name.trim() : "";
+    const expiry = (API_KEY_EXPIRY_CHOICES as readonly unknown[]).includes(d.expiry) ? (d.expiry as ApiKeyExpiry) : API_KEY_DEFAULT_EXPIRY;
+    return name ? { name, expiry } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A fresh sign-in at the ID through Daenerys (prompt=login), back to `returnTo`. */
+export function buildReauthUrl(baseUrl: string | undefined, returnTo: string): string {
+  const url = new URL(`${daenerysApiUrl(baseUrl)}/api/auth/oidc/start`);
+  url.searchParams.set("prompt", "login");
+  url.searchParams.set("return_to", returnTo);
+  return url.toString();
+}
+
 /** Organizations an owner has to hand over first (409 transfer_ownership_first). */
 export function blockingAccounts(data: unknown): { id: string; name: string; members: number }[] {
   return arr(obj(data).accounts)
@@ -312,6 +425,9 @@ export function createDaenerysClient({ baseUrl, fetchImpl }: { baseUrl?: string;
     createAccount: (name: string) => call<unknown>("/api/auth/accounts", { method: "POST", body: { name } }),
     idMethods: () => call<unknown>("/api/auth/id/methods"),
     apiKeys: () => call<unknown>("/api/auth/api-keys"),
+    /** 201 with {key, token}: the token comes once. 403 reauth_required when the ID sign-in is older than 10 minutes. */
+    createApiKey: (name: string, expiry: ApiKeyExpiry | string | number) =>
+      call<unknown>("/api/auth/api-keys", { method: "POST", body: apiKeyCreateBody(name, expiry) }),
     revokeApiKey: (keyId: string) => call<unknown>(`/api/auth/api-keys/${encodeURIComponent(keyId)}`, { method: "DELETE" }),
     sessions: () => call<unknown>("/api/auth/sessions"),
     revokeSession: (sessionId: string) =>

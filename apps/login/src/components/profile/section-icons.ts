@@ -4,6 +4,7 @@ import {
   BuildingOffice2Icon,
   HomeIcon,
   IdentificationIcon,
+  KeyIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { ComponentType } from "react";
@@ -13,6 +14,7 @@ export const SECTION_ICONS: Record<ProfileSection, ComponentType<{ className?: s
   home: HomeIcon,
   data: IdentificationIcon,
   security: ShieldCheckIcon,
+  keys: KeyIcon,
   orgs: BuildingOffice2Icon,
   settings: AdjustmentsHorizontalIcon,
 };

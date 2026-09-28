@@ -219,9 +219,12 @@ export default async function Page(props: { params: Promise<{ section?: string[]
     daenerysUrl: process.env.NEXT_PUBLIC_DAENERYS_API_URL ?? "",
     links: {
       services: fallbackServices(process.env.HC_PROFILE_SERVICES),
-      adminUrl: process.env.HC_PROFILE_ADMIN_URL ?? "https://chat.holycode.org/admin",
-      mailAdminUrl: process.env.HC_PROFILE_MAIL_ADMIN_URL ?? "https://chat.holycode.org/admin/mail",
-      keysUrl: process.env.HC_PROFILE_KEYS_URL ?? "https://chat.holycode.org/settings/security",
+      // Чат переехал на app.holycode.org (28.09.2026); ключи доступа — свой
+      // раздел профиля /me/keys (пусто = он), а не настройки чата: с профилем
+      // ID чат показывает там только «Внешний вид», и ссылка шла по кругу.
+      adminUrl: process.env.HC_PROFILE_ADMIN_URL ?? "https://app.holycode.org/admin",
+      mailAdminUrl: process.env.HC_PROFILE_MAIL_ADMIN_URL ?? "https://app.holycode.org/admin/mail",
+      keysUrl: process.env.HC_PROFILE_KEYS_URL ?? "",
     },
   };
 
