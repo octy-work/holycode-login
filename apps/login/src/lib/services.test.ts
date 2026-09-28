@@ -91,16 +91,14 @@ describe("the directory: Daenerys' answer and the fallback list", () => {
     expect(fallbackServices("").some((service) => service.key === "panel")).toBe(false);
   });
 
-  test("the fallback list — production addresses without the panel and without mail", () => {
-    // Mail is the Stalwart admin console with its own accounts (owner, 28.09.2026):
-    // only the server hands it out, and only to admins — never the fallback.
+  test("the fallback list — production addresses without the panel", () => {
     const services = fallbackServices("");
-    expect(services.map((service) => service.key)).toEqual(["chat", "build", "agent", "profile"]);
+    expect(services.map((service) => service.key)).toEqual(["chat", "build", "agent", "profile", "mail"]);
     expect(services.find((service) => service.key === "chat")?.url).toBe("https://chat.holycode.org/");
     expect(services.find((service) => service.key === "profile")?.url).toBe("https://id.holycode.org/me");
-    expect(services.some((service) => service.key === "mail")).toBe(false);
+    expect(services.find((service) => service.key === "mail")?.url).toBe("https://mail.holycode.org/");
     expect(services).not.toBe(DEFAULT_SERVICES);
-    expect(fallbackServices(undefined).map((s) => s.key)).toEqual(["chat", "build", "agent", "profile"]);
+    expect(fallbackServices(undefined).map((s) => s.key)).toEqual(["chat", "build", "agent", "profile", "mail"]);
   });
 
   test("HC_PROFILE_SERVICES as JSON: an array or { services }, rubbish — production addresses", () => {

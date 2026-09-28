@@ -27,8 +27,7 @@ const OWNER_SERVICES: ServiceEntry[] = [
   { key: "profile", name: "Профиль", url: "https://id.holycode.org/me", icon: "profile", kind: "profile" },
   { key: "mail", name: "Почта", url: "https://mail.holycode.org/", icon: "mail", kind: "mail" },
 ];
-// The server gives the panel and mail to owners and admins only.
-const MEMBER_SERVICES = OWNER_SERVICES.filter((s) => s.key !== "panel" && s.key !== "mail");
+const MEMBER_SERVICES = OWNER_SERVICES.filter((s) => s.key !== "panel");
 
 const tiles = (container: HTMLElement) =>
   Array.from(container.querySelectorAll("[data-testid^=service-tile-]")).map((el) => el.getAttribute("data-service"));
@@ -103,28 +102,26 @@ describe("the service switcher in the profile header", () => {
       />,
     );
     fireEvent.click(getByTestId("service-switcher-trigger"));
-    expect(tiles(container)).toEqual(["chat", "build", "agent", "profile"]);
+    expect(tiles(container)).toEqual(["chat", "build", "agent", "profile", "mail"]);
     expect(queryByTestId("service-tile-panel")).toBeNull();
-    expect(queryByTestId("service-tile-mail")).toBeNull();
     expect(queryByTestId("service-menu-admin")).toBeNull();
     expect(getByTestId("service-tile-agent")).toHaveTextContent("hint.agent");
     expect(getByTestId("service-menu-prefs")).toBeInTheDocument();
   });
 
-  test("the fallback (no Daenerys): production addresses without the panel and mail, links without an organization, names by key", () => {
+  test("the fallback (no Daenerys): production addresses without the panel, links without an organization, names by key", () => {
     const { container, getByTestId, queryByTestId } = render(
       <ServiceSwitcher services={fallbackServices("")} org={null} getReturnTo={() => PROFILE} />,
     );
     fireEvent.click(getByTestId("service-switcher-trigger"));
     expect(getByTestId("service-menu")).toHaveTextContent("title");
     expect(getByTestId("service-menu")).not.toHaveTextContent("·");
-    expect(tiles(container)).toEqual(["chat", "build", "agent", "profile"]);
+    expect(tiles(container)).toEqual(["chat", "build", "agent", "profile", "mail"]);
     expect(queryByTestId("service-tile-panel")).toBeNull();
-    expect(queryByTestId("service-tile-mail")).toBeNull();
     const chat = new URL(getByTestId("service-tile-chat").getAttribute("href")!);
     expect(chat.searchParams.get("org")).toBeNull();
     expect(chat.searchParams.get("return_to")).toBe(PROFILE);
-    expect(getByTestId("service-tile-profile")).toHaveTextContent("name.profile");
+    expect(getByTestId("service-tile-mail")).toHaveTextContent("name.mail");
     expect(queryByTestId("service-menu-admin")).toBeNull();
     expect(queryByTestId("service-menu-prefs")).toBeNull();
   });
@@ -207,6 +204,6 @@ describe("'Other services' for the avatar menu on phones", () => {
     const keys = Array.from(container.querySelectorAll("[data-testid^=service-link-]")).map((el) =>
       el.getAttribute("data-service"),
     );
-    expect(keys).toEqual(["chat", "build", "agent", "profile"]);
+    expect(keys).toEqual(["chat", "build", "agent", "profile", "mail"]);
   });
 });

@@ -227,7 +227,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     const keys = Array.from(container.querySelectorAll("[data-testid^=service-tile-]")).map((el) =>
       el.getAttribute("data-service"),
     );
-    expect(keys).toEqual(["chat", "build", "agent", "profile"]); // fallback: no panel, no mail
+    expect(keys).toEqual(["chat", "build", "agent", "profile", "mail"]);
     const chat = new URL(getByTestId("service-tile-chat").getAttribute("href")!);
     expect(chat.origin).toBe("https://chat.holycode.org");
     expect(chat.searchParams.get("org")).toBe("org-1");
