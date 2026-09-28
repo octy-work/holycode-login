@@ -109,5 +109,12 @@ declare namespace NodeJS {
      * In local development (NODE_ENV=development), it is disabled by default unless explicitly set to "false".
      */
     OTEL_SDK_DISABLED?: string;
+
+    /**
+     * Optional (HolyCode): issuer an authenticator app shows for the TOTP entry.
+     * The otpauth URI from ZITADEL (issuer "ZITADEL" or the domain) is rewritten to it.
+     * Defaults to NEXT_PUBLIC_BRAND_WORDMARK without "|" ("Holy|Code" → "HolyCode").
+     */
+    HC_TOTP_ISSUER?: string;
   }
 }

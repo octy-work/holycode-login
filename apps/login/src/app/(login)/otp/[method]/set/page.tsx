@@ -9,6 +9,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { getEnrollmentAuthorizationError } from "@/lib/server/enrollment-guard";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
+import { brandTotpUri, totpIssuerFromEnv } from "@/lib/totp-issuer";
 import { addOTPEmail, addOTPSMS, getBrandingSettings, getLoginSettings, registerTOTP } from "@/lib/zitadel";
 import { RegisterTOTPResponse } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { headers } from "next/headers";
@@ -161,7 +162,13 @@ export default async function Page(props: {
         {totpResponse && "uri" in totpResponse && "secret" in totpResponse ? (
           <div>
             <TotpRegister
-              uri={totpResponse.uri as string}
+              uri={brandTotpUri(
+                totpResponse.uri as string,
+                totpIssuerFromEnv({
+                  HC_TOTP_ISSUER: process.env.HC_TOTP_ISSUER,
+                  NEXT_PUBLIC_BRAND_WORDMARK: process.env.NEXT_PUBLIC_BRAND_WORDMARK,
+                }),
+              )}
               secret={totpResponse.secret as string}
               loginName={loginName}
               sessionId={sessionId}
