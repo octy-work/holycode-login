@@ -1,7 +1,8 @@
 import { timestampFromDate } from "@zitadel/client";
 import { AuthenticationMethodType } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { continueWithSession, firstFactorStillValid } from "./session";
+import { firstFactorStillValid } from "../first-factor";
+import { continueWithSession } from "./session";
 
 // HolyCode, 28.09.2026: a signed-in session that only lacks the second factor
 // (2FA was turned on after sign-in) must ask for the code, not send the person

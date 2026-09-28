@@ -11,7 +11,7 @@ import {
   listAuthenticationMethodTypes,
   listUsers,
 } from "@/lib/zitadel";
-import { Code, create, Duration, Timestamp, timestampDate } from "@zitadel/client";
+import { Code, create, Duration } from "@zitadel/client";
 import { Challenges, RequestChallenges } from "@zitadel/proto/zitadel/session/v2/challenge_pb";
 import { Session } from "@zitadel/proto/zitadel/session/v2/session_pb";
 import { Checks, ChecksSchema } from "@zitadel/proto/zitadel/session/v2/session_service_pb";
@@ -24,6 +24,7 @@ import {
   getSessionCookieByLoginName,
   removeSessionFromCookie,
 } from "../cookies";
+import { firstFactorStillValid } from "../first-factor";
 import { getServiceConfig } from "../service-url";
 import { isSessionValid } from "../session";
 import { checkMFAFactors } from "../verify-helper";
@@ -72,20 +73,6 @@ export async function skipMFAAndContinueWithNextUrl({
   }
 
   return { error: "Could not skip MFA and continue" };
-}
-
-// Первый фактор сессии ещё действует по сроку политики: пароль —
-// passwordCheckLifetime, провайдер — externalLoginCheckLifetime.
-export function firstFactorStillValid(session: Session, loginSettings?: { passwordCheckLifetime?: Duration; externalLoginCheckLifetime?: Duration }) {
-  const within = (verifiedAt: Timestamp | undefined, lifetime?: Duration) => {
-    if (!verifiedAt || !lifetime || !lifetime.seconds) return false;
-    const checkedAt = timestampDate(verifiedAt).getTime();
-    return Date.now() - checkedAt < Number(lifetime.seconds) * 1000;
-  };
-  return (
-    within(session.factors?.password?.verifiedAt, loginSettings?.passwordCheckLifetime) ||
-    within(session.factors?.intent?.verifiedAt, loginSettings?.externalLoginCheckLifetime)
-  );
 }
 
 export type ContinueWithSessionCommand = Session & { requestId?: string };
