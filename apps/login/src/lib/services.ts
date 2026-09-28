@@ -42,7 +42,6 @@ export const DEFAULT_SERVICES: readonly ServiceEntry[] = Object.freeze([
   Object.freeze({ key: "build", name: "HolyBuild", url: "https://build.holycode.org/", icon: "build", kind: "app" }),
   Object.freeze({ key: "agent", name: "HolyAgent", url: "https://agent.holycode.org/", icon: "agent", kind: "app" }),
   Object.freeze({ key: "profile", name: "", url: "https://id.holycode.org/me", icon: "profile", kind: "profile" }),
-  Object.freeze({ key: "mail", name: "", url: "https://mail.holycode.org/", icon: "mail", kind: "mail" }),
 ]);
 
 /** Roles that may open the organization admin (the same rule as the chat's `canOpenAdmin`). */
