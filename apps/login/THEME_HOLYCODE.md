@@ -181,11 +181,46 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 | --- | --- |
 | `UI_LANGUAGES=ru,en` | какие языки показывать в переключателе (порядок как в списке) |
 | `HC_MAIL_DOMAINS=oggo.app` | домены для «Завести почту в …» на регистрации; пусто — обычное поле e-mail |
-| `NEXT_PUBLIC_BRAND_WORDMARK=Holy\|Code` | текст знака; часть до `\|` с градиентом; пустая строка — логотип из label policy (сборочная) |
+| `HC_BRAND_WORDMARK=Holy\|Code` | бренд контейнера (рантайм, `src/lib/brand.ts`): текст знака, часть до `\|` с градиентом. Пустая строка — режим организации: логотип, акцентный цвет и значок вкладки из label policy инстанса. Не задан — `NEXT_PUBLIC_BRAND_WORDMARK`, затем `Holy\|Code` |
+| `NEXT_PUBLIC_BRAND_WORDMARK=Holy\|Code` | то же на этапе сборки (запасное значение, если `HC_BRAND_WORDMARK` не задан) |
 | `CUSTOM_REQUEST_HEADERS=x-zitadel-instance-host:id.holycode.org,x-zitadel-public-host:id.holycode.org` | только для локального запуска против удалённого инстанса |
 | `NEXT_PUBLIC_DAENERYS_API_URL` | адрес Daenerys для профиля (сборочная); пусто — `https://daenerys-api.holycode.org` |
 | `HC_PROFILE_SERVICES=chat\|HolyCode\|https://chat.holycode.org,build\|HolyBuild\|https://build.holycode.org,…` | запасной список переключателя сервисов, пока Daenerys не ответил `GET /api/services`: `key\|Имя\|url[\|icon[\|kind]]` через запятую, либо JSON-массив как у `DAENERYS_SERVICES`; старая форма `Имя\|url` тоже читается (ключ — по хосту: `chat.` → chat, `id.` → profile). Пусто — прод-адреса без панели |
 | `HC_PROFILE_ADMIN_URL`, `HC_PROFILE_MAIL_ADMIN_URL`, `HC_PROFILE_KEYS_URL` | кабинет организации и пароли приложений (по умолчанию — app.holycode.org/admin, /admin/mail); ключи доступа — пусто = свой раздел профиля `/me/keys` (28.09.2026: раньше вёл в настройки чата, а чат с профилем ID шлёт обратно — круг) |
+
+## Вход организаций — `id.octy.ru` и другие (29.09.2026)
+
+Вход организации — отдельный виртуальный инстанс того же Zitadel (кабинет HolyCode →
+«Безопасность → Вход», код в монорепо `apps/daenerys-api/src/org-admin/signin.js`). Его
+хосты обслуживает сервис `zitadel-login-orgs` в compose почтового контура на rumail
+(`ZITADEL_ORG_HOSTS_RULE`). До 29.09.2026 там стоял апстримный Login V2, поэтому
+`id.octy.ru` показывал стандартную форму Zitadel, а не нашу.
+
+Тот же образ форка обслуживает и организации: бренд теперь выбирается при запуске, а не при
+сборке. Для `zitadel-login-orgs`:
+
+| Переменная | Значение |
+| --- | --- |
+| `image` | тот же `reg.oggo.app/holycode/login:<тег>`, что у `zitadel-login` |
+| `HC_BRAND_WORDMARK` | пустая строка — режим организации |
+| `HC_TOTP_ISSUER` | имя организации для приложения-аутентификатора, например `Octy` (пусто — issuer Zitadel) |
+| `HC_MAIL_DOMAINS` | пусто: «Завести почту у нас» на регистрации — только HolyCode |
+| `UI_LANGUAGES` | как у `zitadel-login` |
+
+В режиме организации (`HC_BRAND_WORDMARK=""`):
+
+- **знак** в карточке — логотип из label policy инстанса (светлый и тёмный; есть только один —
+  он для обеих тем), высота 36 px, ширина по логотипу;
+- **акцент** — основной цвет label policy: кнопка, ссылки, фокус, выделение и свечение фона
+  (`tenantAccentCss` в `src/lib/brand.ts`, `<style>` рисуется вместе со страницей, без
+  мигания). Текст на кнопке тёмный, если цвет светлый (лайм Octy), ссылки на белом —
+  темнее акцента;
+- **значок вкладки** и значок приложения на согласии устройства — `iconUrl` label policy;
+- тексты — из `hosted_login_translation` инстанса, как и раньше; раскладка, поля и потоки —
+  те же, что у HolyCode ID.
+
+Профиль `/me` на хостах организаций не открывается: Traefik переписывает `/me` только для
+`id.holycode.org`.
 
 ## Локальный запуск
 

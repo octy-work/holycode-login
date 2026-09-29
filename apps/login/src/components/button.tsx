@@ -44,7 +44,8 @@ export const getButtonClasses = (
       "w-full": fullWidth && variant !== ButtonVariants.Ghost,
       "h-9 px-2 text-sm font-medium text-hc-link hover:text-hc-p500 disabled:text-hc-muted":
         variant === ButtonVariants.Ghost,
-      "hc-btn-primary text-white": variant === ButtonVariants.Primary && color !== ButtonColors.Warn,
+      // Text colour comes from .hc-btn-primary (--hc-on-accent): dark on a light tenant accent.
+      "hc-btn-primary": variant === ButtonVariants.Primary && color !== ButtonColors.Warn,
       "bg-hc-err text-white hover:brightness-110 disabled:opacity-50":
         variant === ButtonVariants.Primary && color === ButtonColors.Warn,
       "border border-hc-border bg-transparent text-hc-text hover:border-hc-p500 hover:bg-hc-soft disabled:opacity-50 disabled:hover:border-hc-border disabled:hover:bg-transparent":

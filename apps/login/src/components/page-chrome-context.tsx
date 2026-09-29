@@ -8,6 +8,8 @@ export type PageChrome = {
   helpLink?: string;
   privacyPolicyLink?: string;
   tosLink?: string;
+  /** Word-mark of this container (lib/brand.ts); "" — tenant mode: logo and colours from the label policy. */
+  brandWordmark?: string;
 };
 
 const PageChromeContext = createContext<PageChrome>({ languages: [] });

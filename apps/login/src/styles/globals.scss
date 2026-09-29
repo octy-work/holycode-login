@@ -18,6 +18,12 @@
   --hc-p600: #7c3aed;
   --hc-p500: #8b5cf6;
   --hc-p400: #a78bfa;
+  // Primary button; tenant mode (lib/brand.ts) re-colours these from the label policy.
+  --hc-btn-from: #7c3aed;
+  --hc-btn-to: #8b5cf6;
+  --hc-btn-shadow: rgba(124, 58, 237, 0.35);
+  --hc-btn-shadow-hover: rgba(124, 58, 237, 0.45);
+  --hc-on-accent: #ffffff;
   --hc-cyan: #06b6d4;
   --hc-soft: rgba(124, 58, 237, 0.08);
   --hc-ring: rgba(124, 58, 237, 0.16);
@@ -106,12 +112,13 @@ body {
 }
 
 .hc-btn-primary {
-  background-image: linear-gradient(90deg, #7c3aed, #8b5cf6);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+  background-image: linear-gradient(90deg, var(--hc-btn-from), var(--hc-btn-to));
+  box-shadow: 0 8px 24px var(--hc-btn-shadow);
+  color: var(--hc-on-accent);
 }
 .hc-btn-primary:hover:not(:disabled) {
   filter: brightness(1.08);
-  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 10px 28px var(--hc-btn-shadow-hover);
 }
 .hc-btn-primary:disabled {
   background-image: none;
