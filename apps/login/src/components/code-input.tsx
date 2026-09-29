@@ -1,7 +1,8 @@
 "use client";
 
+import { extractCode, normalizeCode } from "@/lib/code-paste";
 import { clsx } from "clsx";
-import { ChangeEvent, forwardRef, InputHTMLAttributes, useImperativeHandle, useRef, useState } from "react";
+import { ChangeEvent, forwardRef, InputHTMLAttributes, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 export type CodeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value" | "size"> & {
   label?: string;
@@ -16,10 +17,24 @@ export type CodeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "onChan
 /**
  * Six-cell code input. A single real <input> (autofill, paste and screen readers keep
  * working — one-time-code autofill needs one field) drawn as separate cells; the caret
- * blinks in the active cell.
+ * blinks in the active cell. Pasting replaces the whole code and picks it out of a
+ * pasted sentence; letters are upper-cased (codes from e-mail are upper-case).
  */
 export const CodeInput = forwardRef<HTMLInputElement, CodeInputProps>(function CodeInput(
-  { label, length = 6, error, mode = "numeric", className, onChange, onFocus, onBlur, value, defaultValue, ...props },
+  {
+    label,
+    length = 6,
+    error,
+    mode = "numeric",
+    className,
+    onChange,
+    onFocus,
+    onBlur,
+    onPaste,
+    value,
+    defaultValue,
+    ...props
+  },
   ref,
 ) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -27,6 +42,16 @@ export const CodeInput = forwardRef<HTMLInputElement, CodeInputProps>(function C
 
   const [inner, setInner] = useState<string>(String(defaultValue ?? value ?? ""));
   const [focused, setFocused] = useState(false);
+
+  // react-hook-form fills `defaultValues` (the code from the e-mail link) straight into
+  // the DOM through the ref, bypassing props — draw the cells from that value.
+  useEffect(() => {
+    const dom = inputRef.current?.value ?? "";
+    if (value === undefined && dom) {
+      setInner(dom);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const current = (value !== undefined ? String(value) : inner).slice(0, length);
   const cells = Array.from({ length }, (_, i) => current[i] ?? "");
@@ -70,8 +95,23 @@ export const CodeInput = forwardRef<HTMLInputElement, CodeInputProps>(function C
           spellCheck={false}
           className="absolute inset-0 h-full w-full cursor-text opacity-0"
           onChange={(e) => {
-            setInner(e.target.value);
+            const el = e.target;
+            const normalized = normalizeCode(el.value, mode);
+            if (normalized !== el.value) {
+              const caret = el.selectionStart;
+              el.value = normalized;
+              el.setSelectionRange(caret, caret);
+            }
+            setInner(el.value);
             onChange?.(e);
+          }}
+          onPaste={(e) => {
+            onPaste?.(e);
+            if (e.defaultPrevented) return;
+            const code = extractCode(e.clipboardData.getData("text"), length, mode);
+            if (code === undefined) return;
+            e.preventDefault();
+            setInputValue(e.currentTarget, code);
           }}
           onFocus={(e) => {
             setFocused(true);
@@ -87,3 +127,10 @@ export const CodeInput = forwardRef<HTMLInputElement, CodeInputProps>(function C
     </div>
   );
 });
+
+/** Sets the value the way typing does, so React's onChange (and the form) sees it. */
+function setInputValue(el: HTMLInputElement, next: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  setter?.call(el, next);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}

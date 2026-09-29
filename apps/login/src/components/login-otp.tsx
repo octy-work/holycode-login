@@ -223,6 +223,8 @@ export function LoginOTP({ host, loginName, sessionId, requestId, organization, 
           label={t("verify.labels.code")}
           autoComplete="one-time-code"
           mode="numeric"
+          // Authenticator codes are 6 digits; codes sent by e-mail/SMS are 8 (OTP_EMAIL/OTP_SMS generators).
+          length={method === "time-based" ? 6 : 8}
           data-testid="code-text-input"
         />
 
