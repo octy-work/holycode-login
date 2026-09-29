@@ -1,4 +1,7 @@
+import { createLogger } from "@/lib/logger";
 import { createPublicKey, randomBytes, verify } from "crypto";
+
+const logger = createLogger("device-handoff");
 
 /**
  * The ID session for the app window after a device sign-in (HolyAgent).
@@ -57,6 +60,7 @@ export function rememberDeviceApproval(userId: string, session: HandoffSession, 
   if (!userId || !session?.id || !session?.token) return;
   sweep(now);
   store().approvals.set(userId, { userId, session, at: now });
+  logger.info("device approval noted", { user: userId.slice(-6) });
 }
 
 /** One-time code for the latest approval of this person, if it is fresh. */
@@ -64,10 +68,14 @@ export function mintHandoff(userId: string, now = Date.now()): string | undefine
   sweep(now);
   const { approvals, handoffs } = store();
   const approval = approvals.get(userId);
-  if (!approval) return undefined;
+  if (!approval) {
+    logger.warn("no device approval for handoff", { user: userId.slice(-6), approvals: approvals.size });
+    return undefined;
+  }
   approvals.delete(userId);
   const code = randomBytes(32).toString("base64url");
   handoffs.set(code, { userId, session: approval.session, exp: now + HANDOFF_TTL_MS });
+  logger.info("handoff link issued", { user: userId.slice(-6) });
   return code;
 }
 
@@ -77,9 +85,14 @@ export function consumeHandoff(code: string, now = Date.now()): HandoffSession |
   sweep(now);
   const { handoffs } = store();
   const handoff = handoffs.get(code);
-  if (!handoff) return undefined;
+  if (!handoff) {
+    logger.warn("handoff link unknown or used");
+    return undefined;
+  }
   handoffs.delete(code);
-  return handoff.exp > now ? handoff.session : undefined;
+  const live = handoff.exp > now;
+  logger.info(live ? "handoff link used" : "handoff link expired", { user: handoff.userId.slice(-6) });
+  return live ? handoff.session : undefined;
 }
 
 // ---------------------------------------------------------------------------
