@@ -1,6 +1,7 @@
 "use server";
 
 import { getSessionCookieById } from "@/lib/cookies";
+import { rememberApprovalForCookie } from "@/lib/device-approval";
 import { isSessionValid } from "@/lib/session";
 import { authorizeOrDenyDeviceAuthorization, getSession } from "@/lib/zitadel";
 import { headers } from "next/headers";
@@ -45,6 +46,7 @@ export async function approveDeviceWithSession(
       deviceAuthorizationId,
       session: { sessionId: cookie.id, sessionToken: cookie.token },
     });
+    await rememberApprovalForCookie(serviceConfig, cookie, current.session.factors?.user?.id);
     return { ok: true };
   } catch {
     return { error: "failed" };

@@ -5,6 +5,7 @@ import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { resolveRedirectUri } from "@/lib/client";
 import { getMostRecentCookieWithLoginname, getSessionCookieById } from "@/lib/cookies";
+import { rememberApprovalForCookie } from "@/lib/device-approval";
 import { completeDeviceAuthorization } from "@/lib/server/device";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
@@ -56,22 +57,24 @@ export default async function Page(props: { searchParams: Promise<any> }) {
       await completeDeviceAuthorization(requestId.replace("device_", ""), {
         sessionId: cookie.id,
         sessionToken: cookie.token,
-      }).catch((err) => {
-        return (
-          <DynamicTheme branding={branding}>
-            <div className="flex flex-col space-y-4">
-              <h1>
-                <Translated i18nKey="error.title" namespace="signedin" />
-              </h1>
-              <p className="ztdl-p mb-6 block">
-                <Translated i18nKey="error.description" namespace="signedin" />
-              </p>
-              <Alert>{err.message}</Alert>
-            </div>
-            <div className="w-full"></div>
-          </DynamicTheme>
-        );
-      });
+      })
+        .then(() => rememberApprovalForCookie(serviceConfig, cookie))
+        .catch((err) => {
+          return (
+            <DynamicTheme branding={branding}>
+              <div className="flex flex-col space-y-4">
+                <h1>
+                  <Translated i18nKey="error.title" namespace="signedin" />
+                </h1>
+                <p className="ztdl-p mb-6 block">
+                  <Translated i18nKey="error.description" namespace="signedin" />
+                </p>
+                <Alert>{err.message}</Alert>
+              </div>
+              <div className="w-full"></div>
+            </DynamicTheme>
+          );
+        });
     }
   }
 
