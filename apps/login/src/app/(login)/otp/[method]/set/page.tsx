@@ -6,6 +6,7 @@ import { FormActions } from "@/components/form-actions";
 import { TotpRegister } from "@/components/totp-register";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
+import { brandWordmarkFromEnv } from "@/lib/brand";
 import { getEnrollmentAuthorizationError } from "@/lib/server/enrollment-guard";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
@@ -166,7 +167,7 @@ export default async function Page(props: {
                 totpResponse.uri as string,
                 totpIssuerFromEnv({
                   HC_TOTP_ISSUER: process.env.HC_TOTP_ISSUER,
-                  NEXT_PUBLIC_BRAND_WORDMARK: process.env.NEXT_PUBLIC_BRAND_WORDMARK,
+                  NEXT_PUBLIC_BRAND_WORDMARK: brandWordmarkFromEnv(),
                 }),
               )}
               secret={totpResponse.secret as string}

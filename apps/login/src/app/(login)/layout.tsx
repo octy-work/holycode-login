@@ -5,10 +5,11 @@ import { LanguageProvider } from "@/components/language-provider";
 import { PageChromeProvider } from "@/components/page-chrome-context";
 import { Skeleton } from "@/components/skeleton";
 import { ThemeProvider } from "@/components/theme-provider";
+import { brandWordmarkFromEnv, isTenantBrand } from "@/lib/brand";
 import { LANGS, getLanguage } from "@/lib/i18n";
 import { resolveLocalizedLegalLink } from "@/lib/legal-links";
 import { getServiceConfig } from "@/lib/service-url";
-import { getAllowedLanguages, getLegalAndSupportSettings } from "@/lib/zitadel";
+import { getAllowedLanguages, getBrandingSettings, getLegalAndSupportSettings } from "@/lib/zitadel";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import type { Metadata, Viewport } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -35,6 +36,19 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("common");
+  // Tenant mode (id.octy.ru …): the tab icon is the instance's own, when its label policy has one.
+  if (isTenantBrand(brandWordmarkFromEnv())) {
+    try {
+      const { serviceConfig } = getServiceConfig(await headers());
+      const branding = await getBrandingSettings({ serviceConfig });
+      const icon = branding?.lightTheme?.iconUrl || branding?.darkTheme?.iconUrl;
+      if (icon) {
+        return { title: t("title"), icons: { icon, apple: icon } };
+      }
+    } catch (e) {
+      console.error("Failed to load branding for the tab icon", e);
+    }
+  }
   return {
     title: t("title"),
     icons: {
@@ -109,7 +123,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }
             >
               <LanguageProvider>
-                <PageChromeProvider value={{ languages, helpLink, privacyPolicyLink, tosLink }}>
+                <PageChromeProvider
+                  value={{ languages, helpLink, privacyPolicyLink, tosLink, brandWordmark: brandWordmarkFromEnv() }}
+                >
                   <BackgroundWrapper className="relative flex min-h-screen flex-col justify-center">
                     <div className="relative mx-auto w-full max-w-[1100px] py-6 sm:py-10">{children}</div>
                   </BackgroundWrapper>

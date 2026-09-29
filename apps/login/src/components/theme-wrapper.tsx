@@ -1,6 +1,8 @@
 "use client";
 
+import { usePageChrome } from "@/components/page-chrome-context";
 import { setTheme } from "@/helpers/colors";
+import { isTenantBrand, tenantAccentCss } from "@/lib/brand";
 import { BrandingSettings, ThemeMode } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { useTheme } from "next-themes";
 import { ReactNode, useEffect, useLayoutEffect } from "react";
@@ -13,6 +15,12 @@ type Props = {
 
 export const ThemeWrapper = ({ children, branding }: Props) => {
   const { setTheme: setNextTheme } = useTheme();
+  const chrome = usePageChrome();
+  // Tenant mode: the HolyCode layout in the instance's own accent colour. Rendered with the
+  // page (not in an effect) so the server HTML is already in the right colour.
+  const accentCss = isTenantBrand(chrome.brandWordmark)
+    ? tenantAccentCss(branding?.lightTheme?.primaryColor, branding?.darkTheme?.primaryColor)
+    : "";
 
   useEffect(() => {
     setTheme(document, branding);
@@ -128,5 +136,10 @@ export const ThemeWrapper = ({ children, branding }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branding?.themeMode]);
 
-  return <div>{children}</div>;
+  return (
+    <div>
+      {accentCss ? <style data-hc-tenant-accent="" dangerouslySetInnerHTML={{ __html: accentCss }} /> : null}
+      {children}
+    </div>
+  );
 };
