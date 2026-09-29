@@ -1,12 +1,14 @@
 import { DeviceCodeForm } from "@/components/device-code-form";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { Translated } from "@/components/translated";
+import { normalizeUserCode } from "@/lib/device-code";
 import { getServiceConfig } from "@/lib/service-url";
-import { getBrandingSettings, getDefaultOrg } from "@/lib/zitadel";
+import { getBrandingSettings, getDefaultOrg, getDeviceAuthorizationRequest } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("device");
@@ -21,6 +23,23 @@ export default async function Page(props: { searchParams: Promise<Record<string 
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
+
+  // The app opens verification_uri_complete (?user_code=…): no code form, straight to
+  // the confirmation. A wrong or expired code falls back to the form with a message.
+  let codeNotFound = false;
+  if (userCode) {
+    const code = normalizeUserCode(userCode);
+    const found = await getDeviceAuthorizationRequest({ serviceConfig, userCode: code }).catch(() => undefined);
+    const id = found?.deviceAuthorizationRequest?.id;
+    if (id) {
+      const params = new URLSearchParams({ requestId: `device_${id}`, user_code: code });
+      if (organization) {
+        params.set("organization", organization);
+      }
+      redirect(`/device/consent?${params}`);
+    }
+    codeNotFound = true;
+  }
 
   let defaultOrganization;
   if (!organization) {
@@ -44,7 +63,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
       </div>
 
       <div className="w-full">
-        <DeviceCodeForm userCode={userCode}></DeviceCodeForm>
+        <DeviceCodeForm userCode={userCode} codeNotFound={codeNotFound}></DeviceCodeForm>
       </div>
     </DynamicTheme>
   );

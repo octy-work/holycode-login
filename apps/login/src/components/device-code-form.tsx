@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert } from "@/components/alert";
+import { normalizeUserCode } from "@/lib/device-code";
 import { getDeviceAuthorizationRequest } from "@/lib/server/oidc";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,7 @@ type Inputs = {
   userCode: string;
 };
 
-export function DeviceCodeForm({ userCode }: { userCode?: string }) {
+export function DeviceCodeForm({ userCode, codeNotFound }: { userCode?: string; codeNotFound?: boolean }) {
   const router = useRouter();
 
   const { register, handleSubmit, formState } = useForm<Inputs>({
@@ -29,14 +30,16 @@ export function DeviceCodeForm({ userCode }: { userCode?: string }) {
 
   const t = useTranslations("device");
 
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>(codeNotFound ? t("confirm.expired") : "");
 
   const [loading, setLoading] = useState<boolean>(false);
 
   async function submitCodeAndContinue(value: Inputs): Promise<boolean | void> {
     setLoading(true);
+    setError("");
+    const code = normalizeUserCode(value.userCode);
 
-    const response = await getDeviceAuthorizationRequest(value.userCode)
+    const response = await getDeviceAuthorizationRequest(code)
       .catch(() => {
         setError("Could not continue the request");
         return;
@@ -46,7 +49,7 @@ export function DeviceCodeForm({ userCode }: { userCode?: string }) {
       });
 
     if (!response || !response.deviceAuthorizationRequest?.id) {
-      setError("Could not continue the request");
+      setError(t("confirm.expired"));
       return;
     }
 
@@ -54,7 +57,7 @@ export function DeviceCodeForm({ userCode }: { userCode?: string }) {
       `/device/consent?` +
         new URLSearchParams({
           requestId: `device_${response.deviceAuthorizationRequest.id}`,
-          user_code: value.userCode,
+          user_code: code,
         }).toString(),
     );
   }

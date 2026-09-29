@@ -515,6 +515,24 @@
       "email": "View your email address.",
       "profile": "View your full profile information.",
       "offline_access": "Allow offline access to your account."
+    },
+    "confirm": {
+      "title": "Sign in to {appName}",
+      "subtitle": "Confirm the sign-in on your device",
+      "code": "Code",
+      "match": "Check that {appName} shows the same code. Allow only if you started this sign-in.",
+      "as": "You will sign in as",
+      "allow": "Allow sign-in",
+      "signIn": "Sign in and allow",
+      "otherAccount": "Another account",
+      "deny": "Deny",
+      "doneTitle": "Done",
+      "done": "You are signed in to {appName} — go back to the app. You can close this tab.",
+      "deniedTitle": "Sign-in denied",
+      "denied": "You can close this tab.",
+      "sessionGone": "Your browser session has ended — please sign in again.",
+      "failed": "Could not confirm the sign-in. Start it again in the app.",
+      "expired": "Code not found or expired. Start the sign-in again in the app."
     }
   },
   "error": {

@@ -2,6 +2,7 @@ import { AppEmblem } from "@/components/brand-mark";
 import { ConsentScreen } from "@/components/consent";
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { Translated } from "@/components/translated";
+import { findDeviceSession } from "@/lib/device-session";
 import { getServiceConfig } from "@/lib/service-url";
 import { getBrandingSettings, getDefaultOrg, getDeviceAuthorizationRequest } from "@/lib/zitadel";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
@@ -55,6 +56,11 @@ export default async function Page(props: { searchParams: Promise<Record<string 
     params.append("organization", organization);
   }
 
+  // Signed in already → one "Allow" with that session; otherwise sign in first, and
+  // /signedin finishes the request (no second confirmation).
+  const session = await findDeviceSession(serviceConfig);
+  const user = session?.factors?.user;
+
   return (
     <DynamicTheme branding={branding}>
       <div className="flex flex-col space-y-3">
@@ -62,33 +68,30 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           <AppEmblem branding={branding} className="h-[42px] w-[42px] shrink-0 rounded-[11px]" />
           <div className="min-w-0">
             <div className="text-hc-text truncate text-[15px] leading-tight font-semibold">
-              {deviceAuthorizationRequest?.appName}
-            </div>
-            <div className="text-hc-muted mt-0.5 text-[12.5px]">
               <Translated
-                i18nKey="request.title"
+                i18nKey="confirm.title"
                 namespace="device"
                 data={{ appName: deviceAuthorizationRequest?.appName }}
               />
             </div>
+            <div className="text-hc-muted mt-0.5 text-[12.5px]">
+              <Translated i18nKey="confirm.subtitle" namespace="device" />
+            </div>
           </div>
         </div>
-
-        <p className="ztdl-p">
-          <Translated
-            i18nKey="request.description"
-            namespace="device"
-            data={{ appName: deviceAuthorizationRequest?.appName }}
-          />
-        </p>
       </div>
 
       <div className="w-full">
         <ConsentScreen
           deviceAuthorizationRequestId={deviceAuthorizationRequest?.id}
-          scope={deviceAuthorizationRequest.scope}
           appName={deviceAuthorizationRequest?.appName}
-          nextUrl={`/loginname?` + params}
+          userCode={userCode}
+          session={
+            session && user
+              ? { id: session.id, displayName: user.displayName || user.loginName, loginName: user.loginName }
+              : undefined
+          }
+          loginUrl={`/loginname?` + params}
         />
       </div>
     </DynamicTheme>
