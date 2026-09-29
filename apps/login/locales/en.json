@@ -466,14 +466,6 @@
       "inviteSendFailed": "Failed to send invitation email",
       "emailSendFailed": "Failed to send verification email",
       "contextMissing": "An error occurred. Please try again."
-    },
-    "copy": {
-      "title": "Your code",
-      "hint": "Copy the code and paste it on the page that asked for it.",
-      "copy": "Copy code",
-      "copiedButton": "Copied",
-      "copied": "The code is on your clipboard — go back to the page that asked for it and paste it.",
-      "missing": "There is no code in this link. Open the email again and click “Copy code”."
     }
   },
   "authenticator": {
