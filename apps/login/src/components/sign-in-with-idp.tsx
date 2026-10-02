@@ -32,6 +32,8 @@ export interface SignInWithIDPProps {
   label?: ReactNode;
   /** "row" — icon tiles side by side (default up to 6 providers); "list" — named buttons. */
   layout?: "row" | "list";
+  /** Caption of a named button ("Continue with Apple"); the provider name when absent. */
+  listLabel?: (name: string) => string;
 }
 
 /** Divider with a centered caption: ——— or sign in with ——— */
@@ -55,6 +57,7 @@ export function SignInWithIdp({
   showLabel = true,
   label,
   layout,
+  listLabel,
 }: Readonly<SignInWithIDPProps>) {
   const [state, action, _isPending] = useActionState(redirectToIdp, {});
 
@@ -95,7 +98,12 @@ export function SignInWithIdp({
         {sessionId && <input type="hidden" name="sessionId" value={sessionId} />}
         {postErrorRedirectUrl && <input type="hidden" name="postErrorRedirectUrl" value={postErrorRedirectUrl} />}
         {loginHint && <input type="hidden" name="loginHint" value={loginHint} />}
-        <Component key={id} name={name} layout={buttonLayout} {...(Component === SignInWithGeneric ? { brand } : {})} />
+        <Component
+          key={id}
+          name={listLabel && effectiveLayout === "list" ? listLabel(name) : name}
+          layout={buttonLayout}
+          {...(Component === SignInWithGeneric ? { brand } : {})}
+        />
       </form>
     ) : null;
   };

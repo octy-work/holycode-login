@@ -155,6 +155,14 @@ export function RegisterPasskey({
 
     options.publicKey.challenge = coerceToArrayBuffer(options.publicKey.challenge, "challenge");
     options.publicKey.user.id = coerceToArrayBuffer(options.publicKey.user.id, "userid");
+    // HolyCode: ask the authenticator to keep the account in the passkey (a discoverable
+    // credential), so it can sign in without typing the login (use-discoverable-passkey).
+    // Zitadel does not set residentKey; platform passkeys are discoverable anyway, this
+    // covers security keys. The server does not check it.
+    options.publicKey.authenticatorSelection = {
+      ...(options.publicKey.authenticatorSelection ?? {}),
+      residentKey: options.publicKey.authenticatorSelection?.residentKey ?? "preferred",
+    };
     if (options.publicKey.excludeCredentials) {
       options.publicKey.excludeCredentials.map((cred: any) => {
         cred.id = coerceToArrayBuffer(cred.id as string, "excludeCredentials.id");

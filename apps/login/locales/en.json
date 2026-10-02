@@ -76,6 +76,37 @@
       "notMe": "Not me",
       "usePassword": "Sign in with a password",
       "hint": "The default is the way you signed in last time"
+    },
+    "chooser": {
+      "title": "Sign in",
+      "description": "One HolyCode ID for HolyChat, HolyAgent, HolyBuild and the panel.",
+      "login": "Sign in with login or e-mail",
+      "formTitle": "Sign in with login",
+      "allWays": "All ways to sign in",
+      "continueWith": "Continue with {provider}",
+      "back": "Another way to sign in",
+      "passkey": {
+        "touchId": "Sign in with Touch ID",
+        "faceId": "Sign in with Face ID",
+        "windowsHello": "Sign in with Windows Hello",
+        "fingerprint": "Sign in with fingerprint",
+        "passkey": "Sign in with a passkey"
+      },
+      "confirm": {
+        "touchId": "Confirm with Touch ID",
+        "faceId": "Confirm with Face ID",
+        "windowsHello": "Confirm with Windows Hello",
+        "fingerprint": "Confirm with fingerprint",
+        "passkey": "Confirm with the passkey"
+      }
+    },
+    "discover": {
+      "title": "One more touch",
+      "description": "The passkey is found. Confirm once more to sign in.",
+      "cancelled": "Passkey sign-in was cancelled.",
+      "failed": "Could not read the passkey. Sign in with your login.",
+      "noAccount": "There is no HolyCode ID passkey on this device. Sign in with your login or a provider.",
+      "notFound": "No account for this passkey. Sign in with your login."
     }
   },
   "zitadel": {

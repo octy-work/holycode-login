@@ -76,6 +76,37 @@
       "notMe": "Не я",
       "usePassword": "Войти по паролю",
       "hint": "Способ по умолчанию — последний, которым вы входили"
+    },
+    "chooser": {
+      "title": "Вход",
+      "description": "Один HolyCode ID для HolyChat, HolyAgent, HolyBuild и панели.",
+      "login": "Войти по логину или почте",
+      "formTitle": "Вход по логину",
+      "allWays": "Все способы",
+      "continueWith": "Продолжить с {provider}",
+      "back": "Другой способ входа",
+      "passkey": {
+        "touchId": "Войти с Touch ID",
+        "faceId": "Войти с Face ID",
+        "windowsHello": "Войти с Windows Hello",
+        "fingerprint": "Войти по отпечатку",
+        "passkey": "Войти с ключом доступа"
+      },
+      "confirm": {
+        "touchId": "Подтвердить Touch ID",
+        "faceId": "Подтвердить Face ID",
+        "windowsHello": "Подтвердить Windows Hello",
+        "fingerprint": "Подтвердить отпечатком",
+        "passkey": "Подтвердить ключом"
+      }
+    },
+    "discover": {
+      "title": "Ещё одно касание",
+      "description": "Ключ найден. Подтвердите ещё раз, чтобы войти.",
+      "cancelled": "Вход по ключу отменён.",
+      "failed": "Не получилось прочитать ключ. Войдите по логину.",
+      "noAccount": "На этом устройстве нет ключа HolyCode ID. Войдите по логину или через провайдера.",
+      "notFound": "Аккаунт для этого ключа не найден. Войдите по логину."
     }
   },
   "zitadel": {

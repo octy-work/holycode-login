@@ -34,6 +34,10 @@ vi.mock("@/lib/server/session", () => ({
   updateOrCreateSession: vi.fn(),
 }));
 
+vi.mock("@/lib/server/passkey-discover", () => ({
+  startDiscoveredPasskey: vi.fn(),
+}));
+
 const apple = { id: "392465682232508420", name: "Apple", type: IdentityProviderType.APPLE } as any;
 const github = { id: "392465683138478084", name: "GitHub", type: IdentityProviderType.GITHUB } as any;
 const loginSettings = { allowLocalAuthentication: true, disableLoginWithPhone: true } as any;
@@ -47,6 +51,7 @@ const baseProps = {
   identityProviders: [apple, github],
   allowRegister: true,
   remembered: null,
+  startWith: "form" as const,
 };
 
 describe("SignInForm — first visit (one screen)", () => {
@@ -264,5 +269,134 @@ describe("SignInForm — welcome back", () => {
     expect(forgetLastLogin).toHaveBeenCalledTimes(1);
     expect(queryByTestId("remembered-account")).toBeNull();
     expect(getByTestId("username-text-input")).toHaveValue("");
+  });
+});
+
+describe("SignInForm — the choice of ways in (02.10.2026)", () => {
+  let startDiscoveredPasskey: any;
+  let sendPasskey: any;
+  const originalCredential = (window as any).PublicKeyCredential;
+  const originalCredentials = (navigator as any).credentials;
+
+  const withWebAuthn = (get: (...args: any[]) => Promise<any>) => {
+    (window as any).PublicKeyCredential = {
+      isUserVerifyingPlatformAuthenticatorAvailable: () => Promise.resolve(true),
+    };
+    Object.defineProperty(navigator, "credentials", { value: { get }, configurable: true });
+    Object.defineProperty(navigator, "platform", { value: "MacIntel", configurable: true });
+  };
+  const buffer = (s: string) => new TextEncoder().encode(s).buffer;
+
+  beforeEach(async () => {
+    startDiscoveredPasskey = vi.mocked((await import("@/lib/server/passkey-discover")).startDiscoveredPasskey);
+    sendPasskey = vi.mocked((await import("@/lib/server/passkeys")).sendPasskey);
+    startDiscoveredPasskey.mockReset();
+    sendPasskey.mockReset();
+    push.mockReset();
+  });
+  afterEach(() => {
+    cleanup();
+    (window as any).PublicKeyCredential = originalCredential;
+    Object.defineProperty(navigator, "credentials", { value: originalCredentials, configurable: true });
+  });
+
+  const props = { ...baseProps, startWith: "choose" as const, passkeysAllowed: true };
+
+  test("starts with the ways in: login or e-mail, providers as named buttons, register", () => {
+    const { getByTestId, queryByTestId } = render(<SignInForm {...props} />);
+
+    expect(getByTestId("choose-login")).toHaveTextContent("chooser.login");
+    expect(queryByTestId("username-text-input")).toBeNull();
+    expect(getByTestId("idp-buttons")).toHaveTextContent("chooser.continueWith:Apple");
+    expect(getByTestId("idp-buttons")).toHaveTextContent("chooser.continueWith:GitHub");
+    expect(getByTestId("register-button")).toBeInTheDocument();
+    // jsdom has no WebAuthn: no passkey button.
+    expect(queryByTestId("discover-passkey")).toBeNull();
+  });
+
+  test("'login or e-mail' opens the form, 'All ways' brings the choice back", () => {
+    const { getByTestId, queryByTestId } = render(<SignInForm {...props} />);
+
+    fireEvent.click(getByTestId("choose-login"));
+    expect(getByTestId("username-text-input")).toHaveFocus();
+    expect(getByTestId("password-text-input")).toBeInTheDocument();
+
+    fireEvent.click(getByTestId("back-to-choice"));
+    expect(queryByTestId("username-text-input")).toBeNull();
+    expect(getByTestId("choose-login")).toBeInTheDocument();
+  });
+
+  test("a login hint goes straight to the form", () => {
+    const { getByTestId, queryByTestId } = render(<SignInForm {...props} loginName="event74@ya.ru" />);
+    expect(getByTestId("username-text-input")).toHaveValue("event74@ya.ru");
+    expect(queryByTestId("back-to-choice")).toBeNull();
+  });
+
+  test("with WebAuthn the passkey button leads, named after the device", async () => {
+    withWebAuthn(vi.fn());
+    const { findByTestId, getByTestId } = render(<SignInForm {...props} />);
+
+    expect(await findByTestId("discover-passkey")).toHaveTextContent("chooser.passkey.touchId");
+    expect(getByTestId("discover-passkey").className).toContain("hc-btn-primary");
+    expect(getByTestId("choose-login").className).not.toContain("hc-btn-primary");
+  });
+
+  test("two touches: the first finds the account, the second answers its challenge", async () => {
+    const get = vi
+      .fn()
+      .mockResolvedValueOnce({
+        id: "c1",
+        rawId: buffer("c1"),
+        type: "public-key",
+        response: { userHandle: buffer("392454771388186628") },
+      })
+      .mockResolvedValueOnce({
+        id: "c1",
+        rawId: buffer("c1"),
+        type: "public-key",
+        response: {
+          authenticatorData: buffer("a"),
+          clientDataJSON: buffer("{}"),
+          signature: buffer("s"),
+          userHandle: buffer("392454771388186628"),
+        },
+      });
+    withWebAuthn(get);
+    startDiscoveredPasskey.mockResolvedValue({ sessionId: "s1", publicKey: { challenge: "AAAA", allowCredentials: [] } });
+    sendPasskey.mockResolvedValue({ redirect: "/signedin" });
+
+    const { findByTestId } = render(<SignInForm {...props} />);
+    const discover = await findByTestId("discover-passkey");
+    await act(async () => {
+      fireEvent.click(discover);
+    });
+
+    expect(get.mock.calls[0][0].publicKey.allowCredentials).toBeUndefined();
+    expect(startDiscoveredPasskey).toHaveBeenCalledWith({ userHandle: expect.any(String), requestId: "oidc_1" });
+
+    const confirm = await findByTestId("discover-confirm");
+    expect(confirm).toHaveTextContent("chooser.confirm.touchId");
+    await act(async () => {
+      fireEvent.click(confirm);
+    });
+
+    expect(sendPasskey).toHaveBeenCalledWith(expect.objectContaining({ sessionId: "s1", requestId: "oidc_1" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/signedin"));
+  });
+
+  test("a passkey without an account in it: says so and stays on the choice", async () => {
+    withWebAuthn(
+      vi.fn().mockResolvedValue({ id: "c1", rawId: buffer("c1"), type: "public-key", response: { userHandle: null } }),
+    );
+    const { findByTestId, getByTestId } = render(<SignInForm {...props} />);
+
+    const discover = await findByTestId("discover-passkey");
+    await act(async () => {
+      fireEvent.click(discover);
+    });
+
+    expect(startDiscoveredPasskey).not.toHaveBeenCalled();
+    expect(getByTestId("error")).toHaveTextContent("discover.noAccount");
+    expect(getByTestId("choose-login")).toBeInTheDocument();
   });
 });

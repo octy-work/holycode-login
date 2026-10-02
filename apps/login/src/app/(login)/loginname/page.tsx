@@ -16,8 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * HolyCode: the one sign-in screen — login and password together, providers below,
- * and "welcome back" for the account this browser signed in with last time
+ * HolyCode: the sign-in screen — the choice of ways in (passkey, login or e-mail,
+ * providers; 02.10.2026), the login form with login and password together, and
+ * "welcome back" for the account this browser signed in with last time
  * (see SignInForm, lib/last-login.ts). The /password step stays for other entries
  * (passkey "use password", account picker fallbacks).
  */
@@ -29,6 +30,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const organization = searchParams?.organization;
   const orgDomain = searchParams?.orgDomain;
   const submit: boolean = searchParams?.submit === "true";
+  // HolyCode: `?via=login` opens the login form instead of the choice of ways in.
+  const startWith = searchParams?.via === "login" ? "form" : "choose";
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
@@ -84,6 +87,8 @@ export default async function Page(props: { searchParams: Promise<Record<string 
         identityProviders={offeredIdps}
         allowRegister={!!loginSettings?.allowRegister}
         remembered={remembered}
+        startWith={startWith}
+        passkeysAllowed={loginSettings?.passkeysType !== PasskeysType.NOT_ALLOWED}
       />
     </DynamicTheme>
   );

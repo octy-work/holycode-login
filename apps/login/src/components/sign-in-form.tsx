@@ -4,7 +4,7 @@ import { handleServerActionResponse } from "@/lib/client-utils";
 import { RememberedPrimary, RememberedView } from "@/lib/last-login";
 import { resetPassword } from "@/lib/server/password";
 import { forgetLastLogin, PasskeyOffer, signIn } from "@/lib/server/sign-in";
-import { FingerPrintIcon } from "@heroicons/react/24/solid";
+import { ArrowLeftIcon, FingerPrintIcon, UserIcon } from "@heroicons/react/24/solid";
 import { IdentityProvider, LoginSettings } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
@@ -21,6 +21,7 @@ import { RegisterLink } from "./register-link";
 import { SignInWithIdp } from "./sign-in-with-idp";
 import { Spinner } from "./spinner";
 import { Translated } from "./translated";
+import { useDiscoverablePasskey, usePasskeyLabelKind } from "./use-discoverable-passkey";
 import { usePasskeySignIn } from "./use-passkey-sign-in";
 
 type Inputs = {
@@ -44,6 +45,13 @@ type Props = {
   allowRegister: boolean;
   /** The account this browser signed in with last time (hc_last_login), when it applies. */
   remembered: RememberedView | null;
+  /**
+   * "choose" — the first screen offers the ways in (passkey, login or e-mail, providers);
+   * "form" — straight to the login form (a login hint, `?via=login`). Default "choose".
+   */
+  startWith?: "choose" | "form";
+  /** The login policy allows passkeys (the usernameless passkey button on the first screen). */
+  passkeysAllowed?: boolean;
 };
 
 /**
@@ -56,6 +64,11 @@ type Props = {
  * - Returning ("welcome back"): the remembered account with "Not me", its last way
  *   in first (password field, the provider's button or the passkey button), other
  *   ways below as secondary.
+ *
+ * Since 02.10.2026 the first visit starts with the choice of a way in (owner's
+ * decision Q1): "Sign in with Touch ID" (usernameless, see use-discoverable-passkey),
+ * "Sign in with login or e-mail" (the form above), then the providers as named
+ * buttons. A login hint or `?via=login` opens the form right away.
  */
 export function SignInForm(props: Props) {
   const { requestId, organization, defaultOrganization, loginSettings, suffix, hideSuffix, identityProviders } = props;
@@ -81,9 +94,15 @@ export function SignInForm(props: Props) {
   const [passkeyOffer, setPasskeyOffer] = useState<PasskeyOffer | null>(null);
 
   const passkey = usePasskeySignIn({ requestId, onError: setError, onSamlData: setSamlData });
-  const busy = loading || passkey.pending;
+  const discovered = useDiscoverablePasskey({ requestId, organization, onError: setError, onSamlData: setSamlData });
+  const passkeyKind = usePasskeyLabelKind();
+  const busy = loading || passkey.pending || discovered.pending;
 
   const allowLocal = !!loginSettings?.allowLocalAuthentication;
+  const initialMode: "choose" | "form" =
+    props.startWith === "form" || !!props.loginName || props.submit || !allowLocal ? "form" : "choose";
+  const [mode, setMode] = useState<"choose" | "form">(initialMode);
+  const canPasskey = allowLocal && props.passkeysAllowed !== false && !!passkeyKind;
   const showForgot = allowLocal && !loginSettings?.hidePasswordReset;
 
   const typedLoginName = watch("loginName");
@@ -190,6 +209,7 @@ export function SignInForm(props: Props) {
     setPasswordRequired(false);
     setPasskeyOffer(null);
     reset({ loginName: "", password: "" });
+    setMode(props.startWith === "form" || !allowLocal ? "form" : "choose");
     try {
       await forgetLastLogin();
     } catch {
@@ -267,7 +287,7 @@ export function SignInForm(props: Props) {
       data-testid="passkey-button"
     >
       {passkey.pending ? <Spinner className="h-5 w-5" /> : <FingerPrintIcon className="h-5 w-5" aria-hidden="true" />}
-      {t("signIn.passkey")}
+      {passkeyKind && passkeyKind !== "passkey" ? t(`chooser.passkey.${passkeyKind}`) : t("signIn.passkey")}
     </Button>
   );
 
@@ -427,12 +447,126 @@ export function SignInForm(props: Props) {
     );
   }
 
+  if (mode === "choose") {
+    if (discovered.found) {
+      // Between the two touches: the account is found, Zitadel's challenge waits.
+      return (
+        <>
+          {header("discover.title", "discover.description")}
+          <div className="mt-4 flex w-full flex-col gap-2.5">
+            {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
+            <Button
+              type="button"
+              variant={ButtonVariants.Primary}
+              disabled={busy}
+              onClick={discovered.confirm}
+              data-testid="discover-confirm"
+            >
+              {discovered.pending ? (
+                <Spinner className="h-5 w-5" />
+              ) : (
+                <FingerPrintIcon className="h-5 w-5" aria-hidden="true" />
+              )}
+              {t(`chooser.confirm.${passkeyKind ?? "passkey"}`)}
+            </Button>
+            {messages}
+            <Button
+              type="button"
+              variant={ButtonVariants.Ghost}
+              disabled={busy}
+              onClick={discovered.reset}
+              data-testid="discover-back"
+            >
+              {t("chooser.back")}
+            </Button>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {header("chooser.title", "chooser.description")}
+        <div className="mt-4 flex w-full flex-col gap-2.5">
+          {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
+          {canPasskey && (
+            <Button
+              type="button"
+              variant={ButtonVariants.Primary}
+              disabled={busy}
+              onClick={discovered.discover}
+              data-testid="discover-passkey"
+            >
+              {discovered.pending ? (
+                <Spinner className="h-5 w-5" />
+              ) : (
+                <FingerPrintIcon className="h-5 w-5" aria-hidden="true" />
+              )}
+              {t(`chooser.passkey.${passkeyKind}`)}
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant={canPasskey ? ButtonVariants.Secondary : ButtonVariants.Primary}
+            disabled={busy}
+            onClick={() => {
+              setError("");
+              setMode("form");
+            }}
+            data-testid="choose-login"
+          >
+            <UserIcon className="h-5 w-5" aria-hidden="true" />
+            {t("chooser.login")}
+          </Button>
+        </div>
+        {messages}
+
+        {identityProviders.length > 0 && (
+          <div className="mt-4 w-full">
+            <SignInWithIdp
+              identityProviders={identityProviders}
+              requestId={requestId}
+              organization={organization}
+              postErrorRedirectUrl="/loginname"
+              layout="list"
+              listLabel={(name) => t("chooser.continueWith", { provider: name })}
+              label={t("signIn.or")}
+            />
+          </div>
+        )}
+
+        {props.allowRegister && (
+          <div className="mt-2 w-full">
+            <RegisterLink organization={organization} requestId={requestId} />
+          </div>
+        )}
+      </>
+    );
+  }
+
   const showPasswordField = !passkeyOffer || passkeyOffer.altPassword;
   const idpLoginHint = typedLoginName?.trim() ? withSuffix(typedLoginName.trim()) : undefined;
 
   return (
     <>
-      {header("title", "description")}
+      {initialMode === "choose" && (
+        <button
+          type="button"
+          onClick={() => {
+            setError("");
+            setInfo("");
+            setPasswordRequired(false);
+            setPasskeyOffer(null);
+            setMode("choose");
+          }}
+          className="text-hc-link hover:text-hc-p500 -mt-1 mb-3 inline-flex items-center gap-1.5 self-start rounded-md text-[13px] font-medium transition-colors"
+          data-testid="back-to-choice"
+        >
+          <ArrowLeftIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("chooser.allWays")}
+        </button>
+      )}
+      {header(initialMode === "choose" ? "chooser.formTitle" : "title", "description")}
       <div className="mt-4 w-full">
         {samlData && <AutoSubmitForm url={samlData.url} fields={samlData.fields} />}
 
