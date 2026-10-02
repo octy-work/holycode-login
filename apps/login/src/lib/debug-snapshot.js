@@ -837,16 +837,23 @@ function withTimeout(promise, ms, message) {
   })
 }
 
+// Два кадра — чтобы закрылось меню профиля. В фоновой вкладке
+// requestAnimationFrame не срабатывает вовсе — тогда хватает таймера
+// (02.10.2026: снимок висел на «Снимаю…», пока вкладку не открыли).
 function nextFrames(win, count = 2) {
   return new Promise((resolve) => {
-    if (typeof win.requestAnimationFrame !== 'function') {
-      setTimeout(resolve, 32)
-      return
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      resolve()
     }
+    setTimeout(finish, 150)
+    if (typeof win.requestAnimationFrame !== 'function') return
     let left = count
     const step = () => {
       left -= 1
-      if (left <= 0) resolve()
+      if (left <= 0) finish()
       else win.requestAnimationFrame(step)
     }
     win.requestAnimationFrame(step)
