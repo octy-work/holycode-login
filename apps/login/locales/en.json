@@ -1154,6 +1154,24 @@
       "passkey": "Could not create the passkey. Try again or choose the app.",
       "passkeyCancelled": "Creating the passkey was cancelled.",
       "pow": "Could not check the browser. Reload the page and try again."
+    },
+    "org": {
+      "title": "Your organization",
+      "description": "The account {account} becomes its owner.",
+      "name": "Name",
+      "domainTitle": "Domain for mail",
+      "hasDomain": "We have a domain",
+      "hasDomainHint": "Connected in the admin: DNS moved to HolyCode or records only",
+      "domain": "Domain",
+      "noDomain": "No domain yet",
+      "noDomainHint": "The team gets addresses in HolyCode domains; connect your own domain later",
+      "create": "Create organization",
+      "skip": "Later — go on without an organization",
+      "errors": {
+        "name": "The name is 2 to 80 characters.",
+        "domain": "Check the domain, e.g. acme.ru.",
+        "create": "Could not create the organization. Please try again."
+      }
     }
   },
   "recoveryCode": {

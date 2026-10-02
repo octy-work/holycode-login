@@ -4,6 +4,7 @@ import {
   functionalCookiesAllowed,
   hasConsents,
   localPartProblem,
+  normalizeDomain,
   parseCookieConsent,
   parseSignupState,
   serializeSignupState,
@@ -71,5 +72,15 @@ describe("mailbox names", () => {
     expect(transliterate("Щука Ёж")).toBe("shchuka ezh");
     expect(suggestLocalParts("Родион", "Отлетов")).toEqual(["rodion.otletov", "rodion", "r.otletov", "otletov.rodion"]);
     expect(suggestLocalParts("Ann", "")).toEqual([]);
+  });
+});
+
+describe("organization domain", () => {
+  test("normalizes what people type, refuses the rest", () => {
+    expect(normalizeDomain(" Acme.RU ")).toBe("acme.ru");
+    expect(normalizeDomain("https://shop.acme.co.uk/path")).toBe("shop.acme.co.uk");
+    expect(normalizeDomain("acme")).toBeNull();
+    expect(normalizeDomain("acme..ru")).toBeNull();
+    expect(normalizeDomain("-acme.ru")).toBeNull();
   });
 });

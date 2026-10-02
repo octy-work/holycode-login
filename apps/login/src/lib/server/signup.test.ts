@@ -35,6 +35,7 @@ vi.mock("./daenerys-signup", () => ({
   activateMailbox: vi.fn(),
   checkMailbox: vi.fn(),
   clientIpFrom: () => "1.2.3.4",
+  createSignupOrg: vi.fn(),
   listSignupDomains: vi.fn(),
   recordConsent: vi.fn(),
   reserveMailbox: vi.fn(),
@@ -48,8 +49,14 @@ const verify = await import("../verify-helper");
 const dny = await import("./daenerys-signup");
 const powMod = await import("./pow");
 const rateMod = await import("./rate-limit");
-const { completeIdpSignup, confirmTotpSetup, startSignup, checkMailboxName, generateSignupRecoveryCodes } =
-  await import("./signup");
+const {
+  completeIdpSignup,
+  confirmTotpSetup,
+  startSignup,
+  checkMailboxName,
+  generateSignupRecoveryCodes,
+  createSignupOrganization,
+} = await import("./signup");
 
 const base = {
   idpId: "idp1",
@@ -248,5 +255,39 @@ describe("checkMailboxName", () => {
       address: "rodion@holycode.org",
       aliases: [{ address: "rodion@sozv.one", available: false }],
     });
+  });
+});
+
+describe("for a team", () => {
+  test("after the account, the organization step instead of the service", async () => {
+    jar.set(SIGNUP_COOKIE_NAME, serializeSignupState({ who: "team", terms: CONSENT_VERSION, pd: CONSENT_VERSION }));
+    vi.mocked(cookieMod.createSessionForIdpAndUpdateCookie).mockResolvedValue({
+      id: "s1",
+      factors: { user: { id: "u1", loginName: "rodion@gmail.com", organizationId: "org1" } },
+    } as any);
+
+    const res = await completeIdpSignup({ ...base, mail: { kind: "own" } });
+
+    expect(res).toEqual({ redirect: "/register/organization" });
+    expect(client.completeFlowOrGetUrl).not.toHaveBeenCalled();
+    expect(JSON.parse(jar.get(SIGNUP_COOKIE_NAME) as string).g).toBe("rodion@gmail.com");
+  });
+
+  test("the organization is created for that account and the admin opens with the domain", async () => {
+    jar.set(
+      SIGNUP_COOKIE_NAME,
+      serializeSignupState({ who: "team", terms: CONSENT_VERSION, pd: CONSENT_VERSION, team: "rodion@gmail.com" }),
+    );
+    vi.mocked(cookiesMod.getSessionCookieByLoginName).mockResolvedValue({ id: "s1", token: "tok" } as any);
+    vi.mocked(zitadel.getSession).mockResolvedValue({ session: { factors: { user: { id: "u1" } } } } as any);
+    vi.mocked(dny.createSignupOrg).mockResolvedValue({ ok: true, data: { account_id: "acct-acme", name: "Acme" } });
+
+    expect(await createSignupOrganization({ name: "A", domain: "" })).toEqual({ error: "org.errors.name" });
+    expect(await createSignupOrganization({ name: "Acme", domain: "not a domain" })).toEqual({ error: "org.errors.domain" });
+
+    const res = await createSignupOrganization({ name: " Acme ", domain: "https://Acme.RU/" });
+    expect(dny.createSignupOrg).toHaveBeenCalledWith({ userId: "u1", name: "Acme" });
+    expect(res).toEqual({ redirect: "https://chat.holycode.org/admin?org=acct-acme&domain=acme.ru" });
+    expect(jar.has(SIGNUP_COOKIE_NAME)).toBe(false);
   });
 });

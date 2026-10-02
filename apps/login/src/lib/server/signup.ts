@@ -9,6 +9,7 @@ import {
   hasConsents,
   localPartProblem,
   MAX_MAILBOX_ALIASES,
+  normalizeDomain,
   normalizeLocalPart,
   parseCookieConsent,
   parseSignupState,
@@ -41,6 +42,7 @@ import {
   activateMailbox,
   checkMailbox,
   clientIpFrom,
+  createSignupOrg,
   listSignupDomains,
   recordConsent,
   reserveMailbox,
@@ -196,6 +198,7 @@ async function journalConsent(userId: string) {
     version: CONSENT_VERSION,
     cookies: cookieConsent,
     clientIp: clientIpFrom(_headers),
+    userAgent: _headers.get("user-agent") ?? undefined,
   });
   if (journaled.ok) {
     return;
@@ -372,6 +375,19 @@ export async function completeIdpSignup(command: CompleteIdpSignupCommand): Prom
     return { redirect: "/register/protect" };
   }
 
+  if (state?.who === "team") {
+    // "For a team": name the organization before going on (/register/organization).
+    await writeSignupState({
+      who: "team",
+      terms: CONSENT_VERSION,
+      pd: CONSENT_VERSION,
+      ...(command.requestId ? { requestId: command.requestId } : {}),
+      organization: command.organization,
+      team: session.factors.user.loginName,
+    });
+    return { redirect: "/register/organization" };
+  }
+
   await clearSignupState();
 
   const methods = await listAuthenticationMethodTypes({ serviceConfig, userId }).catch(() => null);
@@ -526,6 +542,10 @@ export async function continueAfterSignup(input: { address: string }): Promise<F
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
   const cookie = await getSessionCookieByLoginName({ loginName: input.address, organization: state?.organization });
+  if (cookie && state?.who === "team") {
+    await writeSignupState({ ...state, team: cookie.loginName, activated: undefined });
+    return { redirect: "/register/organization" };
+  }
   await clearSignupState();
   if (!cookie) {
     return { redirect: "/loginname" };
@@ -569,4 +589,70 @@ export async function generateSignupRecoveryCodes(): Promise<{ codes: string[] }
     logger.warn("Could not issue recovery codes", { error: String(error) });
     return { error: t("done.codes.failed") };
   }
+}
+
+/** For the organization page: the account that is naming its organization, or null. */
+export async function currentSignupTeam(): Promise<string | null> {
+  const state = await readSignupState();
+  return state?.who === "team" && state.team ? state.team : null;
+}
+
+async function teamContext() {
+  const state = await readSignupState();
+  if (!state?.team) return null;
+  const cookie = await getSessionCookieByLoginName({ loginName: state.team, organization: state.organization });
+  if (!cookie) return null;
+  const { serviceConfig } = getServiceConfig(await headers());
+  const session = await getSession({ serviceConfig, sessionId: cookie.id, sessionToken: cookie.token }).catch(() => null);
+  const userId = session?.session?.factors?.user?.id;
+  return userId ? { state, cookie, userId, serviceConfig } : null;
+}
+
+/**
+ * "For a team": the organization (Daenerys `POST /api/id/org`, the person is its
+ * owner), then the organization's admin — with the domain to connect, if given.
+ */
+export async function createSignupOrganization(input: { name: string; domain?: string }): Promise<FlowResult> {
+  const t = await getTranslations("signup");
+  const name = (input.name || "").trim();
+  if (name.length < 2 || name.length > 80) {
+    return { error: t("org.errors.name") };
+  }
+  let domain: string | null = null;
+  if (input.domain && input.domain.trim()) {
+    domain = normalizeDomain(input.domain);
+    if (!domain) return { error: t("org.errors.domain") };
+  }
+  const ctx = await teamContext();
+  if (!ctx) {
+    return { error: t("errors.noSignup") };
+  }
+  const created = await createSignupOrg({ userId: ctx.userId, name });
+  if (!created.ok) {
+    logger.warn("Organization not created", { code: created.code, status: created.status });
+    return { error: t("org.errors.create") };
+  }
+  await clearSignupState();
+  const base = (process.env.HC_ORG_ADMIN_URL || "https://chat.holycode.org/admin").replace(/\/+$/, "");
+  const params = new URLSearchParams({ org: created.data.account_id });
+  if (domain) params.set("domain", domain);
+  return { redirect: `${base}?${params}` };
+}
+
+/** "For a team", later: go on to the service now, name the organization in the admin. */
+export async function skipSignupOrganization(): Promise<FlowResult> {
+  const t = await getTranslations("signup");
+  const ctx = await teamContext();
+  await clearSignupState();
+  if (!ctx) {
+    return { redirect: "/loginname" };
+  }
+  const loginSettings = await getLoginSettings({ serviceConfig: ctx.serviceConfig, organization: ctx.state.organization });
+  const result = await completeFlowOrGetUrl(
+    ctx.state.requestId
+      ? { sessionId: ctx.cookie.id, requestId: ctx.state.requestId, organization: ctx.cookie.organization }
+      : { loginName: ctx.cookie.loginName, organization: ctx.cookie.organization },
+    loginSettings?.defaultRedirectUri,
+  );
+  return result && typeof result === "object" ? result : { error: t("errors.generic") };
 }

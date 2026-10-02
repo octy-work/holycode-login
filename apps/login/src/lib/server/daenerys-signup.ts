@@ -34,6 +34,7 @@ export async function signupRequest<T>(
     method?: "GET" | "POST";
     body?: unknown;
     clientIp?: string;
+    userAgent?: string;
     env?: Record<string, string | undefined>;
     fetchImpl?: FetchLike;
     timeoutMs?: number;
@@ -49,7 +50,10 @@ export async function signupRequest<T>(
   try {
     const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: "application/json" };
     if (options.body !== undefined) headers["Content-Type"] = "application/json";
-    if (options.clientIp) headers["X-HC-Client-IP"] = options.clientIp;
+    // Daenerys requires the person's IP on check/reserve (its limits) and hashes IP and
+    // User-Agent into the consent journal; "0.0.0.0" when the proxy did not pass one.
+    headers["X-HC-Client-IP"] = options.clientIp || "0.0.0.0";
+    if (options.userAgent) headers["X-HC-Client-User-Agent"] = options.userAgent.slice(0, 512);
     const response = await fetchImpl(`${url}${path}`, {
       method: options.method ?? (options.body === undefined ? "GET" : "POST"),
       headers,
@@ -147,7 +151,13 @@ export function activateMailbox(input: { reservationId: string; userId: string }
   });
 }
 
-export function recordConsent(input: { userId: string; version: string; cookies: "all" | "necessary"; clientIp?: string }) {
+export function recordConsent(input: {
+  userId: string;
+  version: string;
+  cookies: "all" | "necessary";
+  clientIp?: string;
+  userAgent?: string;
+}) {
   return signupRequest<{ ok: boolean }>("/api/id/consent", {
     body: {
       user_id: input.userId,
@@ -155,5 +165,13 @@ export function recordConsent(input: { userId: string; version: string; cookies:
       cookies: input.cookies,
     },
     clientIp: input.clientIp,
+    userAgent: input.userAgent,
+  });
+}
+
+/** "For a team": an organization owned by the person (Daenerys `POST /api/id/org`). */
+export function createSignupOrg(input: { userId: string; name: string }) {
+  return signupRequest<{ account_id: string; name: string; created?: boolean }>("/api/id/org", {
+    body: { user_id: input.userId, name: input.name },
   });
 }

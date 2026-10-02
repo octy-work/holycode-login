@@ -45,6 +45,8 @@ export type SignupState = {
   reservation?: SignupReservation;
   /** The mailbox just switched on — recovery codes may be issued once, on the last step. */
   activated?: string;
+  /** "For a team": the account (login name) that still has to name its organization. */
+  team?: string;
 };
 
 type Wire = {
@@ -56,6 +58,7 @@ type Wire = {
   o?: string;
   m?: { i: string; a: string; x?: string[] };
   d?: string;
+  g?: string;
 };
 
 const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -98,6 +101,7 @@ export function parseSignupState(raw: string | undefined | null): SignupState | 
     state.reservation = { id: w.m.i, address: w.m.a, aliases };
   }
   if (typeof w.d === "string" && ADDRESS_RE.test(w.d)) state.activated = w.d;
+  if (typeof w.g === "string" && w.g.length <= 320 && /^[^\s<>"]+$/.test(w.g)) state.team = w.g;
   return state;
 }
 
@@ -112,6 +116,7 @@ export function serializeSignupState(state: SignupState): string {
     if (state.reservation.aliases.length) wire.m.x = state.reservation.aliases.slice(0, 2);
   }
   if (state.activated) wire.d = state.activated;
+  if (state.team) wire.g = state.team;
   return JSON.stringify(wire);
 }
 
@@ -132,6 +137,17 @@ export function functionalCookiesAllowed(consent: CookieConsent | null): boolean
 export type MailboxDomain = { domain: string; group: "holycode" | "product" };
 
 export const MAX_MAILBOX_ALIASES = 2;
+
+/** A domain the person types for the organization: "Acme.RU " → "acme.ru", or null. */
+export function normalizeDomain(input: string): string | null {
+  const d = (input || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.$/, "");
+  return /^(?=.{3,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(d) ? d : null;
+}
 
 /** What the person typed → the local part as Daenerys checks it. */
 export function normalizeLocalPart(input: string): string {
