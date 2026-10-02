@@ -3,6 +3,7 @@ import { DynamicTheme } from "@/components/dynamic-theme";
 import { InviteBanner, inviteContextFromSearchParams } from "@/components/invite-banner";
 import { RegisterForm } from "@/components/register-form";
 import { SignInWithIdp } from "@/components/sign-in-with-idp";
+import { SignupStart } from "@/components/signup-start";
 import { Translated } from "@/components/translated";
 import { getServiceConfig } from "@/lib/service-url";
 import {
@@ -88,6 +89,23 @@ export default async function Page(props: { searchParams: Promise<Record<string 
           </p>
         </div>
         <div className="w-full"></div>
+      </DynamicTheme>
+    );
+  }
+
+  // HolyCode (02.10.2026, owner's decision Q5): self-registration goes through the
+  // wizard — who the account is for, consents, then an account at a provider as the
+  // anchor (SignupStart). An invitation is an anchor of its own, so an invited person
+  // keeps the e-mail form below.
+  if (!invite && process.env.HC_SIGNUP_LEGACY_FORM !== "1") {
+    return (
+      <DynamicTheme branding={branding}>
+        <SignupStart
+          identityProviders={loginSettings.allowExternalIdp ? identityProviders : []}
+          legal={legal}
+          requestId={requestId}
+          organization={searchParams.organization}
+        />
       </DynamicTheme>
     );
   }

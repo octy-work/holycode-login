@@ -632,6 +632,13 @@ async function handleAutoLinking(ctx: IDPHandlerContext): Promise<IDPHandlerResu
  * CASE 4: Auto-creation of user
  */
 async function handleAutoCreation(ctx: IDPHandlerContext): Promise<IDPHandlerResult> {
+  // HolyCode (02.10.2026): a new person always goes through the registration's e-mail
+  // step — the consents (Q8) and the choice of a HolyCode mailbox (Q2) — instead of an
+  // account made silently from the provider's data. HC_SIGNUP_IDP_AUTOCREATE=1 brings
+  // the provider's auto-creation back.
+  if (ctx.options?.isAutoCreation && process.env.HC_SIGNUP_IDP_AUTOCREATE !== "1") {
+    return handleManualCreation({ ...ctx, options: { ...ctx.options, isCreationAllowed: true } as typeof ctx.options });
+  }
   const { options, intent, serviceConfig, buildRedirectParams, t } = ctx;
   const { idpInformation } = intent;
   const createUserData = resolveCreateUser(intent);

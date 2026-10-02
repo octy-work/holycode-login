@@ -68,7 +68,19 @@ vi.mock("../fingerprint", () => ({
   getFingerprintIdCookie: vi.fn(),
 }));
 
+// HolyCode sends new people to the registration's e-mail step even when the provider
+// auto-creates (02.10.2026); upstream's auto-creation cases run with the switch back on.
+const autoCreateEnv = process.env.HC_SIGNUP_IDP_AUTOCREATE;
+
 describe("processIDPCallback", () => {
+  beforeEach(() => {
+    process.env.HC_SIGNUP_IDP_AUTOCREATE = "1";
+  });
+  afterEach(() => {
+    if (autoCreateEnv === undefined) delete process.env.HC_SIGNUP_IDP_AUTOCREATE;
+    else process.env.HC_SIGNUP_IDP_AUTOCREATE = autoCreateEnv;
+  });
+
   // Mock modules
   let mockHeaders: any;
   let mockGetServiceUrlFromHeaders: any;
@@ -875,6 +887,15 @@ describe("processIDPCallback", () => {
           },
         },
       });
+    });
+
+    test("HolyCode: a new person goes to the e-mail step instead of a silent account", async () => {
+      delete process.env.HC_SIGNUP_IDP_AUTOCREATE;
+
+      const result = await processIDPCallback(defaultParams);
+
+      expect(mockCreateUser).not.toHaveBeenCalled();
+      expect(result).toEqual({ redirect: expect.stringContaining("/idp/google/complete-registration?") });
     });
 
     test("should auto-create user and create session", async () => {

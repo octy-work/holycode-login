@@ -458,9 +458,19 @@ export type AddHumanUserData = WithServiceConfig<{
   email: string;
   password?: string;
   organization: string;
+  /** HolyCode: the address is a mailbox in our own domain (reserved in Daenerys) — no code to send. */
+  emailVerified?: boolean;
 }>;
 
-export async function addHumanUser({ serviceConfig, email, firstName, lastName, password, organization }: AddHumanUserData) {
+export async function addHumanUser({
+  serviceConfig,
+  email,
+  firstName,
+  lastName,
+  password,
+  organization,
+  emailVerified,
+}: AddHumanUserData) {
   const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
 
   let addHumanUserRequest: AddHumanUserRequest = create(AddHumanUserRequestSchema, {
@@ -468,7 +478,7 @@ export async function addHumanUser({ serviceConfig, email, firstName, lastName, 
       email,
       verification: {
         case: "isVerified",
-        value: false,
+        value: !!emailVerified,
       },
     },
     username: email,

@@ -7,6 +7,7 @@ import ThemeSwitch from "@/components/theme-switch";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import React, { Children, ReactNode } from "react";
 import { Card } from "./card";
+import { CookieBanner } from "./cookie-banner";
 import { ThemeWrapper } from "./theme-wrapper";
 import { Translated } from "./translated";
 
@@ -65,6 +66,8 @@ export function DynamicTheme({
           ) : (
             <div className="w-full">{actualChildren}</div>
           )}
+
+          <CookieBanner />
 
           <div className="text-hc-muted mt-5 flex items-center justify-between gap-3 text-xs">
             <div className="flex min-w-0 items-center gap-2">

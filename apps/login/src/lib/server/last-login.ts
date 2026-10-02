@@ -11,6 +11,7 @@ import {
   serializeLastLogin,
 } from "@/lib/last-login";
 import { createLogger } from "@/lib/logger";
+import { COOKIE_CONSENT_COOKIE_NAME, functionalCookiesAllowed, parseCookieConsent } from "@/lib/signup";
 import { cookies } from "next/headers";
 
 // Deliberately NOT a "use server" module: writing the cookie must only happen
@@ -41,6 +42,11 @@ export async function rememberLastLogin(entry: {
   }
   try {
     const jar = await cookies();
+    // "Necessary only" in the cookie notice: "welcome back" is a functional cookie.
+    if (!functionalCookiesAllowed(parseCookieConsent(jar.get(COOKIE_CONSENT_COOKIE_NAME)?.value))) {
+      jar.delete(LAST_LOGIN_COOKIE_NAME);
+      return;
+    }
     const previous = parseLastLogin(jar.get(LAST_LOGIN_COOKIE_NAME)?.value);
     const next = nextLastLogin(previous, {
       loginName: entry.loginName,

@@ -1027,5 +1027,121 @@
         "unknown": "Did not work, try again."
       }
     }
+  },
+  "signup": {
+    "haveAccount": "Already have an account? Sign in",
+    "back": "Back",
+    "continue": "Continue",
+    "restart": "Start the registration again",
+    "who": {
+      "title": "Create a HolyCode ID",
+      "description": "Who is the account for?",
+      "personal": "For myself",
+      "personalDescription": "A personal ID and, if you like, a mailbox in a HolyCode domain",
+      "team": "For a team or a company",
+      "teamDescription": "An organization, your own domain, mail and access for the team"
+    },
+    "consents": {
+      "terms": "I accept the <tos>Terms</tos> and the <privacy>Privacy Policy</privacy> and I am at least 18",
+      "pd": "I give <pd>consent to the processing of personal data</pd>"
+    },
+    "anchor": {
+      "title": "Confirm it's you",
+      "description": "Sign in with an account you already have. It protects against mass registrations and helps you get access back.",
+      "continueWith": "Continue with {provider}",
+      "noProviders": "Registration is unavailable right now: no way to confirm is set up.",
+      "phoneLater": "Confirmation by phone number is coming later."
+    },
+    "complete": {
+      "title": "Almost there",
+      "description": "You confirmed it's you. Choose your e-mail — the address becomes your login.",
+      "submit": "Create HolyCode ID",
+      "nextStep": "Next: protect the mailbox with Touch ID or an authenticator app."
+    },
+    "mailbox": {
+      "newTab": "New mailbox",
+      "ownTab": "My e-mail",
+      "name": "Mailbox name",
+      "domain": "Domain",
+      "available": "{address} is free",
+      "checking": "Checking…",
+      "status": {
+        "taken": "{address} is taken",
+        "held": "Someone is registering {address} right now, try another name",
+        "reserved_name": "This name is reserved",
+        "invalid": "Latin letters, digits, dot, dash and underscore; a letter or digit at both ends",
+        "short": "At least 4 characters",
+        "domain": "This domain is unavailable",
+        "limited": "Too many checks — wait a minute",
+        "unavailable": "Name check is unavailable right now, try later"
+      },
+      "aliasesTitle": "The same name in other domains",
+      "free": "free",
+      "busy": "taken",
+      "aliasesHint": "Mail to these addresses arrives in the same mailbox. Up to three addresses.",
+      "ownLabel": "E-mail"
+    },
+    "name": {
+      "first": "First name",
+      "last": "Last name"
+    },
+    "protect": {
+      "title": "Protect the mailbox",
+      "description": "{address} needs a second factor: one stolen password must not hand a mailbox in our domain to a stranger.",
+      "passkey": "Passkey",
+      "passkeyDescription": "No password, recommended",
+      "kind": {
+        "touchId": "Touch ID",
+        "faceId": "Face ID",
+        "windowsHello": "Windows Hello",
+        "fingerprint": "Fingerprint",
+        "passkey": "Passkey"
+      },
+      "totp": "Authenticator app",
+      "totpHint": "Google Authenticator, Yandex Key, 1Password",
+      "totpTitle": "Authenticator app",
+      "totpDescription": "Scan the code in the app and enter the six digits.",
+      "totpManual": "Or enter the key by hand:",
+      "totpCode": "Code from the app",
+      "confirm": "Confirm"
+    },
+    "done": {
+      "title": "Done",
+      "aliases": "Also: {aliases}",
+      "description": "Your HolyCode ID is created and the mailbox works.",
+      "continue": "Continue",
+      "openMail": "Open mail"
+    },
+    "cookies": {
+      "title": "Cookies",
+      "text": "Signing in needs them: the session, the language, \"welcome back\". No ads, no third-party analytics.",
+      "necessary": "Necessary",
+      "necessaryHint": "the sign-in session and the language, the ID does not work without them",
+      "functional": "Functional",
+      "functionalHint": "\"welcome back\": the account you signed in with on this device",
+      "all": "Allow all",
+      "onlyNecessary": "Necessary only",
+      "configure": "Settings",
+      "save": "Save"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "consents": "Tick both consents to continue.",
+      "registerClosed": "Registration is closed right now.",
+      "name": "Enter your first and last name.",
+      "mailboxInvalid": "Check the mailbox name.",
+      "mailboxUnavailable": "Mailboxes are unavailable right now. Choose \"My e-mail\" or try later.",
+      "mailboxTaken": "This address was just taken. Choose another name.",
+      "tooMany": "Too many attempts. Try again in a few minutes.",
+      "noEmail": "The provider sent no e-mail — create a HolyCode mailbox.",
+      "accountExists": "An account with this e-mail exists. Sign in to it and link the provider in the settings.",
+      "secondFactor": "Set up a second factor first.",
+      "anchor": "Could not confirm it's you. Sign in with the provider again.",
+      "activation": "Could not switch the mailbox on. Try again in a minute.",
+      "noSignup": "No registration in progress, or it has expired.",
+      "totpCode": "The code did not match. Check the phone's time and enter a new one.",
+      "passkey": "Could not create the passkey. Try again or choose the app.",
+      "passkeyCancelled": "Creating the passkey was cancelled."
+    }
   }
 }
