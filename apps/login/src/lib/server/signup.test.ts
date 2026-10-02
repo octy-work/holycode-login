@@ -287,7 +287,7 @@ describe("for a team", () => {
 
     const res = await createSignupOrganization({ name: " Acme ", domain: "https://Acme.RU/" });
     expect(dny.createSignupOrg).toHaveBeenCalledWith({ userId: "u1", name: "Acme" });
-    expect(res).toEqual({ redirect: "https://chat.holycode.org/admin?org=acct-acme&domain=acme.ru" });
+    expect(res).toEqual({ redirect: "https://chat.holycode.org/admin/domains?org=acct-acme&add=acme.ru" });
     expect(jar.has(SIGNUP_COOKIE_NAME)).toBe(false);
   });
 });

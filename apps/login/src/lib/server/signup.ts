@@ -635,7 +635,11 @@ export async function createSignupOrganization(input: { name: string; domain?: s
   await clearSignupState();
   const base = (process.env.HC_ORG_ADMIN_URL || "https://chat.holycode.org/admin").replace(/\/+$/, "");
   const params = new URLSearchParams({ org: created.data.account_id });
-  if (domain) params.set("domain", domain);
+  if (domain) {
+    // HolyChat opens the "Add domain" wizard with it (/admin/domains?add=…).
+    params.set("add", domain);
+    return { redirect: `${base}/domains?${params}` };
+  }
   return { redirect: `${base}?${params}` };
 }
 
