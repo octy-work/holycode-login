@@ -231,7 +231,7 @@ export async function updateOrCreateSession(options: UpdateSessionCommand) {
     // раньше сюда не попадал и получал 24 часа по умолчанию (HolyCode, 28.09.2026).
     lifetime = checks?.webAuthN
       ? loginSettings?.multiFactorCheckLifetime // TODO different lifetime for webauthn u2f/passkey
-      : checks?.otpEmail || checks?.otpSms || checks?.totp
+      : checks?.otpEmail || checks?.otpSms || checks?.totp || checks?.recoveryCode
         ? loginSettings?.secondFactorCheckLifetime
         : checks?.password
           ? loginSettings?.passwordCheckLifetime

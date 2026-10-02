@@ -1,12 +1,13 @@
 import {
+  CheckIcon,
   ClockIcon,
   DevicePhoneMobileIcon,
   EnvelopeIcon,
   FingerPrintIcon,
   KeyIcon,
+  LifebuoyIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/solid";
-import { CheckIcon } from "@heroicons/react/24/solid";
 import { ReactNode } from "react";
 import { OptionCard, OptionCardLink } from "./option-card";
 import { OptionalTranslated } from "./optional-translated";
@@ -53,6 +54,10 @@ export const EMAIL = (alreadyAdded: boolean, link: string) => (
 
 export const SMS = (alreadyAdded: boolean, link: string) => (
   <MethodCard key={link} alreadyAdded={alreadyAdded} link={link} methodKey="otpSms" icon={<DevicePhoneMobileIcon />} />
+);
+
+export const RECOVERY_CODE = (alreadyAdded: boolean, link: string) => (
+  <MethodCard key={link} alreadyAdded={alreadyAdded} link={link} methodKey="recoveryCode" icon={<LifebuoyIcon />} />
 );
 
 export const PASSKEYS = (alreadyAdded: boolean, link: string) => (

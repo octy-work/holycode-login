@@ -21,6 +21,7 @@ import {
 import {
   addHumanUser,
   addIDPLink,
+  generateRecoveryCodes,
   getLoginSettings,
   getSession,
   listAuthenticationMethodTypes,
@@ -45,6 +46,8 @@ import {
   reserveMailbox,
 } from "./daenerys-signup";
 import { registerPasskeyLink, verifyPasskeyRegistration } from "./passkeys";
+import { issueChallenge, verifySolution } from "./pow";
+import { allow } from "./rate-limit";
 
 const logger = createLogger("signup");
 
@@ -91,6 +94,15 @@ export async function setCookieConsent(choice: CookieConsent): Promise<void> {
   });
 }
 
+/** Proof-of-work for the mailbox form (lib/pow.ts): the browser solves it while the person types. */
+export async function issueSignupChallenge(): Promise<{ challenge: string; difficulty: number }> {
+  return issueChallenge();
+}
+
+async function ipKey(action: string): Promise<string> {
+  return `${action}:${clientIpFrom(await headers()) ?? "unknown"}`;
+}
+
 /** Step 1: who the account is for and the two consents. */
 export async function startSignup(input: {
   who: SignupWho;
@@ -105,6 +117,9 @@ export async function startSignup(input: {
   }
   if (!input.terms || !input.pd) {
     return { error: t("errors.consents") };
+  }
+  if (!allow(await ipKey("start"), 30, 60 * 60 * 1000)) {
+    return { error: t("errors.tooMany") };
   }
   await writeSignupState({
     who: input.who,
@@ -151,6 +166,9 @@ export async function checkMailboxName(input: {
   const problem = localPartProblem(local);
   if (problem) {
     return { status: problem, address, aliases: [] };
+  }
+  if (!allow(await ipKey("check"), 60, 60 * 1000)) {
+    return { status: "limited", address, aliases: [] };
   }
   const domains = await listSignupDomains();
   const allowed = new Set(domains.map((d) => d.domain));
@@ -222,6 +240,8 @@ export type CompleteIdpSignupCommand = {
   mail: { kind: "own" } | { kind: "hosted"; local: string; domain: string; aliases: string[] };
   /** Ticked on this screen when the person came straight from a provider button (no step 1). */
   consents?: { terms: boolean; pd: boolean };
+  /** Proof-of-work, required for a new mailbox. */
+  pow?: { challenge: string; nonce: string };
 };
 
 /**
@@ -256,8 +276,15 @@ export async function completeIdpSignup(command: CompleteIdpSignupCommand): Prom
   let emailVerified = false;
   let reservation: SignupState["reservation"] | undefined;
 
+  if (!allow(await ipKey("complete"), 10, 60 * 60 * 1000)) {
+    return { error: t("errors.tooMany") };
+  }
+
   if (command.mail.kind === "hosted") {
     const hosted = command.mail;
+    if (!command.pow || !verifySolution(command.pow.challenge, command.pow.nonce)) {
+      return { error: t("errors.pow") };
+    }
     const local = normalizeLocalPart(hosted.local);
     if (localPartProblem(local)) {
       return { error: t("errors.mailboxInvalid") };
@@ -421,7 +448,7 @@ async function switchMailboxOn(ctx: Extract<Awaited<ReturnType<typeof protectCon
   }
   const address = activated.data.address || ctx.state.reservation.address;
   const aliases = activated.data.aliases ?? ctx.state.reservation.aliases;
-  await writeSignupState({ ...ctx.state, reservation: undefined });
+  await writeSignupState({ ...ctx.state, reservation: undefined, activated: address });
   const params = new URLSearchParams({ address });
   if (aliases.length) params.set("aliases", aliases.join(","));
   return { redirect: `/register/done?${params}` };
@@ -511,4 +538,35 @@ export async function continueAfterSignup(input: { address: string }): Promise<F
     loginSettings?.defaultRedirectUri,
   );
   return result && typeof result === "object" ? result : { error: t("errors.generic") };
+}
+
+/**
+ * Step 6: ten single-use recovery codes, issued once right after the mailbox is on
+ * (the `activated` mark in the wizard's cookie and the session of that account).
+ * Later codes come from the profile.
+ */
+export async function generateSignupRecoveryCodes(): Promise<{ codes: string[] } | { error: string }> {
+  const t = await getTranslations("signup");
+  const state = await readSignupState();
+  if (!state?.activated) {
+    return { error: t("done.codes.gone") };
+  }
+  const cookie = await getSessionCookieByLoginName({ loginName: state.activated, organization: state.organization });
+  if (!cookie) {
+    return { error: t("done.codes.gone") };
+  }
+  const { serviceConfig } = getServiceConfig(await headers());
+  const session = await getSession({ serviceConfig, sessionId: cookie.id, sessionToken: cookie.token }).catch(() => null);
+  const userId = session?.session?.factors?.user?.id;
+  if (!userId) {
+    return { error: t("done.codes.gone") };
+  }
+  await writeSignupState({ ...state, activated: undefined });
+  try {
+    const generated = await generateRecoveryCodes({ serviceConfig, userId, count: 10 });
+    return { codes: generated.recoveryCodes };
+  } catch (error) {
+    logger.warn("Could not issue recovery codes", { error: String(error) });
+    return { error: t("done.codes.failed") };
+  }
 }

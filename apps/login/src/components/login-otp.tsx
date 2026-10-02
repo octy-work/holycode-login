@@ -8,6 +8,7 @@ import { RequestChallengesSchema } from "@zitadel/proto/zitadel/session/v2/chall
 import { ChecksSchema } from "@zitadel/proto/zitadel/session/v2/session_service_pb";
 import { LoginSettings } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -276,6 +277,22 @@ export function LoginOTP({ host, loginName, sessionId, requestId, organization, 
                     </>
                   )}
                 </span>
+              )}
+              {method === "time-based" && (
+                <Link
+                  href={`/recovery-code?${new URLSearchParams(
+                    Object.fromEntries(
+                      Object.entries({ loginName, sessionId, organization, requestId }).filter(([, v]) => !!v) as [
+                        string,
+                        string,
+                      ][],
+                    ),
+                  )}`}
+                  className="text-hc-link hover:text-hc-p500 text-center text-[12.5px] font-medium"
+                  data-testid="recovery-code-link"
+                >
+                  <Translated i18nKey="link" namespace="recoveryCode" />
+                </Link>
               )}
               <BackButton data-testid="back-button" />
             </>

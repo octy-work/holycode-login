@@ -1,7 +1,8 @@
 "use client";
 
 import { handleServerActionResponse } from "@/lib/client-utils";
-import { checkMailboxName, completeIdpSignup, MailboxNameStatus } from "@/lib/server/signup";
+import { solvePow } from "@/lib/pow";
+import { checkMailboxName, completeIdpSignup, issueSignupChallenge, MailboxNameStatus } from "@/lib/server/signup";
 import { localPartProblem, MailboxDomain, MAX_MAILBOX_ALIASES, normalizeLocalPart, suggestLocalParts } from "@/lib/signup";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import { LegalAndSupportSettings } from "@zitadel/proto/zitadel/settings/v2/legal_settings_pb";
@@ -58,6 +59,27 @@ export function SignupComplete(props: Props) {
   const [error, setError] = useState("");
   const [samlData, setSamlData] = useState<{ url: string; fields: Record<string, string> } | null>(null);
 
+  // Proof-of-work for a new mailbox, solved in the background while the person types.
+  const powRef = useRef<Promise<{ challenge: string; nonce: string } | null> | null>(null);
+  const startPow = () => {
+    const signal = { cancelled: false };
+    powRef.current = issueSignupChallenge()
+      .then(async ({ challenge, difficulty }) => {
+        const nonce = await solvePow(challenge, difficulty, undefined, signal);
+        return nonce ? { challenge, nonce } : null;
+      })
+      .catch(() => null);
+    return signal;
+  };
+  useEffect(() => {
+    if (!hosting || typeof crypto === "undefined" || !crypto.subtle) return;
+    const signal = startPow();
+    return () => {
+      signal.cancelled = true;
+    };
+     
+  }, [hosting]);
+
   const normalized = normalizeLocalPart(local);
   const otherDomains = domains.map((d) => d.domain).filter((d) => d !== domain);
   const requestSeq = useRef(0);
@@ -104,6 +126,7 @@ export function SignupComplete(props: Props) {
     setError("");
     setLoading(true);
     try {
+      const pow = mode === "hosted" ? await (powRef.current ?? Promise.resolve(null)) : null;
       const res = await completeIdpSignup({
         idpId: props.idpId,
         idpUserId: props.idpUserId,
@@ -116,7 +139,12 @@ export function SignupComplete(props: Props) {
         ownEmail,
         mail: mode === "hosted" ? { kind: "hosted", local: normalized, domain, aliases } : { kind: "own" },
         ...(props.needConsents ? { consents } : {}),
+        ...(pow ? { pow } : {}),
       });
+      if (mode === "hosted" && "error" in res) {
+        // A challenge is single-use: solve a new one for the next try.
+        startPow();
+      }
       if (!handleServerActionResponse(res, router, setSamlData, setError)) {
         setError(t("errors.generic"));
       }

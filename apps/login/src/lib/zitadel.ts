@@ -533,6 +533,17 @@ export async function updateUser({ serviceConfig, request }: WithServiceConfig<{
   return userService.updateUser(request);
 }
 
+/** HolyCode: single-use recovery codes for a user (Zitadel v4.19 user service). */
+export async function generateRecoveryCodes({
+  serviceConfig,
+  userId,
+  count,
+}: WithServiceConfig<{ userId: string; count: number }>) {
+  const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
+
+  return userService.generateRecoveryCodes({ userId, count }, {});
+}
+
 export async function verifyTOTPRegistration({
   serviceConfig,
   code,

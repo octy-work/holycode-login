@@ -511,7 +511,8 @@
       "otpEmail": "Code via Email",
       "otpSms": "Code via SMS",
       "passkey": "Passkeys",
-      "password": "Password"
+      "password": "Password",
+      "recoveryCode": "Recovery code"
     },
     "methodDescriptions": {
       "passkey": "This device's passkey — faster and safer than a password",
@@ -519,7 +520,8 @@
       "otpSms": "We'll text you a code",
       "password": "The classic way",
       "totp": "Code from your authenticator app",
-      "u2f": "Hardware security key"
+      "u2f": "Hardware security key",
+      "recoveryCode": "When there is no access to your phone and keys"
     }
   },
   "device": {
@@ -1110,7 +1112,16 @@
       "aliases": "Also: {aliases}",
       "description": "Your HolyCode ID is created and the mailbox works.",
       "continue": "Continue",
-      "openMail": "Open mail"
+      "openMail": "Open mail",
+      "codes": {
+        "title": "Recovery codes",
+        "copy": "Copy",
+        "copied": "Copied",
+        "download": "Download",
+        "hint": "Each code is one sign-in without the second factor if you lose your phone and keys. Keep them where you will not lose them.",
+        "gone": "Recovery codes are available in your profile: id.holycode.org/me.",
+        "failed": "Could not issue recovery codes — create them in your profile: id.holycode.org/me."
+      }
     },
     "cookies": {
       "title": "Cookies",
@@ -1141,7 +1152,18 @@
       "noSignup": "No registration in progress, or it has expired.",
       "totpCode": "The code did not match. Check the phone's time and enter a new one.",
       "passkey": "Could not create the passkey. Try again or choose the app.",
-      "passkeyCancelled": "Creating the passkey was cancelled."
+      "passkeyCancelled": "Creating the passkey was cancelled.",
+      "pow": "Could not check the browser. Reload the page and try again."
+    }
+  },
+  "recoveryCode": {
+    "title": "Recovery code",
+    "description": "Enter one of the codes you saved at registration. Each code works once.",
+    "label": "Code",
+    "submit": "Sign in",
+    "link": "No access to the app? Sign in with a recovery code",
+    "errors": {
+      "invalid": "The code did not match or has been used."
     }
   }
 }

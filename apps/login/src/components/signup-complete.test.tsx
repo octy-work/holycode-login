@@ -8,7 +8,12 @@ vi.mock("next-intl", () => {
   const t = (key: string, values?: Record<string, string>) => (values?.address ? `${key}:${values.address}` : key);
   return { useTranslations: () => t, useLocale: () => "ru" };
 });
-vi.mock("@/lib/server/signup", () => ({ checkMailboxName: vi.fn(), completeIdpSignup: vi.fn() }));
+vi.mock("@/lib/server/signup", () => ({
+  checkMailboxName: vi.fn(),
+  completeIdpSignup: vi.fn(),
+  issueSignupChallenge: vi.fn().mockResolvedValue({ challenge: "c1", difficulty: 16 }),
+}));
+vi.mock("@/lib/pow", () => ({ solvePow: vi.fn().mockResolvedValue("42") }));
 
 const props = {
   idpUserId: "google-42",

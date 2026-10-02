@@ -20,6 +20,7 @@ vi.mock("@/lib/zitadel", () => ({
   getSession: vi.fn(),
   listAuthenticationMethodTypes: vi.fn(),
   registerTOTP: vi.fn(),
+  generateRecoveryCodes: vi.fn(),
   setUserMetadata: vi.fn(),
   verifyTOTPRegistration: vi.fn(),
 }));
@@ -28,6 +29,8 @@ vi.mock("../cookies", () => ({ getSessionCookieByLoginName: vi.fn() }));
 vi.mock("../client", () => ({ completeFlowOrGetUrl: vi.fn() }));
 vi.mock("../verify-helper", () => ({ checkMFAFactors: vi.fn() }));
 vi.mock("./passkeys", () => ({ registerPasskeyLink: vi.fn(), verifyPasskeyRegistration: vi.fn() }));
+vi.mock("./pow", () => ({ issueChallenge: vi.fn(), verifySolution: vi.fn(() => true) }));
+vi.mock("./rate-limit", () => ({ allow: vi.fn(() => true) }));
 vi.mock("./daenerys-signup", () => ({
   activateMailbox: vi.fn(),
   checkMailbox: vi.fn(),
@@ -43,7 +46,10 @@ const cookiesMod = await import("../cookies");
 const client = await import("../client");
 const verify = await import("../verify-helper");
 const dny = await import("./daenerys-signup");
-const { completeIdpSignup, confirmTotpSetup, startSignup, checkMailboxName } = await import("./signup");
+const powMod = await import("./pow");
+const rateMod = await import("./rate-limit");
+const { completeIdpSignup, confirmTotpSetup, startSignup, checkMailboxName, generateSignupRecoveryCodes } =
+  await import("./signup");
 
 const base = {
   idpId: "idp1",
@@ -75,6 +81,8 @@ beforeEach(() => {
     { domain: "sozv.one", group: "product" },
   ]);
   vi.mocked(verify.checkMFAFactors).mockResolvedValue(undefined as any);
+  vi.mocked(powMod.verifySolution).mockReturnValue(true);
+  vi.mocked(rateMod.allow).mockReturnValue(true);
   vi.mocked(client.completeFlowOrGetUrl).mockResolvedValue({ redirect: "https://chat.holycode.org/" } as any);
 });
 
@@ -125,6 +133,7 @@ describe("completeIdpSignup", () => {
     const res = await completeIdpSignup({
       ...base,
       mail: { kind: "hosted", local: "Rodion", domain: "holycode.org", aliases: ["sozv.one", "evil.com"] },
+      pow: { challenge: "c", nonce: "1" },
     });
 
     expect(dny.reserveMailbox).toHaveBeenCalledWith(
@@ -147,6 +156,7 @@ describe("completeIdpSignup", () => {
     const res = await completeIdpSignup({
       ...base,
       mail: { kind: "hosted", local: "rodion", domain: "holycode.org", aliases: [] },
+      pow: { challenge: "c", nonce: "1" },
     });
     expect(res).toEqual({ error: "errors.mailboxTaken" });
     expect(zitadel.addHumanUser).not.toHaveBeenCalled();
@@ -159,6 +169,18 @@ describe("completeIdpSignup", () => {
       expect.objectContaining({ userId: "u1", entries: [expect.objectContaining({ key: "hc_consent" })] }),
     );
   });
+});
+
+test("a new mailbox without the proof-of-work is refused", async () => {
+  jar.set(SIGNUP_COOKIE_NAME, serializeSignupState({ who: "personal", terms: CONSENT_VERSION, pd: CONSENT_VERSION }));
+  vi.mocked(powMod.verifySolution).mockReturnValueOnce(false);
+  const res = await completeIdpSignup({
+    ...base,
+    mail: { kind: "hosted", local: "rodion", domain: "holycode.org", aliases: [] },
+    pow: { challenge: "forged", nonce: "1" },
+  });
+  expect(res).toEqual({ error: "errors.pow" });
+  expect(dny.reserveMailbox).not.toHaveBeenCalled();
 });
 
 describe("second factor and switching the mailbox on", () => {
@@ -188,6 +210,12 @@ describe("second factor and switching the mailbox on", () => {
     vi.mocked(dny.activateMailbox).mockResolvedValue({ ok: true, data: { address: "rodion@holycode.org", aliases: [] } });
     expect(await confirmTotpSetup("123 456")).toEqual({ redirect: "/register/done?address=rodion%40holycode.org" });
     expect(dny.activateMailbox).toHaveBeenCalledWith({ reservationId: "res1", userId: "u1" });
+
+    // Step 6: ten recovery codes, once.
+    vi.mocked(zitadel.generateRecoveryCodes).mockResolvedValue({ recoveryCodes: ["A1", "B2"] } as any);
+    expect(await generateSignupRecoveryCodes()).toEqual({ codes: ["A1", "B2"] });
+    expect(zitadel.generateRecoveryCodes).toHaveBeenCalledWith(expect.objectContaining({ userId: "u1", count: 10 }));
+    expect(await generateSignupRecoveryCodes()).toEqual({ error: "done.codes.gone" });
   });
 
   test("Daenerys refuses without a second factor — the person is told so", async () => {

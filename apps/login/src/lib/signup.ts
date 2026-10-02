@@ -43,6 +43,8 @@ export type SignupState = {
   organization?: string;
   /** The reserved mailbox, between creating the account and switching the mailbox on. */
   reservation?: SignupReservation;
+  /** The mailbox just switched on — recovery codes may be issued once, on the last step. */
+  activated?: string;
 };
 
 type Wire = {
@@ -53,6 +55,7 @@ type Wire = {
   r?: string;
   o?: string;
   m?: { i: string; a: string; x?: string[] };
+  d?: string;
 };
 
 const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -94,6 +97,7 @@ export function parseSignupState(raw: string | undefined | null): SignupState | 
       : [];
     state.reservation = { id: w.m.i, address: w.m.a, aliases };
   }
+  if (typeof w.d === "string" && ADDRESS_RE.test(w.d)) state.activated = w.d;
   return state;
 }
 
@@ -107,6 +111,7 @@ export function serializeSignupState(state: SignupState): string {
     wire.m = { i: state.reservation.id, a: state.reservation.address };
     if (state.reservation.aliases.length) wire.m.x = state.reservation.aliases.slice(0, 2);
   }
+  if (state.activated) wire.d = state.activated;
   return JSON.stringify(wire);
 }
 
