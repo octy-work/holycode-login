@@ -101,3 +101,13 @@ describe("the dot on the avatar and the security pill", () => {
     expect(accountAttentionTone({ securityAttention: "no_2fa" })).toBe("warn");
   });
 });
+
+describe("debug snapshot row (owner's decision of 02.10.2026)", () => {
+  const links = { profile: "/me", security: "/me/security", keys: "/me/keys", settings: "/me/settings", switchUser: "/accounts", signOut: "/logout" };
+  test("only when the profile turned the snapshot on, before switch user", () => {
+    expect(profileAccountEntries({ links }).some((entry) => entry.id === "debugSnapshot")).toBe(false);
+    const ids = profileAccountEntries({ links, debugSnapshot: true }).map((entry) => entry.id);
+    expect(ids.indexOf("debugSnapshot")).toBeGreaterThan(ids.indexOf("settings"));
+    expect(ids.indexOf("debugSnapshot")).toBeLessThan(ids.indexOf("switchUser"));
+  });
+});

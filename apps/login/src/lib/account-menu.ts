@@ -6,7 +6,8 @@
  *   head (name, @login · e-mail) → HolyAgent update (inside the desktop shell,
  *   right under the head — it must be noticed) → profile, sign-in & security
  *   ("no 2FA" pill), access keys → language → all settings → "Download
- *   HolyAgent" (a browser) → switch user → sign out.
+ *   HolyAgent" (a browser) → debug snapshot (02.10.2026, lib/debug-snapshot.js)
+ *   → switch user → sign out.
  *
  * Inside the profile the first rows are its own sections (/me, /me/security,
  * /me/keys); theme and colours are not rows here — the theme of the ID is saved
@@ -92,7 +93,7 @@ export function accountAttentionTone({
   return securityAttention ? "warn" : "";
 }
 
-export type AccountItemId = "profile" | "security" | "keys" | "settings" | "switchUser" | "signOut";
+export type AccountItemId = "profile" | "security" | "keys" | "settings" | "debugSnapshot" | "switchUser" | "signOut";
 
 export type AccountEntry =
   | { kind: "hr"; id: string }
@@ -106,12 +107,15 @@ export function profileAccountEntries({
   securityAttention = "",
   languages = 0,
   holyagent = null,
+  debugSnapshot = false,
 }: {
   links: { profile: string; security: string; keys: string; settings: string; switchUser: string; signOut: string };
   securityAttention?: SecurityAttention;
   /** How many interface languages there are: the language row only when there is a choice. */
   languages?: number;
   holyagent?: HolyAgentEntryInput;
+  /** The "Debug snapshot" row (owner's decision of 02.10.2026: in the profile menu of every service). */
+  debugSnapshot?: boolean;
 }): AccountEntry[] {
   const entries: AccountEntry[] = [];
   const agentRow = holyagentEntry(holyagent);
@@ -128,6 +132,7 @@ export function profileAccountEntries({
   if (languages > 1) entries.push({ kind: "language", id: "language", icon: "language" });
   entries.push({ kind: "item", id: "settings", icon: "settings", href: links.settings });
   if (agentRow && agentRow.state === "download") entries.push({ kind: "hr", id: "hr-download" }, agentRow);
+  if (debugSnapshot) entries.push({ kind: "hr", id: "hr-debug" }, { kind: "item", id: "debugSnapshot", icon: "camera", href: "" });
   entries.push({ kind: "hr", id: "hr-account" });
   entries.push({ kind: "item", id: "switchUser", icon: "switch-user", href: links.switchUser });
   entries.push({ kind: "hr", id: "hr-session" });

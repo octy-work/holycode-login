@@ -11,6 +11,7 @@ import {
   TextRef,
 } from "@/lib/account-menu";
 import { setLanguageCookie } from "@/lib/cookies";
+import { debugSnapshotAvailable, takeDebugSnapshot } from "@/lib/debug-snapshot";
 import { HolyAgentState } from "@/lib/holyagent-release";
 import { clsx } from "clsx";
 import { useLocale, useTranslations } from "next-intl";
@@ -75,7 +76,13 @@ export function AccountMenu({
   useSwitcherDismiss(open, rootRef, close, triggerRef);
 
   const languages = chrome.languages ?? [];
-  const entries = profileAccountEntries({ links, securityAttention, languages: languages.length, holyagent });
+  const entries = profileAccountEntries({
+    links,
+    securityAttention,
+    languages: languages.length,
+    holyagent,
+    debugSnapshot: debugSnapshotAvailable(),
+  });
   const attention = Boolean(accountAttentionTone({ securityAttention, holyagent }));
   const subtitle = [user.handle, user.email].filter(Boolean).join(" · ");
   const text = (ref: TextRef) => t(ref.key, ref.values);
@@ -194,6 +201,26 @@ export function AccountMenu({
         {t(`attention.${entry.attention}`)}
       </span>
     ) : null;
+    if (entry.id === "debugSnapshot") {
+      return (
+        <button
+          key={entry.id}
+          type="button"
+          role="menuitem"
+          className={clsx(rowClasses, "hover:bg-hc-card-2 focus-visible:bg-hc-card-2 w-full items-center focus-visible:outline-none")}
+          onClick={() => {
+            close();
+            void takeDebugSnapshot();
+          }}
+          data-testid="user-menu-debugSnapshot"
+        >
+          <span className="text-hc-p400 flex w-5 shrink-0 items-center justify-center">
+            <SwitcherIcon name={entry.icon} size={16} />
+          </span>
+          <span className="min-w-0 flex-1 truncate">{t(entry.id)}</span>
+        </button>
+      );
+    }
     return (
       <a
         key={entry.id}

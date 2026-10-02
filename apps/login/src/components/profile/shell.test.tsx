@@ -424,6 +424,8 @@ describe("the common top bar (owner's decision of 02.10.2026, option A)", () => 
       "user-menu-keys",
       "user-menu-settings",
       "user-menu-holyagent",
+      // «Отладочный снимок» (02.10.2026, lib/debug-snapshot.js): профиль включает его в shell.tsx.
+      "user-menu-debugSnapshot",
       "user-menu-switch-user",
       "user-menu-sign-out",
     ]);

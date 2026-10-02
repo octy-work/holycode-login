@@ -5,6 +5,8 @@ import { usePageChrome } from "@/components/page-chrome-context";
 import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
 import { securityAttentionOf } from "@/lib/account-menu";
+import { daenerysApiUrl } from "@/lib/daenerys";
+import { configureDebugSnapshot, registerDebugState } from "@/lib/debug-snapshot";
 import { profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
 import { canOpenAdmin } from "@/lib/services";
 import { rememberReturnTo } from "@/lib/topbar";
@@ -78,6 +80,28 @@ export function ProfileShell({
     switchUser: `${base}/accounts`,
     signOut: `${base}/logout`,
   };
+
+  // "Debug snapshot" in the avatar menu (owner's decision of 02.10.2026, lib/debug-snapshot.js):
+  // the report goes to Daenerys with the .holycode.org cookie, like the profile's own calls.
+  useEffect(() => {
+    configureDebugSnapshot({
+      service: "id",
+      name: "HolyCode ID",
+      version: process.env.NEXT_PUBLIC_APP_VERSION || "",
+      endpoint: `${daenerysApiUrl(view.daenerysUrl)}/api/debug-reports`,
+      lang: locale,
+      user: { user_id: view.user.loginName, name: view.user.fullName, email: view.user.email },
+      org: directory.org ? { account_id: directory.org.account_id, name: directory.org.name, role: directory.org.role } : null,
+      canViewReports: false,
+    });
+    return registerDebugState("profile", () => ({
+      section: view.section,
+      daenerys: daenerys.status,
+      methods: view.methods ?? null,
+      theme: view.theme ?? "",
+      services: directory.services.length,
+    }));
+  }, [view, locale, directory, daenerys.status]);
 
   useEffect(() => {
     const actual = profilePrefixFromPathname(window.location.pathname, view.basePath);

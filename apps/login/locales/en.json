@@ -935,6 +935,7 @@
       "keys": "Access keys (API)",
       "language": "Language",
       "settings": "All settings",
+      "debugSnapshot": "Debug snapshot",
       "switchUser": "Switch user",
       "signOut": "Sign out",
       "attention": {

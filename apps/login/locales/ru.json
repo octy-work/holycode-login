@@ -935,6 +935,7 @@
       "keys": "Ключи доступа (API)",
       "language": "Язык",
       "settings": "Все настройки",
+      "debugSnapshot": "Отладочный снимок",
       "switchUser": "Сменить пользователя",
       "signOut": "Выйти",
       "attention": {
