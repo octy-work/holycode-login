@@ -1,6 +1,7 @@
 import { DynamicTheme } from "@/components/dynamic-theme";
 import { SignInForm } from "@/components/sign-in-form";
 import { resolveRememberedView, sameLoginName } from "@/lib/last-login";
+import { passkeyLabelKind } from "@/lib/passkey-discover";
 import { readLastLogin } from "@/lib/server/last-login";
 import { getServiceConfig } from "@/lib/service-url";
 import { getActiveIdentityProviders, getBrandingSettings, getDefaultOrg, getLoginSettings } from "@/lib/zitadel";
@@ -89,6 +90,7 @@ export default async function Page(props: { searchParams: Promise<Record<string 
         remembered={remembered}
         startWith={startWith}
         passkeysAllowed={loginSettings?.passkeysType !== PasskeysType.NOT_ALLOWED}
+        passkeyKindHint={passkeyLabelKind({ userAgent: _headers.get("user-agent") ?? "", hasPlatformAuthenticator: true })}
       />
     </DynamicTheme>
   );

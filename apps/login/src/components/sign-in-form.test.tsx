@@ -341,6 +341,17 @@ describe("SignInForm — the choice of ways in (02.10.2026)", () => {
     expect(getByTestId("choose-login").className).not.toContain("hc-btn-primary");
   });
 
+  test("the server's guess puts the button in the first paint; no WebAuthn hides it", async () => {
+    withWebAuthn(vi.fn());
+    const first = render(<SignInForm {...props} passkeyKindHint="touchId" />);
+    expect(first.getByTestId("discover-passkey")).toHaveTextContent("chooser.passkey.touchId");
+    first.unmount();
+
+    (window as any).PublicKeyCredential = undefined;
+    const second = render(<SignInForm {...props} passkeyKindHint="touchId" />);
+    await waitFor(() => expect(second.queryByTestId("discover-passkey")).toBeNull());
+  });
+
   test("two touches: the first finds the account, the second answers its challenge", async () => {
     const get = vi
       .fn()

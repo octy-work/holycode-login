@@ -22,6 +22,13 @@ describe("passkeyLabelKind", () => {
     );
   });
 
+  test("the User-Agent wins over a misleading platform (emulators, Android on desktop)", () => {
+    expect(
+      passkeyLabelKind({ userAgent: android, platform: "MacIntel", maxTouchPoints: 5, hasPlatformAuthenticator: true }),
+    ).toBe("fingerprint");
+    expect(passkeyLabelKind({ userAgent: mac, hasPlatformAuthenticator: true })).toBe("touchId");
+  });
+
   test("an iPad says it is a Mac, touch points give it away", () => {
     expect(
       passkeyLabelKind({ userAgent: mac, platform: "MacIntel", maxTouchPoints: 5, hasPlatformAuthenticator: true }),

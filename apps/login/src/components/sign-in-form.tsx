@@ -2,6 +2,7 @@
 
 import { handleServerActionResponse } from "@/lib/client-utils";
 import { RememberedPrimary, RememberedView } from "@/lib/last-login";
+import { PasskeyLabelKind } from "@/lib/passkey-discover";
 import { resetPassword } from "@/lib/server/password";
 import { forgetLastLogin, PasskeyOffer, signIn } from "@/lib/server/sign-in";
 import { ArrowLeftIcon, FingerPrintIcon, UserIcon } from "@heroicons/react/24/solid";
@@ -52,6 +53,8 @@ type Props = {
   startWith?: "choose" | "form";
   /** The login policy allows passkeys (the usernameless passkey button on the first screen). */
   passkeysAllowed?: boolean;
+  /** The server's guess of the passkey button's name by the User-Agent (refined in the browser). */
+  passkeyKindHint?: PasskeyLabelKind;
 };
 
 /**
@@ -95,7 +98,7 @@ export function SignInForm(props: Props) {
 
   const passkey = usePasskeySignIn({ requestId, onError: setError, onSamlData: setSamlData });
   const discovered = useDiscoverablePasskey({ requestId, organization, onError: setError, onSamlData: setSamlData });
-  const passkeyKind = usePasskeyLabelKind();
+  const passkeyKind = usePasskeyLabelKind(props.passkeyKindHint ?? null);
   const busy = loading || passkey.pending || discovered.pending;
 
   const allowLocal = !!loginSettings?.allowLocalAuthentication;

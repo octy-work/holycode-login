@@ -15,15 +15,17 @@ type PublicKeyJson = Parameters<typeof getPasskeyAssertion>[0];
 
 /**
  * What the passkey button on this device is called, or null when the browser has no
- * WebAuthn at all (then the button is not shown). Decided after mount: the server
- * cannot know it, and the first render must match the server's.
+ * WebAuthn at all (then the button is hidden). Starts from the server's guess by the
+ * User-Agent (so the button is in the first paint and nothing jumps), then checks the
+ * browser: without a platform authenticator it is just "a passkey".
  */
-export function usePasskeyLabelKind(): PasskeyLabelKind | null {
-  const [kind, setKind] = useState<PasskeyLabelKind | null>(null);
+export function usePasskeyLabelKind(initial: PasskeyLabelKind | null = null): PasskeyLabelKind | null {
+  const [kind, setKind] = useState<PasskeyLabelKind | null>(initial);
   useEffect(() => {
     let cancelled = false;
     const credential = typeof window !== "undefined" ? window.PublicKeyCredential : undefined;
     if (!credential || typeof navigator === "undefined" || !navigator.credentials) {
+      setKind(null);
       return;
     }
     const decide = (hasPlatformAuthenticator: boolean) => {

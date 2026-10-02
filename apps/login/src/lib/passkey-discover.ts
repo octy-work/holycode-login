@@ -30,8 +30,14 @@ export function passkeyLabelKind(info: {
   }
   const ua = info.userAgent || "";
   const platform = (info.platform || "").toLowerCase();
+  if (/iphone|ipad|ipod/i.test(ua)) {
+    return "faceId";
+  }
+  if (/android/i.test(ua)) {
+    return "fingerprint";
+  }
   // iPadOS reports itself as a Mac; touch points give it away.
-  if (/iphone|ipad|ipod/i.test(ua) || (platform === "macintel" && (info.maxTouchPoints ?? 0) > 1)) {
+  if (platform === "macintel" && (info.maxTouchPoints ?? 0) > 1) {
     return "faceId";
   }
   if (platform.startsWith("mac") || /macintosh/i.test(ua)) {
@@ -39,9 +45,6 @@ export function passkeyLabelKind(info: {
   }
   if (platform.startsWith("win") || /windows/i.test(ua)) {
     return "windowsHello";
-  }
-  if (/android/i.test(ua)) {
-    return "fingerprint";
   }
   return "passkey";
 }
