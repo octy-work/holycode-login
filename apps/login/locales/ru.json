@@ -888,6 +888,32 @@
       "admin": "Админка",
       "switchUser": "Сменить пользователя"
     },
+    "topbar": {
+      "name": "Профиль",
+      "brandLabel": "HolyCode ID — профиль",
+      "backTo": "Назад в {name}"
+    },
+    "account": {
+      "userMenu": "Меню пользователя",
+      "profile": "Профиль",
+      "security": "Вход и безопасность",
+      "keys": "Ключи доступа (API)",
+      "language": "Язык",
+      "settings": "Все настройки",
+      "switchUser": "Сменить пользователя",
+      "signOut": "Выйти",
+      "attention": {
+        "no_2fa": "нет 2FA",
+        "no_passkey": "нет Touch ID"
+      },
+      "holyagent": {
+        "download": "Скачать HolyAgent",
+        "downloadSub": "версия {version} для macOS",
+        "update": "Обновление HolyAgent {version}",
+        "updateSub": "у вас {installed} · установить и перезапустить",
+        "installing": "Устанавливаю HolyAgent {version}…"
+      }
+    },
     "daenerys": {
       "unavailable": "Недоступно: не удалось связаться с сервером управления HolyCode",
       "unauthorized": "Вы вошли в HolyCode ID, но ещё не в сервисы HolyCode",

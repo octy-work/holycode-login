@@ -888,6 +888,32 @@
       "admin": "Admin",
       "switchUser": "Switch user"
     },
+    "topbar": {
+      "name": "Profile",
+      "brandLabel": "HolyCode ID — profile",
+      "backTo": "Back to {name}"
+    },
+    "account": {
+      "userMenu": "User menu",
+      "profile": "Profile",
+      "security": "Sign-in & security",
+      "keys": "Access keys (API)",
+      "language": "Language",
+      "settings": "All settings",
+      "switchUser": "Switch user",
+      "signOut": "Sign out",
+      "attention": {
+        "no_2fa": "no 2FA",
+        "no_passkey": "no Touch ID"
+      },
+      "holyagent": {
+        "download": "Download HolyAgent",
+        "downloadSub": "version {version} for macOS",
+        "update": "HolyAgent {version} is available",
+        "updateSub": "you have {installed} · install and relaunch",
+        "installing": "Installing HolyAgent {version}…"
+      }
+    },
     "daenerys": {
       "unavailable": "Unavailable: the HolyCode management server could not be reached",
       "unauthorized": "You are signed in to HolyCode ID, but not to the HolyCode services yet",

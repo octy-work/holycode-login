@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildCSP, daenerysConnectOrigin } from "./csp";
+import { buildCSP, daenerysConnectOrigin, TAURI_IPC_ORIGINS } from "./csp";
 
 describe("buildCSP", () => {
   test("returns all base directives with safe defaults", () => {
@@ -76,5 +76,12 @@ describe("buildCSP — HolyCode profile talks to Daenerys", () => {
     expect(daenerysConnectOrigin(undefined)).toBe("https://daenerys-api.holycode.org");
     expect(daenerysConnectOrigin("http://localhost:4010/api/")).toBe("http://localhost:4010");
     expect(daenerysConnectOrigin("not a url")).toBe("https://daenerys-api.holycode.org");
+  });
+});
+
+describe("Tauri IPC of the HolyAgent window", () => {
+  test("connect-src lets the shell's IPC through next to Daenerys", () => {
+    const csp = buildCSP({ connectOrigins: ["https://daenerys-api.holycode.org", ...TAURI_IPC_ORIGINS] });
+    expect(csp).toContain("connect-src 'self' https://daenerys-api.holycode.org ipc: http://ipc.localhost");
   });
 });

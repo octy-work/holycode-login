@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildCSP, daenerysConnectOrigin } from "./lib/csp";
+import { buildCSP, daenerysConnectOrigin, TAURI_IPC_ORIGINS } from "./lib/csp";
 import { applyCustomHeaders } from "./lib/custom-headers";
 import { createLogger } from "./lib/logger";
 import { fetchLiveSession, gateReturnTarget, isGatedProfilePath, pickMostRecentSessionCookie } from "./lib/profile-gate";
@@ -87,8 +87,9 @@ export async function proxy(request: NextRequest) {
 
   const cspFetchEnabled = process.env.CSP_FETCH_ENABLED !== "false";
 
-  // HolyCode: the profile page (/me) fetches Daenerys from the browser.
-  const connectOrigins = [daenerysConnectOrigin(process.env.NEXT_PUBLIC_DAENERYS_API_URL)];
+  // HolyCode: the profile page (/me) fetches Daenerys from the browser (also the public
+  // HolyAgent release list), and inside the HolyAgent window talks to the shell over Tauri IPC.
+  const connectOrigins = [daenerysConnectOrigin(process.env.NEXT_PUBLIC_DAENERYS_API_URL), ...TAURI_IPC_ORIGINS];
 
   if (cspFetchEnabled) {
     try {

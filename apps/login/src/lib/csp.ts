@@ -16,6 +16,13 @@ export interface CSPOptions {
   connectOrigins?: string[];
 }
 
+/**
+ * The Tauri IPC of the HolyAgent desktop shell: its window opens id.holycode.org with the
+ * bridge (the avatar menu installs HolyAgent updates through it, 02.10.2026). Without these
+ * the custom-protocol IPC is refused by connect-src and Tauri falls back to postMessage.
+ */
+export const TAURI_IPC_ORIGINS: readonly string[] = Object.freeze(["ipc:", "http://ipc.localhost"]);
+
 /** The Daenerys API origin the profile page fetches, for connect-src. */
 export function daenerysConnectOrigin(configured?: string | null): string {
   const value = (configured ?? "").trim() || "https://daenerys-api.holycode.org";

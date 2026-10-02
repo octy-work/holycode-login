@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  backToService,
   buildServiceHref,
   canOpenAdmin,
   DEFAULT_SERVICES,
@@ -7,6 +8,8 @@ import {
   normalizeService,
   normalizeServices,
   parseServicesEnv,
+  platformDomainOf,
+  readReturnTo,
 } from "./services";
 
 const PROFILE = "https://id.holycode.org/me/security";
@@ -144,5 +147,53 @@ describe("canOpenAdmin(): the organization admin is for owners and admins", () =
     expect(canOpenAdmin("")).toBe(false);
     expect(canOpenAdmin(undefined)).toBe(false);
     expect(canOpenAdmin(null)).toBe(false);
+  });
+});
+
+describe("“← Back to …” of the top bar (backToService, readReturnTo, platformDomainOf)", () => {
+  const services = fallbackServices("");
+
+  test("a service of the platform: named by the directory", () => {
+    expect(
+      backToService("https://build.holycode.org/board?x=1", services, { ownOrigin: "https://id.holycode.org" }),
+    ).toEqual({
+      href: "https://build.holycode.org/board?x=1",
+      host: "build.holycode.org",
+      key: "build",
+      name: "HolyBuild",
+    });
+  });
+
+  test("an unknown subdomain: the host; the bare domain is accepted too", () => {
+    expect(backToService("https://jenkins.holycode.org/", services)).toMatchObject({
+      key: "",
+      name: "",
+      host: "jenkins.holycode.org",
+    });
+    expect(backToService("https://holycode.org/agent", services)?.host).toBe("holycode.org");
+  });
+
+  test("another domain, our own origin, javascript: or rubbish → null", () => {
+    expect(backToService("https://evil.example/holycode.org", services)).toBeNull();
+    expect(backToService("https://holycode.org.evil.example/", services)).toBeNull();
+    expect(backToService("https://id.holycode.org/me", services, { ownOrigin: "https://id.holycode.org" })).toBeNull();
+    expect(backToService("javascript:alert(1)", services)).toBeNull();
+    expect(backToService("", services)).toBeNull();
+  });
+
+  test("a tenant ID accepts its own domain", () => {
+    expect(platformDomainOf("id.octy.ru")).toBe("octy.ru");
+    expect(platformDomainOf("id.holycode.org")).toBe("holycode.org");
+    expect(platformDomainOf("localhost:3011")).toBe("holycode.org");
+    expect(backToService("https://app.octy.ru/", [], { domain: "octy.ru" })?.host).toBe("app.octy.ru");
+    expect(backToService("https://app.octy.ru/", [])).toBeNull();
+  });
+
+  test("readReturnTo: http(s) only", () => {
+    expect(readReturnTo("https://id.holycode.org/me?return_to=https%3A%2F%2Fapp.holycode.org%2F")).toBe(
+      "https://app.holycode.org/",
+    );
+    expect(readReturnTo("https://id.holycode.org/me?return_to=javascript%3Aalert(1)")).toBe("");
+    expect(readReturnTo("https://id.holycode.org/me")).toBe("");
   });
 });

@@ -232,3 +232,82 @@ export function canOpenAdmin(role: string | undefined | null): boolean {
 /** `?org=` and `?return_to=` — what a service opened from the switcher reads back. */
 export const ORG_PARAM = "org";
 export const RETURN_TO_PARAM = "return_to";
+
+// ---------------------------------------------------------------------------
+// "← Back to …" in the top bar (owner's decision of 02.10.2026, option A) — the
+// same rule as backToService/readReturnTo of the chat's switcher (href.js,
+// session.js): `return_to` is taken only from the platform's domain or its
+// subdomains and never from our own origin.
+// ---------------------------------------------------------------------------
+
+/** The platform's domain of our production; a tenant ID (id.<domain>) has its own. */
+export const HOLYCODE_DOMAIN = "holycode.org";
+
+/** id.holycode.org → holycode.org, id.octy.ru → octy.ru; anything else (localhost:3011) → holycode.org. */
+export function platformDomainOf(publicHost: string | undefined | null): string {
+  const host = String(publicHost ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/:\d+$/, "");
+  const match = /^id\.([a-z0-9-]+(?:\.[a-z0-9-]+)+)$/.exec(host);
+  return match ? match[1] : HOLYCODE_DOMAIN;
+}
+
+/** `?return_to=` of the address the profile was opened with: http(s) only, else ''. */
+export function readReturnTo(href: string | undefined | null): string {
+  let params: URLSearchParams;
+  try {
+    params = new URL(String(href ?? "")).searchParams;
+  } catch {
+    return "";
+  }
+  const raw = String(params.get(RETURN_TO_PARAM) ?? "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    return /^https?:$/.test(url.protocol) ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+export type BackTarget = { href: string; host: string; key: string; name: string };
+
+function hostnameOf(value: unknown): string {
+  try {
+    return new URL(String(value ?? "")).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Where "← Back to …" leads: `return_to` from the platform's domain (or a subdomain),
+ * not our own origin. The name is the directory's service with the same host; none —
+ * the host as it is. Otherwise null.
+ */
+export function backToService(
+  returnTo: string | undefined | null,
+  services: ServiceEntry[] | undefined | null = [],
+  { ownOrigin = "", domain = HOLYCODE_DOMAIN }: { ownOrigin?: string; domain?: string } = {},
+): BackTarget | null {
+  let url: URL;
+  try {
+    url = new URL(String(returnTo ?? ""));
+  } catch {
+    return null;
+  }
+  if (!/^https?:$/.test(url.protocol)) return null;
+  const host = url.hostname.toLowerCase();
+  const platform = String(domain || HOLYCODE_DOMAIN).toLowerCase();
+  if (host !== platform && !host.endsWith(`.${platform}`)) return null;
+  if (ownOrigin && url.origin === String(ownOrigin).trim()) return null;
+  const list = Array.isArray(services) ? services : [];
+  const match = list.find((service) => service && hostnameOf(service.url) === host) || null;
+  return {
+    href: url.toString(),
+    host,
+    key: String(match?.key ?? ""),
+    name: String(match?.name ?? "").trim(),
+  };
+}

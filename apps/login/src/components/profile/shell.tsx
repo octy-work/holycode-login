@@ -1,13 +1,13 @@
 "use client";
 
-import { Avatar } from "@/components/avatar";
-import { BrandMark } from "@/components/brand-mark";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { usePageChrome } from "@/components/page-chrome-context";
 import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
+import { securityAttentionOf } from "@/lib/account-menu";
 import { PROFILE_SECTIONS, profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
 import { canOpenAdmin } from "@/lib/services";
+import { rememberReturnTo } from "@/lib/topbar";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { clsx } from "clsx";
 import { useLocale, useTranslations } from "next-intl";
@@ -20,8 +20,8 @@ import { MobileNav } from "./mobile-nav";
 import { OrgsSection } from "./orgs";
 import { SECTION_ICONS } from "./section-icons";
 import { SecuritySection } from "./security";
-import { ServiceSwitcher } from "./service-switcher";
 import { SettingsSection } from "./settings";
+import { TopBar } from "./top-bar";
 import { ProfileView } from "./types";
 import { useDaenerys } from "./use-daenerys";
 import { useServices } from "./use-services";
@@ -33,9 +33,11 @@ export type SectionProps = {
 };
 
 /**
- * The profile frame (id.holycode.org/me): header with the service switcher
- * (the grid button next to the brand, from 768 px), the brand and the avatar
- * (a link to "Data"); five sections in a sidebar on wide screens; on phones the
+ * The profile frame (id.holycode.org/me): the common HolyCode top bar across
+ * the whole width (`top-bar.tsx`, owner's decision of 02.10.2026 — the services
+ * grid from 768 px, the mark and "Profile", "← Back to …" by `return_to`; on the
+ * right the HolyAgent cloud inside the desktop shell and the avatar with its
+ * menu); five sections in a sidebar on wide screens; on phones the
  * bottom bar of every HolyCode service — four sections and "Services", whose
  * sheet holds the services, "More in Profile" and the account
  * (`mobile-nav.tsx`); one section rendered at a time.
@@ -64,6 +66,18 @@ export function ProfileShell({
   const adminAllowed = canOpenAdmin(directory.org?.role);
   // "тёмная · RU" on the switcher's last row: what the ID keeps for every service (short labels — the row is narrow).
   const prefsSummary = `${t(`switcher.theme.${view.theme ?? "system"}`)} · ${locale.toUpperCase()}`;
+  // "← Back to …": `return_to` of the address, kept for the tab (section links are full page loads).
+  const [returnTo, setReturnTo] = useState("");
+  useEffect(() => setReturnTo(rememberReturnTo()), []);
+  const base = view.basePath.replace(/\/+$/, "");
+  const accountLinks = {
+    profile: profilePath(prefix, "home"),
+    security: profilePath(prefix, "security"),
+    keys: profilePath(prefix, "keys"),
+    settings: profilePath(prefix, "settings"),
+    switchUser: `${base}/accounts`,
+    signOut: `${base}/logout`,
+  };
 
   useEffect(() => {
     const actual = profilePrefixFromPathname(window.location.pathname, view.basePath);
@@ -96,6 +110,22 @@ export function ProfileShell({
 
   return (
     <ThemeWrapper branding={branding}>
+      <TopBar
+        branding={branding}
+        homeHref={profilePath(prefix, "home")}
+        services={directory.services}
+        org={directory.org}
+        adminUrl={view.links.adminUrl}
+        canOpenAdmin={adminAllowed}
+        prefsSummary={prefsSummary}
+        prefsHref={profilePath(prefix, "settings")}
+        returnTo={returnTo}
+        publicHost={view.publicHost}
+        daenerysUrl={view.daenerysUrl}
+        user={view.user}
+        accountLinks={accountLinks}
+        securityAttention={securityAttentionOf(view.methods)}
+      />
       {/* min-height keeps short sections at the top: the root layout centers its children vertically. */}
       <div
         className="mx-auto min-h-[calc(100dvh-3rem)] w-full max-w-[1100px] pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(88px+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] md:pb-10"
@@ -104,48 +134,13 @@ export function ProfileShell({
         data-daenerys-failure={daenerys.failure ?? undefined}
         data-services-source={directory.source}
       >
-        <header className="mb-4 flex min-w-0 items-center gap-3 py-1">
-          <ServiceSwitcher
-            className="hidden md:block"
-            services={directory.services}
-            org={directory.org}
-            current="profile"
-            adminUrl={view.links.adminUrl}
-            canOpenAdmin={adminAllowed}
-            prefsSummary={prefsSummary}
-            prefsHref={profilePath(prefix, "settings")}
-          />
-          <a href={profilePath(prefix, "home")} className="flex shrink-0 items-center gap-2" aria-label="HolyCode ID">
-            <BrandMark branding={branding} />
-            <span className="rounded-md bg-linear-to-br from-[#7c3aed] to-[#06b6d4] px-1.5 py-0.5 text-[10px] font-extrabold tracking-[0.08em] text-white">
-              ID
-            </span>
-          </a>
-          <span className="flex-1" />
-          {showLanguages && (
-            <div className="hidden md:block">
-              <LanguageSwitcher languages={chrome.languages} />
-            </div>
-          )}
-          <a
-            href={profilePath(prefix, "data")}
-            className="focus-visible:ring-hc-ring block shrink-0 rounded-full focus-visible:ring-[3px] focus-visible:outline-none"
-            aria-label={view.user.fullName}
-            data-testid="avatar-link"
-          >
-            <Avatar
-              size="small"
-              name={view.user.fullName}
-              loginName={view.user.loginName}
-              imageUrl={view.user.avatarUrl || undefined}
-            />
-          </a>
-        </header>
+        {/* the bar is fixed: this keeps the content below it */}
+        <div aria-hidden="true" className="h-[calc(48px+env(safe-area-inset-top))] md:h-[52px]" />
 
         <div className="grid gap-4 md:grid-cols-[210px_minmax(0,1fr)]">
           <aside className="hidden md:block">
             <nav
-              className="bg-hc-card border-hc-border sticky top-4 rounded-[16px] border p-2"
+              className="bg-hc-card border-hc-border sticky top-[68px] rounded-[16px] border p-2"
               aria-label="HolyCode ID"
               data-testid="profile-nav"
             >

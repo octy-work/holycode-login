@@ -164,10 +164,33 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
   без панели, организация для ссылок — из `/api/auth/me`, если он ответил. Ссылка
   плитки — `url?org=<account_id>&return_to=<адрес профиля>` (`lib/services.ts`,
   логика 1:1 с `apps/holychat-web/src/switcher/href.js` чата). На телефоне (< 768 px)
-  сетки нет — сервисы в листе нижней панели; аватар в шапке на любой ширине — ссылка на
-  «Данные». Разметка и SVG-значки — из `switcher/` чата на токенах `hc-*`
+  сетки нет — сервисы в листе нижней панели. Разметка и SVG-значки — из `switcher/` чата на токенах `hc-*`
   (`service-switcher.tsx`); тексты — `profile.switcher.*`. Состояние в DOM:
   `data-services-source=server|fallback` на `[data-testid=profile-shell]`.
+- **Общая верхняя полоса** (02.10.2026, решение владельца «вариант A — одна полоса во всех
+  сервисах HolyCode»; `top-bar.tsx`, вид — `.hcs-bar` чата на токенах `hc-*`): 52 px во всю
+  ширину, `fixed` сверху (корневой layout держит контент в 1100 px — полоса из него выходит
+  фиксацией, под ней в оболочке распорка той же высоты). Слева — сетка (с 768 px), знак и
+  «Профиль» + «ID», «← Назад в …» по `return_to` (только домен платформы и поддомены, не свой
+  origin; `backToService` в `lib/services.ts`; параметр снимается с адреса и живёт в
+  sessionStorage вкладки — разделы профиля открываются полной загрузкой, а ссылки плиток
+  не вкладывают прежний `return_to`). Справа — облако HolyAgent и аватар с меню. На телефоне
+  полоса 48 px + safe-area: знак, имя, аватар.
+- **Меню аватара** (`account-menu.tsx`, пункты и порядок — `lib/account-menu.ts`, как
+  `switcher/account.js` монорепо): шапка (имя, @логин · почта) → обновление HolyAgent (внутри
+  десктопа) → Профиль, Вход и безопасность (плашка «нет 2FA»/«нет Touch ID»), Ключи доступа →
+  Язык (RU · EN) → Все настройки → «Скачать HolyAgent» (браузер) → Сменить пользователя
+  (`/accounts`) → Выйти (`/logout`). Тексты — `profile.account.*`, `profile.topbar.*`.
+- **HolyAgent** (`lib/holyagent-release.ts` — порт 1:1 `switcher/holyagentRelease.js`):
+  последний релиз — `GET <Daenerys API>/api/releases/public?app_id=com.holyagent.desktop&latest_only=1`
+  без cookie (origin `NEXT_PUBLIC_DAENERYS_API_URL` уже в CSP `connect-src`; чат ходит на
+  daenerys.<домен>, профилю это потребовало бы правки CSP). В браузере — «Скачать HolyAgent
+  X.Y.Z» (DMG). Внутри окна HolyAgent (мост Tauri: `__HOLYAGENT_DESKTOP__` / `__TAURI__.core` /
+  `__TAURI_INTERNALS__`) и релиз новее оболочки (`desktop_get_app_version`) — облако в полосе,
+  жёлтая точка на аватаре и «Обновление HolyAgent X.Y.Z» первым пунктом; установка —
+  `desktop_install_update {url: .app.zip, version}` и опрос `desktop_get_update_status`.
+  Плитки и «Назад» внутри окна открываются вкладкой HolyAgent (`desktop_open_service`,
+  `lib/topbar.ts`). В CSP `connect-src` добавлены `ipc: http://ipc.localhost` — IPC Tauri.
 - **Нижняя панель на телефоне** (28.09.2026, решение владельца: во всех сервисах HolyCode
   одна панель; `mobile-nav.tsx`, вёрстка и числа — как `switcher/mobile-nav.*` в
   монорепо, на токенах `hc-*`). Брейкпоинт 768 px, на десктопе ничего не меняется.

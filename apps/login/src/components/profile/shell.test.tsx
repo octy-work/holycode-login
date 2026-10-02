@@ -1,3 +1,5 @@
+import { resetHolyAgentReleaseWatch } from "@/lib/holyagent-release";
+import { RELEASES } from "@/lib/holyagent-release.fixture";
 import { summarizeAuthMethods } from "@/lib/profile";
 import { fallbackServices } from "@/lib/services";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -119,7 +121,10 @@ const SERVICES_MEMBER = {
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-function installFetch(services: Response | (() => Response) = () => json(404, { error: "not_found" })) {
+function installFetch(
+  services: Response | (() => Response) = () => json(404, { error: "not_found" }),
+  releases: () => Response = () => json(404, { error: "not_found" }),
+) {
   const urls: string[] = [];
   const impl = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -128,6 +133,7 @@ function installFetch(services: Response | (() => Response) = () => json(404, { 
     if (url.includes("/api/auth/sessions")) return json(200, SESSIONS);
     if (url.includes("/api/auth/activity")) return json(200, ACTIVITY);
     if (url.endsWith("/api/services")) return typeof services === "function" ? services() : services;
+    if (url.includes("/api/releases/public")) return releases();
     return json(404, { error: "not_found" });
   });
   vi.stubGlobal("fetch", impl);
@@ -193,6 +199,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    resetHolyAgentReleaseWatch();
     window.history.replaceState({}, "", "/");
   });
 
@@ -260,9 +267,7 @@ describe("the profile at its short public address (traefik rewrite) and at the l
 
     fireEvent.keyDown(window, { key: "Escape" });
 
-    // the phone: the bottom bar's "Services" opens the sheet with the same services; the avatar goes to "Data"
-    expect(getByTestId("avatar-link")).toHaveAttribute("href", "/me/data");
-    expect(container.querySelector("[data-testid=avatar-menu-trigger]")).toBeNull();
+    // the phone: the bottom bar's "Services" opens the sheet with the same services
     fireEvent.click(getByTestId("mobile-nav-services"));
     const sheetTiles = Array.from(container.querySelectorAll("[data-testid^=sheet-tile-]")).map((el) =>
       el.getAttribute("data-service"),
@@ -345,5 +350,150 @@ describe("the profile at its short public address (traefik rewrite) and at the l
     const { container, findByTestId } = render(<ProfileShell view={viewAt("/ui/v2/login/me")} counters={{}} />);
     await waitFor(() => expect(navHrefs(container)[2]).toBe("/me/security"));
     await findByTestId("session-sess_now");
+  });
+});
+
+describe("the common top bar (owner's decision of 02.10.2026, option A)", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    window.localStorage.clear();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    resetHolyAgentReleaseWatch();
+    delete (window as Window & { __TAURI__?: unknown }).__TAURI__;
+    window.history.replaceState({}, "", "/");
+  });
+
+  test("left: the grid, the mark and «Profile»; right: the avatar — no cloud in a browser", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    installFetch(json(200, SERVICES_OWNER), () => json(200, RELEASES));
+    const { getByTestId, queryByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    const bar = getByTestId("profile-topbar");
+    expect(bar).toHaveAttribute("role", "banner");
+    expect(bar.className).toContain("fixed");
+    expect(bar.className).toContain("md:h-[52px]");
+    const order = Array.from(bar.querySelectorAll("[data-testid]")).map((el) => el.getAttribute("data-testid"));
+    expect(order.indexOf("service-switcher")).toBeLessThan(order.indexOf("topbar-brand"));
+    expect(order.indexOf("topbar-brand")).toBeLessThan(order.indexOf("account-menu"));
+    expect(getByTestId("topbar-brand")).toHaveAttribute("href", "/me");
+    expect(getByTestId("app-title")).toHaveTextContent("name");
+    expect(queryByTestId("service-back-link")).toBeNull(); // opened directly, no return_to
+    await waitFor(() => expect(getByTestId("profile-shell").getAttribute("data-services-source")).toBe("server"));
+    expect(queryByTestId("topbar-holyagent-update")).toBeNull();
+  });
+
+  test("the avatar menu: the profile's sections, «Download HolyAgent» with the DMG, switch user and sign out", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    const urls = installFetch(undefined, () => json(200, RELEASES));
+    const { getByTestId, container } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() =>
+      expect(
+        urls.some((u) => u.startsWith("https://daenerys-api.holycode.org/api/releases/public?app_id=com.holyagent.desktop")),
+      ).toBe(true),
+    );
+    // no 2FA (password + provider only): the yellow dot on the avatar and the pill on the row
+    expect(getByTestId("avatar-attention")).toBeInTheDocument();
+    fireEvent.click(getByTestId("avatar-menu-trigger"));
+    expect(getByTestId("user-menu-name")).toHaveTextContent("Родион Отлетов");
+    expect(getByTestId("user-menu")).toHaveTextContent("@owner · owner@example.test");
+    expect(getByTestId("user-menu-profile")).toHaveAttribute("href", "/me");
+    expect(getByTestId("user-menu-security")).toHaveAttribute("href", "/me/security");
+    expect(getByTestId("user-menu-security")).toHaveTextContent("attention.no_2fa");
+    expect(getByTestId("user-menu-keys")).toHaveAttribute("href", "/me/keys");
+    expect(getByTestId("user-menu-settings")).toHaveAttribute("href", "/me/settings");
+    expect(getByTestId("user-menu-switch-user")).toHaveAttribute("href", "/ui/v2/login/accounts");
+    expect(getByTestId("user-menu-sign-out")).toHaveAttribute("href", "/ui/v2/login/logout");
+    await waitFor(() => expect(getByTestId("user-menu-holyagent")).toHaveAttribute("data-state", "download"));
+    const agent = getByTestId("user-menu-holyagent");
+    expect(agent).toHaveAttribute("href", "https://daenerys.holycode.org/api/updates/download/desktop-release-0.1.864.dmg");
+    expect(agent).toHaveAttribute("target", "_blank");
+    expect(agent).toHaveTextContent("holyagent.download");
+    expect(agent).toHaveTextContent("holyagent.downloadSub:0.1.864,?");
+    const rows = Array.from(container.querySelectorAll("[data-testid=user-menu] [data-testid^=user-menu-]")).map((el) =>
+      el.getAttribute("data-testid"),
+    );
+    expect(rows).toEqual([
+      "user-menu-name",
+      "user-menu-profile",
+      "user-menu-security",
+      "user-menu-keys",
+      "user-menu-settings",
+      "user-menu-holyagent",
+      "user-menu-switch-user",
+      "user-menu-sign-out",
+    ]);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(container.querySelector("[data-testid=user-menu]")).toBeNull();
+  });
+
+  test("inside the HolyAgent shell with an older version: the cloud in the bar and the update first in the menu", async () => {
+    window.history.replaceState({}, "", "/me");
+    installFetch(undefined, () => json(200, RELEASES));
+    const invoke = vi.fn(async (cmd: string) => {
+      if (cmd === "desktop_get_app_version") return "0.1.858";
+      if (cmd === "desktop_install_update") return { started: true };
+      return null;
+    });
+    (window as Window & { __TAURI__?: unknown }).__TAURI__ = { core: { invoke } };
+    const { findByTestId, getByTestId, container } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    const cloud = await findByTestId("topbar-holyagent-update");
+    expect(cloud).toHaveAttribute("data-state", "update");
+    expect(cloud).toHaveAttribute("aria-label", "holyagent.update:0.1.864,0.1.858");
+    fireEvent.click(getByTestId("avatar-menu-trigger"));
+    const first = container.querySelector("[data-testid=user-menu] [role=menuitem]");
+    expect(first).toHaveAttribute("data-testid", "user-menu-holyagent");
+    expect(first).toHaveAttribute("data-state", "update");
+    expect(first).not.toHaveAttribute("href");
+    fireEvent.click(cloud);
+    await waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("desktop_install_update", {
+        url: "https://daenerys.holycode.org/api/updates/download/desktop-release-0.1.864.app.zip",
+        version: "0.1.864",
+      }),
+    );
+  });
+
+  test("the same version inside the shell: no cloud, no HolyAgent row", async () => {
+    window.history.replaceState({}, "", "/me");
+    installFetch(undefined, () => json(200, RELEASES));
+    const invoke = vi.fn(async (cmd: string) => (cmd === "desktop_get_app_version" ? "0.1.864" : null));
+    (window as Window & { __TAURI__?: unknown }).__TAURI__ = { core: { invoke } };
+    const { getByTestId, queryByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() => expect(invoke).toHaveBeenCalledWith("desktop_get_app_version", undefined));
+    fireEvent.click(getByTestId("avatar-menu-trigger"));
+    await waitFor(() => expect(getByTestId("user-menu-profile")).toBeInTheDocument());
+    expect(queryByTestId("topbar-holyagent-update")).toBeNull();
+    expect(queryByTestId("user-menu-holyagent")).toBeNull();
+  });
+
+  test("«← Back to HolyBuild» by return_to: kept for the tab, removed from the address, not nested into the tiles", async () => {
+    window.history.replaceState({}, "", "/me/security?return_to=" + encodeURIComponent("https://build.holycode.org/board"));
+    installFetch(json(200, SERVICES_OWNER));
+    const { findByTestId, getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    const back = await findByTestId("service-back-link");
+    expect(back).toHaveAttribute("href", "https://build.holycode.org/board");
+    expect(back).toHaveTextContent("topbar.backTo:HolyBuild");
+    expect(window.location.search).toBe("");
+    expect(window.sessionStorage.getItem("hc_profile_return_to")).toBe("https://build.holycode.org/board");
+    fireEvent.click(getByTestId("service-switcher-trigger"));
+    const chat = new URL(getByTestId("service-tile-chat").getAttribute("href")!);
+    expect(chat.searchParams.get("return_to")).toBe(window.location.href);
+    expect(chat.searchParams.get("return_to")).not.toContain("return_to");
+    cleanup();
+
+    // the next section is a full page load without the parameter: the way back stays
+    window.history.replaceState({}, "", "/me/keys");
+    const again = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    expect(await again.findByTestId("service-back-link")).toHaveAttribute("href", "https://build.holycode.org/board");
+  });
+
+  test("return_to from a foreign domain gives no back link", async () => {
+    window.history.replaceState({}, "", "/me?return_to=" + encodeURIComponent("https://evil.example/"));
+    installFetch();
+    const { getByTestId, queryByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() => expect(getByTestId("profile-shell").getAttribute("data-daenerys-status")).toBe("ready"));
+    expect(queryByTestId("service-back-link")).toBeNull();
   });
 });
