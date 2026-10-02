@@ -27,7 +27,9 @@ export function SignupConsents({
   const t = useTranslations("signup");
   const tosLink = resolveLocalizedLegalLink(legal?.tosLink, locale);
   const privacyLink = resolveLocalizedLegalLink(legal?.privacyPolicyLink, locale);
-  const pdLink = privacyLink;
+  // The consent to personal data processing is its own document; Zitadel's legal
+  // settings keep it in the custom link (until it is set, the privacy policy).
+  const pdLink = resolveLocalizedLegalLink(legal?.customLink, locale) || privacyLink;
   const linkClass = "text-hc-link hover:text-hc-p500 underline decoration-hc-link/40 underline-offset-2";
 
   const link = (href: string | undefined, testId: string) => (chunks: ReactNode) =>

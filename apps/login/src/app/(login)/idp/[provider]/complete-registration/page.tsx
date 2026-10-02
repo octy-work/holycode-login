@@ -4,7 +4,14 @@ import { listSignupDomains } from "@/lib/server/daenerys-signup";
 import { getServiceConfig } from "@/lib/service-url";
 import { hasConsents, parseSignupState, SIGNUP_COOKIE_NAME } from "@/lib/signup";
 import { getBrandingSettings, getLegalAndSupportSettings } from "@/lib/zitadel";
+import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { cookies, headers } from "next/headers";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("signup");
+  return { title: t("complete.title") };
+}
 
 /**
  * Complete registration page — a provider confirmed a person who has no account yet.
