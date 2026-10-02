@@ -590,7 +590,9 @@
         "data": "Data",
         "security": "Security",
         "orgs": "Teams"
-      }
+      },
+      "collapse": "Collapse menu",
+      "expand": "Expand menu"
     },
     "common": {
       "edit": "Edit",

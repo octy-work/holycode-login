@@ -3,8 +3,11 @@ import { RELEASES } from "@/lib/holyagent-release.fixture";
 import { summarizeAuthMethods } from "@/lib/profile";
 import { fallbackServices } from "@/lib/services";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ProfileShell } from "./shell";
+import { PROFILE_NAV_COLLAPSED_KEY } from "./sidebar";
 import { ProfileView } from "./types";
 
 vi.mock("next/navigation", () => ({
@@ -495,5 +498,136 @@ describe("the common top bar (owner's decision of 02.10.2026, option A)", () => 
     const { getByTestId, queryByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
     await waitFor(() => expect(getByTestId("profile-shell").getAttribute("data-daenerys-status")).toBe("ready"));
     expect(queryByTestId("service-back-link")).toBeNull();
+  });
+});
+
+describe("the sidebar at the left edge (owner's decision of 02.10.2026, as in HolyAgent and Daenerys)", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    window.localStorage.clear();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    resetHolyAgentReleaseWatch();
+    window.history.replaceState({}, "", "/");
+    window.localStorage.clear();
+  });
+
+  test("the sidebar is the shell's first child, beside the content — not inside the centered column", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    installFetch();
+    const { getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{ security: 2 }} />);
+    const shell = getByTestId("profile-shell");
+    const sidebar = getByTestId("profile-sidebar");
+    const content = getByTestId("profile-content");
+
+    // the shell fills the viewport under the 52 px bar on wide screens, the two side by side
+    expect(shell.className).toContain("md:fixed");
+    expect(shell.className).toContain("md:top-[52px]");
+    expect(shell.className).toContain("md:flex");
+    expect(shell.firstElementChild).toBe(sidebar);
+    expect(sidebar.nextElementSibling).toBe(content);
+    // the 980 px column and its own scroll are on the right only
+    expect(content.className).toContain("md:overflow-y-auto");
+    expect(content.querySelector(".max-w-\\[980px\\]")).not.toBeNull();
+    expect(sidebar.closest(".max-w-\\[980px\\]")).toBeNull();
+    expect(sidebar.closest(".mx-auto")).toBeNull();
+    // 240 px for the whole height, hidden on phones (the bottom bar is there)
+    expect(sidebar.className).toContain("w-60");
+    expect(sidebar.className).toContain("h-full");
+    expect(sidebar.className).toContain("hidden");
+    expect(sidebar.className).toContain("md:flex");
+    expect(sidebar.className).toContain("hc-sidenav");
+    expect(getByTestId("profile-nav")).toHaveTextContent("title");
+    expect(getByTestId("profile-nav-security")).toHaveTextContent("2");
+    await waitFor(() => expect(shell.getAttribute("data-daenerys-status")).toBe("ready"));
+  });
+
+  test("the active item is the common filled frame — no side stripe", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    installFetch();
+    const { getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    const active = getByTestId("profile-nav-security");
+    expect(active).toHaveAttribute("aria-current", "page");
+    expect(active.className).toContain("hc-sidenav-item");
+    // the old marker was shadow-[inset_2px_0_0_var(--hc-p500)]
+    expect(active.className).not.toMatch(/inset_\d|border-l|before:/);
+    for (const s of ["home", "data", "keys", "orgs", "settings"]) {
+      expect(getByTestId(`profile-nav-${s}`)).not.toHaveAttribute("aria-current");
+      expect(getByTestId(`profile-nav-${s}`).className).toContain("hc-sidenav-item");
+    }
+    await waitFor(() => expect(getByTestId("profile-shell").getAttribute("data-daenerys-status")).toBe("ready"));
+  });
+
+  test("the styles: the reference numbers of HolyAgent/Daenerys, light and dark, without a stripe", () => {
+    const scss = readFileSync(resolve(__dirname, "../../styles/globals.scss"), "utf8");
+    const rule = (selector: string) => {
+      const at = scss.indexOf(`${selector} {`);
+      expect(at, selector).toBeGreaterThanOrEqual(0);
+      return scss.slice(at, scss.indexOf("}", at)).replace(/\s+/g, " ");
+    };
+    const item = rule(".hc-sidenav-item");
+    expect(item).toContain("border: 1px solid transparent");
+    expect(item).toContain("border-radius: 0.9rem");
+    expect(item).toContain("padding: 0.72rem 0.8rem");
+    expect(item).toContain("gap: 0.75rem");
+
+    const dark = rule('.dark .hc-sidenav-item[aria-current="page"]');
+    expect(dark).toContain("color: #fff");
+    expect(dark).toContain("border-color: rgba(124, 58, 237, 0.34)");
+    expect(dark).toContain("linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(124, 58, 237, 0.22))");
+    expect(dark).toContain("inset 0 0 0 1px rgba(124, 58, 237, 0.18), 0 14px 30px rgba(6, 11, 30, 0.22)");
+
+    const light = rule('.hc-sidenav-item[aria-current="page"]');
+    expect(light).toContain("color: #4c1d95");
+    expect(light).toContain("border-color: rgba(124, 58, 237, 0.35)");
+    expect(light).toContain("linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(124, 58, 237, 0.16))");
+    expect(light).toContain("inset 0 0 0 1px rgba(124, 58, 237, 0.12)");
+
+    for (const r of [item, dark, light]) {
+      // a stripe would be a one-sided border, a pseudo-element or an offset inset shadow
+      expect(r).not.toMatch(/border-left|inset \d+px 0 0|inset [1-9]/);
+    }
+    expect(scss).not.toMatch(/hc-sidenav-item[^{]*::?before/);
+
+    const sidebarDark = rule(".dark .hc-sidenav");
+    expect(sidebarDark).toContain("radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 34%)");
+    expect(sidebarDark).toContain("linear-gradient(180deg, rgba(18, 18, 40, 0.98) 0%, rgba(12, 12, 28, 1) 100%)");
+    expect(rule(".hc-sidenav")).toContain("border-right: 1px solid var(--hc-border)");
+  });
+
+  test("collapse to icons with «‹‹» at the bottom; the choice is kept in localStorage", async () => {
+    window.history.replaceState({}, "", "/me/security");
+    installFetch();
+    const first = render(<ProfileShell view={viewAt("/me")} counters={{ security: 1 }} />);
+    const toggle = first.getByTestId("profile-sidebar-toggle");
+    expect(first.getByTestId("profile-sidebar")).toHaveAttribute("data-collapsed", "false");
+    expect(toggle).toHaveAttribute("aria-label", "nav.collapse");
+    // the toggle is the sidebar's last block, below the items
+    expect(first.getByTestId("profile-sidebar").lastElementChild?.contains(toggle)).toBe(true);
+
+    fireEvent.click(toggle);
+    const sidebar = first.getByTestId("profile-sidebar");
+    expect(sidebar).toHaveAttribute("data-collapsed", "true");
+    expect(sidebar.className).toContain("w-16");
+    expect(window.localStorage.getItem(PROFILE_NAV_COLLAPSED_KEY)).toBe("1");
+    // icons only: the label becomes the item's tooltip, the counter a dot
+    const security = first.getByTestId("profile-nav-security");
+    expect(security.querySelector("[data-i18n-key]")).toBeNull();
+    expect(security).toHaveAttribute("title", "nav.security (1)");
+    expect(first.getByTestId("profile-nav")).not.toHaveTextContent("title");
+    expect(first.getByTestId("profile-sidebar-toggle")).toHaveAttribute("aria-label", "nav.expand");
+    await waitFor(() => expect(first.getByTestId("profile-shell").getAttribute("data-daenerys-status")).toBe("ready"));
+    first.unmount();
+
+    // the next page load starts collapsed
+    installFetch();
+    const second = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
+    await waitFor(() => expect(second.getByTestId("profile-sidebar")).toHaveAttribute("data-collapsed", "true"));
+    fireEvent.click(second.getByTestId("profile-sidebar-toggle"));
+    expect(second.getByTestId("profile-sidebar")).toHaveAttribute("data-collapsed", "false");
+    expect(window.localStorage.getItem(PROFILE_NAV_COLLAPSED_KEY)).toBe("0");
+    await waitFor(() => expect(second.getByTestId("profile-shell").getAttribute("data-daenerys-status")).toBe("ready"));
   });
 });

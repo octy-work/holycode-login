@@ -5,11 +5,10 @@ import { usePageChrome } from "@/components/page-chrome-context";
 import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
 import { securityAttentionOf } from "@/lib/account-menu";
-import { PROFILE_SECTIONS, profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
+import { profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
 import { canOpenAdmin } from "@/lib/services";
 import { rememberReturnTo } from "@/lib/topbar";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
-import { clsx } from "clsx";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -18,9 +17,9 @@ import { HomeSection } from "./home";
 import { KeysSection } from "./keys";
 import { MobileNav } from "./mobile-nav";
 import { OrgsSection } from "./orgs";
-import { SECTION_ICONS } from "./section-icons";
 import { SecuritySection } from "./security";
 import { SettingsSection } from "./settings";
+import { ProfileSidebar, useProfileNavCollapsed } from "./sidebar";
 import { TopBar } from "./top-bar";
 import { ProfileView } from "./types";
 import { useDaenerys } from "./use-daenerys";
@@ -37,7 +36,8 @@ export type SectionProps = {
  * the whole width (`top-bar.tsx`, owner's decision of 02.10.2026 — the services
  * grid from 768 px, the mark and "Profile", "← Back to …" by `return_to`; on the
  * right the HolyAgent cloud inside the desktop shell and the avatar with its
- * menu); five sections in a sidebar on wide screens; on phones the
+ * menu); the sections in a sidebar at the left edge under the bar, the whole
+ * height, collapsible to icons (`sidebar.tsx`, 02.10.2026); on phones the
  * bottom bar of every HolyCode service — four sections and "Services", whose
  * sheet holds the services, "More in Profile" and the account
  * (`mobile-nav.tsx`); one section rendered at a time.
@@ -107,6 +107,7 @@ export function ProfileShell({
   }[view.section];
 
   const showLanguages = chrome.languages.length > 1;
+  const nav = useProfileNavCollapsed();
 
   return (
     <ThemeWrapper branding={branding}>
@@ -126,87 +127,71 @@ export function ProfileShell({
         accountLinks={accountLinks}
         securityAttention={securityAttentionOf(view.methods)}
       />
-      {/* min-height keeps short sections at the top: the root layout centers its children vertically. */}
+      {/*
+        Wide screens: the shell fills the viewport under the fixed 52 px bar — the
+        sidebar at the left edge for the whole height, the content scrolling on the
+        right (as in HolyAgent and Daenerys). It is fixed, not in the flow: the root
+        layout centers its children in a 1100 px column, and the sidebar must not be
+        inside it. Phones: the content in the page's own scroll, the bottom bar below.
+      */}
       <div
-        className="mx-auto min-h-[calc(100dvh-3rem)] w-full max-w-[1100px] pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(88px+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] md:pb-10"
+        className="md:fixed md:inset-x-0 md:top-[52px] md:bottom-0 md:flex"
         data-testid="profile-shell"
         data-daenerys-status={daenerys.status}
         data-daenerys-failure={daenerys.failure ?? undefined}
         data-services-source={directory.source}
       >
-        {/* the bar is fixed: this keeps the content below it */}
-        <div aria-hidden="true" className="h-[calc(48px+env(safe-area-inset-top))] md:h-[52px]" />
+        <ProfileSidebar
+          section={view.section}
+          prefix={prefix}
+          counters={counters}
+          collapsed={nav.collapsed}
+          animate={nav.ready}
+          onToggle={nav.toggle}
+        />
 
-        <div className="grid gap-4 md:grid-cols-[210px_minmax(0,1fr)]">
-          <aside className="hidden md:block">
-            <nav
-              className="bg-hc-card border-hc-border sticky top-[68px] rounded-[16px] border p-2"
-              aria-label="HolyCode ID"
-              data-testid="profile-nav"
-            >
-              <div className="text-hc-muted px-2.5 pt-1 pb-2 text-[10.5px] font-semibold tracking-[0.12em] uppercase">
-                <Translated i18nKey="title" namespace="profile" />
-              </div>
-              {PROFILE_SECTIONS.map((section) => {
-                const Icon = SECTION_ICONS[section];
-                const active = section === view.section;
-                return (
+        <div className="min-w-0 flex-1 md:overflow-y-auto" data-testid="profile-content">
+          {/* min-height keeps short sections at the top on phones: the root layout centers its children vertically. */}
+          <div className="mx-auto min-h-[calc(100dvh-3rem)] w-full max-w-[980px] pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(88px+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] md:min-h-0 md:px-8 md:pt-6 md:pb-10">
+            {/* the bar is fixed: this keeps the content below it (on wide screens the shell starts under it) */}
+            <div aria-hidden="true" className="h-[calc(48px+env(safe-area-inset-top))] md:hidden" />
+
+            <main className="min-w-0">
+              <Section view={view} prefix={prefix} daenerys={daenerys} />
+            </main>
+
+            <footer className="text-hc-muted mt-8 flex items-center gap-3 text-xs">
+              {showLanguages && (
+                <div className="md:hidden">
+                  <LanguageSwitcher languages={chrome.languages} />
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                {chrome.helpLink && (
                   <a
-                    key={section}
-                    href={profilePath(prefix, section)}
-                    aria-current={active ? "page" : undefined}
-                    className={clsx(
-                      "flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[13.5px] transition-colors",
-                      active
-                        ? "bg-hc-soft text-hc-text font-semibold shadow-[inset_2px_0_0_var(--hc-p500)]"
-                        : "text-hc-text-2 hover:bg-hc-card-2 hover:text-hc-text",
-                    )}
+                    href={chrome.helpLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-hc-text transition-colors"
                   >
-                    <Icon className="text-hc-p400 h-4 w-4 shrink-0" />
-                    <span className="flex-1">
-                      <Translated i18nKey={`nav.${section}`} namespace="profile" />
-                    </span>
-                    {counters[section] ? (
-                      <span className="border-hc-warn/35 text-hc-warn rounded-full border px-1.5 text-[10.5px] leading-4">
-                        {counters[section]}
-                      </span>
-                    ) : null}
+                    <Translated i18nKey="help" namespace="common" />
                   </a>
-                );
-              })}
-            </nav>
-          </aside>
-
-          <main className="min-w-0">
-            <Section view={view} prefix={prefix} daenerys={daenerys} />
-          </main>
-        </div>
-
-        <footer className="text-hc-muted mt-8 flex items-center gap-3 text-xs">
-          {showLanguages && (
-            <div className="md:hidden">
-              <LanguageSwitcher languages={chrome.languages} />
-            </div>
-          )}
-          <div className="flex items-center gap-1.5">
-            {chrome.helpLink && (
-              <a href={chrome.helpLink} target="_blank" rel="noreferrer" className="hover:text-hc-text transition-colors">
-                <Translated i18nKey="help" namespace="common" />
-              </a>
-            )}
-            {chrome.helpLink && chrome.privacyPolicyLink && <span aria-hidden="true">·</span>}
-            {chrome.privacyPolicyLink && (
-              <a
-                href={chrome.privacyPolicyLink}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-hc-text transition-colors"
-              >
-                <Translated i18nKey="privacy" namespace="common" />
-              </a>
-            )}
+                )}
+                {chrome.helpLink && chrome.privacyPolicyLink && <span aria-hidden="true">·</span>}
+                {chrome.privacyPolicyLink && (
+                  <a
+                    href={chrome.privacyPolicyLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-hc-text transition-colors"
+                  >
+                    <Translated i18nKey="privacy" namespace="common" />
+                  </a>
+                )}
+              </div>
+            </footer>
           </div>
-        </footer>
+        </div>
       </div>
 
       <MobileNav
