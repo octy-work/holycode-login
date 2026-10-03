@@ -566,6 +566,10 @@
       "sessionGone": "Your browser session has ended — please sign in again.",
       "failed": "Could not confirm the sign-in. Start it again in the app.",
       "expired": "Code not found or expired. Start the sign-in again in the app."
+    },
+    "gone": {
+      "title": "This sign-in request is closed",
+      "description": "The sign-in is already confirmed or the link has expired. Go back to the app; if it is still waiting, start the sign-in there again."
     }
   },
   "error": {

@@ -26,15 +26,12 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  const { deviceAuthorizationRequest } = await getDeviceAuthorizationRequest({ serviceConfig, userCode });
-
-  if (!deviceAuthorizationRequest) {
-    return (
-      <div>
-        <Translated i18nKey="noDeviceRequest" namespace="error" />
-      </div>
-    );
-  }
+  // Zitadel forgets the request once it is approved (or expired): a reload after
+  // "Allow", or any re-render of this page, then gets NotFound — show what happened
+  // instead of the error page (03.10.2026).
+  const deviceAuthorizationRequest = await getDeviceAuthorizationRequest({ serviceConfig, userCode })
+    .then((resp) => resp.deviceAuthorizationRequest)
+    .catch(() => undefined);
 
   let defaultOrganization;
   if (!organization) {
@@ -45,6 +42,22 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   }
 
   const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? defaultOrganization });
+
+  if (!deviceAuthorizationRequest) {
+    return (
+      <DynamicTheme branding={branding}>
+        <div className="flex flex-col space-y-2 text-left" data-testid="device-request-gone">
+          <h1>
+            <Translated i18nKey="gone.title" namespace="device" />
+          </h1>
+          <p className="ztdl-p">
+            <Translated i18nKey="gone.description" namespace="device" />
+          </p>
+        </div>
+        <div className="w-full"></div>
+      </DynamicTheme>
+    );
+  }
 
   const params = new URLSearchParams();
 

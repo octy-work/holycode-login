@@ -1,7 +1,6 @@
 "use client";
 
-import { setCookieConsent } from "@/lib/server/signup";
-import { COOKIE_CONSENT_COOKIE_NAME, CookieConsent, parseCookieConsent } from "@/lib/signup";
+import { COOKIE_CONSENT_COOKIE_NAME, COOKIE_CONSENT_MAX_AGE_SECONDS, CookieConsent, parseCookieConsent } from "@/lib/signup";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
@@ -31,10 +30,14 @@ export function CookieBanner() {
     return null;
   }
 
-  const choose = async (choice: CookieConsent) => {
+  // Set right here in the browser, not by a server action: a cookie set in a server
+  // action makes Next re-render the current page, and some pages cannot be rendered
+  // twice (the device approval is gone once it is used) — 03.10.2026.
+  const choose = (choice: CookieConsent) => {
     setVisible(false);
     try {
-      await setCookieConsent(choice);
+      const secure = window.location.protocol === "https:" ? "; secure" : "";
+      document.cookie = `${COOKIE_CONSENT_COOKIE_NAME}=${choice}; path=/; max-age=${COOKIE_CONSENT_MAX_AGE_SECONDS}; samesite=lax${secure}`;
     } catch {
       // The notice comes back next time; nothing else depends on it.
     }

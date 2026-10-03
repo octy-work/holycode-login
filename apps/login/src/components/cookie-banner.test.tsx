@@ -3,25 +3,27 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { CookieBanner } from "./cookie-banner";
 
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
-vi.mock("@/lib/server/signup", () => ({ setCookieConsent: vi.fn() }));
+
+const consent = () =>
+  document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("hc_cookie_consent="))
+    ?.split("=")[1];
 
 describe("CookieBanner", () => {
-  let setCookieConsent: any;
-  beforeEach(async () => {
-    setCookieConsent = vi.mocked((await import("@/lib/server/signup")).setCookieConsent);
-    setCookieConsent.mockReset();
+  beforeEach(() => {
     document.cookie = "hc_cookie_consent=; max-age=0; path=/";
   });
   afterEach(cleanup);
 
-  test("shown once, three choices of equal weight; 'allow all' is remembered", async () => {
+  test("shown once, three choices of equal weight; 'allow all' is kept in the browser, no server call", async () => {
     const { getByTestId, queryByTestId } = render(<CookieBanner />);
     expect(getByTestId("cookie-all")).toBeInTheDocument();
     expect(getByTestId("cookie-necessary")).toBeInTheDocument();
     await act(async () => {
       fireEvent.click(getByTestId("cookie-all"));
     });
-    expect(setCookieConsent).toHaveBeenCalledWith("all");
+    expect(consent()).toBe("all");
     expect(queryByTestId("cookie-banner")).toBeNull();
   });
 
@@ -32,7 +34,7 @@ describe("CookieBanner", () => {
     await act(async () => {
       fireEvent.click(getByTestId("cookie-save"));
     });
-    expect(setCookieConsent).toHaveBeenCalledWith("necessary");
+    expect(consent()).toBe("necessary");
   });
 
   test("already chosen: nothing is shown", () => {

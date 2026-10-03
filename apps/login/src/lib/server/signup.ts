@@ -4,7 +4,6 @@ import { createSessionForIdpAndUpdateCookie } from "@/lib/server/cookie";
 import {
   CONSENT_VERSION,
   COOKIE_CONSENT_COOKIE_NAME,
-  COOKIE_CONSENT_MAX_AGE_SECONDS,
   CookieConsent,
   hasConsents,
   localPartProblem,
@@ -79,21 +78,6 @@ async function clearSignupState() {
 async function readCookieConsent(): Promise<CookieConsent | null> {
   const jar = await cookies();
   return parseCookieConsent(jar.get(COOKIE_CONSENT_COOKIE_NAME)?.value);
-}
-
-/** The cookie banner: "allow all" or "necessary only" (functional cookies such as "welcome back" off). */
-export async function setCookieConsent(choice: CookieConsent): Promise<void> {
-  if (choice !== "all" && choice !== "necessary") {
-    return;
-  }
-  const jar = await cookies();
-  jar.set(COOKIE_CONSENT_COOKIE_NAME, choice, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: COOKIE_CONSENT_MAX_AGE_SECONDS,
-  });
 }
 
 /** Proof-of-work for the mailbox form (lib/pow.ts): the browser solves it while the person types. */
