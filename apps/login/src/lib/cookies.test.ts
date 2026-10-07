@@ -12,6 +12,8 @@ import {
   removeSessionFromCookie,
   setLanguageCookie,
   updateSessionCookie,
+  sessionsCookieExpiry,
+  MAX_SESSIONS_COOKIE_MS,
 } from "./cookies";
 
 import { timestampDate, timestampFromMs } from "@zitadel/client";
@@ -938,6 +940,40 @@ describe("cookies", () => {
           loginName: "user@example.com",
         }),
       ).resolves.toBeUndefined();
+    });
+  });
+
+  // Окно HolyAgent (WKWebView) стирает сессионные cookie при выходе из
+  // программы: без срока вход просил пароль после каждого обновления (07.10.2026).
+  describe("sessionsCookieExpiry", () => {
+    const now = 1_800_000_000_000;
+    const day = 24 * 60 * 60 * 1000;
+
+    it("takes the latest session expiration", () => {
+      const expires = sessionsCookieExpiry([{ expirationTs: String(now + 2 * day) }, { expirationTs: String(now + 10 * day) }], now);
+      expect(expires?.getTime()).toBe(now + 10 * day);
+    });
+
+    it("caps at 30 days and treats a session without expiration as the cap", () => {
+      expect(sessionsCookieExpiry([{ expirationTs: String(now + 90 * day) }], now)?.getTime()).toBe(now + MAX_SESSIONS_COOKIE_MS);
+      expect(sessionsCookieExpiry([{ expirationTs: "" }], now)?.getTime()).toBe(now + MAX_SESSIONS_COOKIE_MS);
+    });
+
+    it("keeps a session cookie for an empty or fully expired list", () => {
+      expect(sessionsCookieExpiry([], now)).toBeUndefined();
+      expect(sessionsCookieExpiry([{ expirationTs: String(now - day) }], now)).toBeUndefined();
+    });
+
+    it("the sessions cookie gets an expiry instead of being a session cookie", async () => {
+      mockCookies.get.mockReturnValue(undefined);
+      const expirationTs = String(Date.now() + 5 * day);
+      await addSessionToCookie({
+        session: { id: "s", token: "t", loginName: "owner@holycode.org", creationTs: "1", expirationTs, changeTs: "1" },
+      });
+      const call = mockCookies.set.mock.calls.at(-1)[0];
+      expect(call.name).toBe("sessions");
+      expect(call.expires).toBeInstanceOf(Date);
+      expect(call.expires.getTime()).toBe(Number(expirationTs));
     });
   });
 });
