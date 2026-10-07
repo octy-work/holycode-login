@@ -12,9 +12,8 @@ import {
   removeSessionFromCookie,
   setLanguageCookie,
   updateSessionCookie,
-  sessionsCookieExpiry,
-  MAX_SESSIONS_COOKIE_MS,
 } from "./cookies";
+import { MAX_SESSIONS_COOKIE_MS, sessionsCookieExpiry } from "./sessions-cookie-expiry";
 
 import { timestampDate, timestampFromMs } from "@zitadel/client";
 import { cookies } from "next/headers";
