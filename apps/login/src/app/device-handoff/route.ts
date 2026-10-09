@@ -1,7 +1,14 @@
 import { applyCustomHeaders } from "@/lib/custom-headers";
-import { deviceHandoffClients, mintHandoff, verifyDeviceIdToken } from "@/lib/device-handoff";
+import {
+  deviceHandoffClients,
+  handoffSessionFromZitadel,
+  mintHandoff,
+  mintHandoffForSession,
+  verifyDeviceIdToken,
+} from "@/lib/device-handoff";
 import { createLogger } from "@/lib/logger";
 import { getServiceConfig } from "@/lib/service-url";
+import { getSession, ServiceConfig } from "@/lib/zitadel";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -28,19 +35,53 @@ async function instanceKeys(baseUrl: string, instanceHost?: string, publicHost?:
   return keys;
 }
 
+function handoffUrl(publicHost: string, code: string) {
+  return `https://${publicHost}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/me/enter?handoff=${code}`;
+}
+
 /**
- * Daenerys, finishing a device sign-in: `{ id_token }` of the device client →
- * `{ url }`, a one-time link that gives the app window the ID session the
- * person approved with (see lib/device-handoff.ts). 404 when there is none.
+ * `{ session_id, session_token }` of a Zitadel session the caller holds —
+ * Daenerys after a password sign-in it ran through the Session API (the ID
+ * session then lives nowhere but in Daenerys, and the app window still needs
+ * the cookie). The token is checked by Zitadel itself (GET /v2/sessions with
+ * the token), so this grants nothing the caller did not already have.
+ */
+async function handoffForSession(serviceConfig: ServiceConfig, publicHost: string, sessionId: string, sessionToken: string) {
+  let response: Awaited<ReturnType<typeof getSession>> | undefined;
+  try {
+    response = await getSession({ serviceConfig, sessionId, sessionToken });
+  } catch (error) {
+    logger.warn("device handoff: session rejected by Zitadel", { error: String(error) });
+    return NextResponse.json({ error: "invalid_session" }, { status: 401 });
+  }
+  const checked = handoffSessionFromZitadel(response?.session, sessionToken);
+  if ("error" in checked) {
+    logger.warn("device handoff: session not usable", { reason: checked.error });
+    return NextResponse.json({ error: "invalid_session", reason: checked.error }, { status: 401 });
+  }
+  const code = mintHandoffForSession(checked.userId, { ...checked.session, id: sessionId });
+  if (!code) {
+    return NextResponse.json({ error: "invalid_session" }, { status: 401 });
+  }
+  return NextResponse.json({ url: handoffUrl(publicHost, code) }, { headers: { "Cache-Control": "no-store" } });
+}
+
+/**
+ * Daenerys asks for a one-time link that gives the app window an ID session
+ * (see lib/device-handoff.ts); the answer is `{ url }`. Two proofs:
+ * `{ id_token }` of the device client, finishing a device sign-in — the
+ * session the person just approved with (404 when there is none); or
+ * `{ session_id, session_token }` of a Zitadel session the caller holds
+ * (password sign-in through Daenerys).
  */
 export async function POST(request: NextRequest) {
   const clientIds = deviceHandoffClients();
   if (!clientIds.length) {
     return NextResponse.json({ error: "disabled" }, { status: 404 });
   }
-  let idToken = "";
+  let body: any;
   try {
-    idToken = String((await request.json())?.id_token || "");
+    body = await request.json();
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
@@ -49,6 +90,17 @@ export async function POST(request: NextRequest) {
   if (!serviceConfig.baseUrl || !publicHost) {
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
   }
+
+  const sessionId = String(body?.session_id || "").trim();
+  const sessionToken = String(body?.session_token || "").trim();
+  if (sessionId || sessionToken) {
+    if (!sessionId || !sessionToken || sessionId.length > 200 || sessionToken.length > 1024) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+    return handoffForSession(serviceConfig, publicHost, sessionId, sessionToken);
+  }
+
+  const idToken = String(body?.id_token || "");
 
   let keys: any[];
   try {
@@ -72,6 +124,5 @@ export async function POST(request: NextRequest) {
   if (!code) {
     return NextResponse.json({ error: "no_approval" }, { status: 404 });
   }
-  const url = `https://${publicHost}${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/me/enter?handoff=${code}`;
-  return NextResponse.json({ url }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ url: handoffUrl(publicHost, code) }, { headers: { "Cache-Control": "no-store" } });
 }

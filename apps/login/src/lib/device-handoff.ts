@@ -1,4 +1,5 @@
 import { createLogger } from "@/lib/logger";
+import { timestampMs } from "@zitadel/client";
 import { createPublicKey, randomBytes, verify } from "crypto";
 
 const logger = createLogger("device-handoff");
@@ -95,6 +96,70 @@ export function consumeHandoff(code: string, now = Date.now()): HandoffSession |
   return live ? handoff.session : undefined;
 }
 
+/**
+ * A code for a session the caller already holds the token of (Daenerys, after
+ * a password sign-in it ran through the Session API): no device approval is
+ * needed, the token itself proves the session is theirs. Nothing new is
+ * granted — the same cookie entry the browser would get for that session.
+ */
+export function mintHandoffForSession(userId: string, session: HandoffSession, now = Date.now()): string | undefined {
+  if (!userId || !session?.id || !session?.token) return undefined;
+  sweep(now);
+  const code = randomBytes(32).toString("base64url");
+  store().handoffs.set(code, { userId, session, exp: now + HANDOFF_TTL_MS });
+  logger.info("handoff link issued for a session", { user: userId.slice(-6) });
+  return code;
+}
+
+type ZitadelTimestamp = Parameters<typeof timestampMs>[0];
+type ZitadelSessionLike = {
+  factors?: {
+    user?: { id?: string; loginName?: string; organizationId?: string };
+    password?: { verifiedAt?: ZitadelTimestamp };
+    webAuthN?: { verifiedAt?: ZitadelTimestamp };
+    intent?: { verifiedAt?: ZitadelTimestamp };
+  };
+  creationDate?: ZitadelTimestamp;
+  expirationDate?: ZitadelTimestamp;
+  changeDate?: ZitadelTimestamp;
+};
+
+function tsString(value: ZitadelTimestamp | undefined): string {
+  return value ? `${timestampMs(value)}` : "";
+}
+
+/**
+ * The cookie entry for a Zitadel session (GET /v2/sessions/{id} with its
+ * token). Only a session someone actually signed in to — password, passkey or
+ * provider checked — and that has not expired; otherwise why not.
+ */
+export function handoffSessionFromZitadel(
+  session: ZitadelSessionLike | undefined,
+  token: string,
+  now = Date.now(),
+): { userId: string; session: HandoffSession } | { error: string } {
+  const user = session?.factors?.user;
+  const userId = String(user?.id || "");
+  const loginName = String(user?.loginName || "");
+  if (!session || !userId || !loginName || !token) return { error: "no_user" };
+  const factors = session.factors!;
+  if (!factors.password?.verifiedAt && !factors.webAuthN?.verifiedAt && !factors.intent?.verifiedAt) {
+    return { error: "unchecked" };
+  }
+  const expirationTs = tsString(session.expirationDate);
+  if (expirationTs && Number(expirationTs) <= now) return { error: "expired" };
+  const entry: HandoffSession = {
+    id: String((session as { id?: string }).id || ""),
+    token,
+    loginName,
+    creationTs: tsString(session.creationDate),
+    expirationTs,
+    changeTs: tsString(session.changeDate),
+  };
+  if (user?.organizationId) entry.organization = String(user.organizationId);
+  return { userId, session: entry };
+}
+
 // ---------------------------------------------------------------------------
 // id_token of the device client
 // ---------------------------------------------------------------------------
@@ -157,8 +222,27 @@ export function verifyDeviceIdToken(
   return { sub: payload.sub };
 }
 
-/** Where the app window may be sent back to after the link: HolyCode apps and the local desktop runtime. */
-export function isHandoffReturnTarget(value: string | null | undefined): boolean {
+// Where the one-time link may send the app window back to: the HolyCode apps
+// of every contour (agent, app), mail and ID itself — the window opens the
+// service it was asked for, not only the profile. HC_DEVICE_HANDOFF_RETURN_HOSTS
+// adds hosts (comma-separated) without a rebuild.
+const RETURN_SERVICE_NAMES = ["agent", "app", "mail", "id"];
+const RETURN_ZONES = ["holycode.org", "ru.holycode.org", "us.holycode.org"];
+
+export function handoffReturnHosts(extra: string | undefined = process.env.HC_DEVICE_HANDOFF_RETURN_HOSTS): string[] {
+  const hosts = new Set<string>();
+  for (const zone of RETURN_ZONES) {
+    for (const name of RETURN_SERVICE_NAMES) hosts.add(`${name}.${zone}`);
+  }
+  for (const item of String(extra || "").split(",")) {
+    const host = item.trim().toLowerCase();
+    if (host) hosts.add(host);
+  }
+  return [...hosts];
+}
+
+/** Where the app window may be sent back to after the link: HolyCode services (https) and the local desktop runtime. */
+export function isHandoffReturnTarget(value: string | null | undefined, hosts: string[] = handoffReturnHosts()): boolean {
   if (!value) return false;
   let url: URL;
   try {
@@ -169,5 +253,5 @@ export function isHandoffReturnTarget(value: string | null | undefined): boolean
   if (url.username || url.password) return false;
   const loopback = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
   if (loopback) return url.protocol === "http:" || url.protocol === "https:";
-  return url.protocol === "https:" && ["agent.holycode.org", "app.holycode.org"].includes(url.hostname);
+  return url.protocol === "https:" && hosts.includes(url.hostname.toLowerCase());
 }
