@@ -67,8 +67,6 @@ export function DynamicTheme({
             <div className="w-full">{actualChildren}</div>
           )}
 
-          <CookieBanner />
-
           <div className="text-hc-muted mt-5 flex items-center justify-between gap-3 text-xs">
             <div className="flex min-w-0 items-center gap-2">
               {showLanguages && (
@@ -106,6 +104,8 @@ export function DynamicTheme({
           </div>
         </Card>
       </div>
+      {/* Cookie notice — a bar at the bottom edge, outside the card (23.10.2026). */}
+      <CookieBanner />
     </ThemeWrapper>
   );
 }
