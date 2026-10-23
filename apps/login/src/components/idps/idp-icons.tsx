@@ -1,7 +1,19 @@
 import { IdentityProviderType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
 
+import { BrandEmblem } from "@/components/brand-emblem";
+
 export type IdpBrand =
-  "github" | "google" | "apple" | "microsoft" | "gitlab" | "yandex" | "telegram" | "vk" | "zitadel" | "generic";
+  | "github"
+  | "google"
+  | "apple"
+  | "microsoft"
+  | "gitlab"
+  | "yandex"
+  | "telegram"
+  | "vk"
+  | "zitadel"
+  | "holycode"
+  | "generic";
 
 /**
  * Built-in providers are recognised by type; generic OAuth/OIDC/JWT providers
@@ -27,6 +39,9 @@ export function detectIdpBrand(type: IdentityProviderType, name?: string): IdpBr
       break;
   }
   const n = (name ?? "").toLowerCase();
+  // IdP «HolyCode» на входе организаций (id.octy.ru → id.holycode.org): эмблема
+  // HolyCode, а не инициал (владелец 23.10.2026: «должна быть с иконкой HolyCode»).
+  if (n.replace(/[\s_-]/g, "").includes("holycode") || n.includes("холикод")) return "holycode";
   if (n.includes("yandex") || n.includes("яндекс")) return "yandex";
   if (n.includes("telegram") || n.includes("телеграм")) return "telegram";
   if (n === "vk" || n.includes("vk id") || n.includes("vkontakte") || n.includes("вконтакте")) return "vk";
@@ -168,6 +183,8 @@ export function IdpIcon({ brand, name, className = "h-5 w-5" }: { brand: IdpBran
       return <TelegramIcon className={className} />;
     case "vk":
       return <VkIcon className={className} />;
+    case "holycode":
+      return <BrandEmblem className={`${className} rounded-[5px]`} />;
     default:
       return (
         <span className="bg-hc-soft text-hc-p400 flex h-6 w-6 items-center justify-center rounded-full text-[13px] font-bold uppercase">
