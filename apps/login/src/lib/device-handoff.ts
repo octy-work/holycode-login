@@ -238,7 +238,8 @@ export function handoffReturnHosts(extra: string | undefined = process.env.HC_DE
     const host = item.trim().toLowerCase();
     if (host) hosts.add(host);
   }
-  return [...hosts];
+  // Array.from, не spread: target tsconfig ниже es2015, next build падал на type check.
+  return Array.from(hosts);
 }
 
 /** Where the app window may be sent back to after the link: HolyCode services (https) and the local desktop runtime. */
