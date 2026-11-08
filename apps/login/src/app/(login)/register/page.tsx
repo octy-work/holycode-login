@@ -97,7 +97,21 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   // wizard — who the account is for, consents, then an account at a provider as the
   // anchor (SignupStart). An invitation is an anchor of its own, so an invited person
   // keeps the e-mail form below.
-  if (!invite && process.env.HC_SIGNUP_LEGACY_FORM !== "1") {
+  //
+  // HC_SIGNUP_EMAIL_ORGS (comma-separated org ids) keeps the plain e-mail + password
+  // form for the listed organizations, e.g. a consumer app with open registration
+  // (Wine Not in Vibedo ID, 2026-11-09). Only where the org itself allows
+  // registration: a service user creates the account, so the form must not open a
+  // door the org's login policy keeps closed.
+  const emailSignupOrgs = (process.env.HC_SIGNUP_EMAIL_ORGS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  const emailSignup =
+    process.env.HC_SIGNUP_LEGACY_FORM === "1" ||
+    (!!organization && !!loginSettings.allowRegister && emailSignupOrgs.includes(organization));
+
+  if (!invite && !emailSignup) {
     return (
       <DynamicTheme branding={branding}>
         <SignupStart

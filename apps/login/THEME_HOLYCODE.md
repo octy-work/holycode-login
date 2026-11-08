@@ -229,6 +229,7 @@ Login V2). Логика потоков — session API, passkey, OTP, IdP, devic
 | `UI_LANGUAGES=ru,en` | какие языки показывать в переключателе (порядок как в списке) |
 | `HC_MAIL_DOMAINS=oggo.app` | домены для «Завести почту в …» на регистрации; пусто — обычное поле e-mail |
 | `HC_BRAND_WORDMARK=Holy\|Code` | бренд контейнера (рантайм, `src/lib/brand.ts`): текст знака, часть до `\|` с градиентом. Пустая строка — режим организации: логотип, акцентный цвет и значок вкладки из label policy инстанса. Не задан — `NEXT_PUBLIC_BRAND_WORDMARK`, затем `Holy\|Code` |
+| `HC_SIGNUP_EMAIL_ORGS=<org id>,…` | организации, где `/register` без приглашения — обычная форма e-mail + пароль, а не мастер HolyCode (провайдеры + «для кого»). Только если у организации `allowRegister`. Для потребительских приложений с открытой регистрацией: Wine Not в Vibedo ID (2026-11-09). `HC_SIGNUP_LEGACY_FORM=1` — то же для всех |
 | `NEXT_PUBLIC_BRAND_WORDMARK=Holy\|Code` | то же на этапе сборки (запасное значение, если `HC_BRAND_WORDMARK` не задан) |
 | `CUSTOM_REQUEST_HEADERS=x-zitadel-instance-host:id.holycode.org,x-zitadel-public-host:id.holycode.org` | только для локального запуска против удалённого инстанса |
 | `NEXT_PUBLIC_DAENERYS_API_URL` | адрес Daenerys для профиля (сборочная); пусто — `https://daenerys-api.holycode.org` |
