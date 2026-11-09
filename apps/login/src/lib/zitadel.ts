@@ -460,6 +460,8 @@ export type AddHumanUserData = WithServiceConfig<{
   organization: string;
   /** HolyCode: the address is a mailbox in our own domain (reserved in Daenerys) — no code to send. */
   emailVerified?: boolean;
+  /** Language of the sign-up page: Zitadel writes its letters (verification, password reset) in it. */
+  preferredLanguage?: string;
 }>;
 
 export async function addHumanUser({
@@ -470,6 +472,7 @@ export async function addHumanUser({
   password,
   organization,
   emailVerified,
+  preferredLanguage,
 }: AddHumanUserData) {
   const userService: Client<typeof UserService> = await createServiceForHost(UserService, serviceConfig);
 
@@ -482,7 +485,7 @@ export async function addHumanUser({
       },
     },
     username: email,
-    profile: { givenName: firstName, familyName: lastName },
+    profile: { givenName: firstName, familyName: lastName, ...(preferredLanguage ? { preferredLanguage } : {}) },
     passwordType: password ? { case: "password", value: { password } } : undefined,
   });
 

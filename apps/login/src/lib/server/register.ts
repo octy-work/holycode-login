@@ -6,7 +6,7 @@ import { Code, ConnectError, Duration, create } from "@zitadel/client";
 import { Factors } from "@zitadel/proto/zitadel/session/v2/session_pb";
 import { Checks, ChecksJson, ChecksSchema } from "@zitadel/proto/zitadel/session/v2/session_service_pb";
 import crypto from "crypto";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { cookies, headers } from "next/headers";
 import { completeFlowOrGetUrl } from "../client";
 import { getOrSetFingerprintId } from "../fingerprint";
@@ -87,6 +87,8 @@ export async function registerUser(
     lastName: command.lastName,
     password: command.password ? command.password : undefined,
     organization: command.organization,
+    // Без языка Zitadel пишет письма на случайном («und» → турецкий у Vibedo ID, 2026-11-09)
+    preferredLanguage: await getLocale().catch(() => undefined),
   }).catch((error) => {
     logger.error("Failed to create user", { error });
     return null;

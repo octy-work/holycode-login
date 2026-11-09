@@ -1,4 +1,5 @@
 import { Timestamp, timestampDate } from "@zitadel/client";
+import { emailVerificationRequired } from "./email-verification";
 import { AuthRequest } from "@zitadel/proto/zitadel/oidc/v2/authorization_pb";
 import { SAMLRequest } from "@zitadel/proto/zitadel/saml/v2/authorization_pb";
 import { Session } from "@zitadel/proto/zitadel/session/v2/session_pb";
@@ -175,8 +176,8 @@ export async function isSessionValid({
     return false;
   }
 
-  // Check email verification if EMAIL_VERIFICATION environment variable is enabled
-  if (process.env.EMAIL_VERIFICATION === "true") {
+  // Check email verification if EMAIL_VERIFICATION is enabled (or for HC_SIGNUP_EMAIL_ORGS)
+  if (emailVerificationRequired(session.factors.user.organizationId)) {
     const userResponse = await getUserByID({ serviceConfig, userId: session.factors.user.id });
 
     const humanUser = userResponse?.user?.type.case === "human" ? userResponse?.user.type.value : undefined;

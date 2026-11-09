@@ -1,4 +1,5 @@
 import { timestampDate } from "@zitadel/client";
+import { emailVerificationRequired } from "./email-verification";
 import { Session } from "@zitadel/proto/zitadel/session/v2/session_pb";
 import { PasswordExpirySettings } from "@zitadel/proto/zitadel/settings/v2/password_settings_pb";
 import { HumanUser } from "@zitadel/proto/zitadel/user/v2/user_pb";
@@ -80,7 +81,7 @@ export async function checkEmailVerification(
   organization?: string,
   requestId?: string,
 ) {
-  if (!humanUser?.email?.isVerified && process.env.EMAIL_VERIFICATION === "true") {
+  if (!humanUser?.email?.isVerified && emailVerificationRequired(session.factors?.user?.organizationId || organization)) {
     const codeSent = await trySendVerification({
       userId: session.factors?.user?.id as string,
       isInvite: false,
