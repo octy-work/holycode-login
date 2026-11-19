@@ -4,14 +4,17 @@ import { AppEmblem, BrandEmblem } from "@/components/brand-mark";
 import { usePageChrome } from "@/components/page-chrome-context";
 import { SecurityAttention } from "@/lib/account-menu";
 import { DEFAULT_WORDMARK } from "@/lib/brand";
+import { Contour, PROFILE_CONTOUR_MODE } from "@/lib/contour";
 import { createHolyAgentMenu, HolyAgentMenuController, holyagentReleasesUrl, HolyAgentState } from "@/lib/holyagent-release";
-import { backToService, platformDomainOf, ServiceEntry, ServiceOrg } from "@/lib/services";
+import { backToService, platformDomainOf, SERVICE_KEYS, ServiceEntry, ServiceOrg } from "@/lib/services";
 import { backName, openServiceInDesktop } from "@/lib/topbar";
 import { BrandingSettings } from "@zitadel/proto/zitadel/settings/v2/branding_settings_pb";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AccountMenu, AccountMenuLinks } from "./account-menu";
+import { ContourSwitch } from "./contour-switch";
+import { NotificationBell } from "./notification-bell";
 import { ServiceSwitcher, SwitcherIcon } from "./service-switcher";
 
 /**
@@ -26,11 +29,16 @@ import { ServiceSwitcher, SwitcherIcon } from "./service-switcher";
  *    (`return_to`);
  *  - middle: `children` (empty in the profile);
  *  - right: the HolyAgent cloud — only inside the desktop shell and only when a
- *    newer release is out (a click installs) — and the avatar with its menu.
+ *    newer release is out (a click installs) — the contour switch «Все · Россия ·
+ *    США» (19.11.2026: в профиле неактивен, PROFILE_CONTOUR_MODE), the bell
+ *    (общая сводка Daenerys) and the avatar with its menu. На телефоне контур и
+ *    колокольчик — в этой же полосе, mobile-nav их не дублирует.
  *
  * One HolyAgent controller per page lives here: the cloud and the menu row show
  * the same state and the same install.
  */
+
+const KNOWN_KEYS = new Set<string>(SERVICE_KEYS);
 
 export function AgentUpdateButton({ state, onInstall }: { state: HolyAgentState | null; onInstall: () => void }) {
   const t = useTranslations("profile.account");
@@ -87,7 +95,7 @@ export function BackLink({
   const ownOrigin = typeof window !== "undefined" ? window.location.origin : "";
   const back = backToService(returnTo, services, { ownOrigin, domain });
   if (!back) return null;
-  const name = backName(back, (key) => t(`switcher.name.${key}`));
+  const name = backName(back, (key) => (KNOWN_KEYS.has(key) ? t(`switcher.name.${key}`) : ""));
   const label = t("topbar.backTo", { name });
   return (
     <a
@@ -123,6 +131,8 @@ export function TopBar({
   user,
   accountLinks,
   securityAttention,
+  contour = "all",
+  notificationsEnabled = true,
   children,
 }: {
   branding?: BrandingSettings;
@@ -139,6 +149,10 @@ export function TopBar({
   user: { fullName: string; loginName: string; email: string; handle?: string; avatarUrl: string };
   accountLinks: AccountMenuLinks;
   securityAttention: SecurityAttention;
+  /** Общий выбор контура (профиль ID → cookie hc_contour → «Все»), прочитан на сервере. */
+  contour?: Contour;
+  /** false — у Daenerys нет сессии (401): колокольчик без опроса и без числа. */
+  notificationsEnabled?: boolean;
   children?: ReactNode;
 }) {
   const t = useTranslations("profile.topbar");
@@ -167,7 +181,7 @@ export function TopBar({
       )}
       data-testid="profile-topbar"
     >
-      <div className="flex min-w-0 shrink-0 items-center gap-2.5">
+      <div className="flex min-w-0 shrink items-center gap-2.5 md:shrink-0">
         <ServiceSwitcher
           className="hidden md:block"
           compact
@@ -210,6 +224,10 @@ export function TopBar({
       <div className="hidden min-w-0 flex-1 items-center gap-2 md:flex">{children}</div>
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <AgentUpdateButton state={holyagent} onInstall={install} />
+        {PROFILE_CONTOUR_MODE === "hidden" ? null : (
+          <ContourSwitch value={contour} disabled={PROFILE_CONTOUR_MODE === "disabled"} />
+        )}
+        <NotificationBell daenerysUrl={daenerysUrl} enabled={notificationsEnabled} services={services} org={org} />
         <AccountMenu
           user={user}
           links={accountLinks}

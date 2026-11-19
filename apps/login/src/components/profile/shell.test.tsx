@@ -479,7 +479,8 @@ describe("the common top bar (owner's decision of 02.10.2026, option A)", () => 
     const { findByTestId, getByTestId } = render(<ProfileShell view={viewAt("/me")} counters={{}} />);
     const back = await findByTestId("service-back-link");
     expect(back).toHaveAttribute("href", "https://build.holycode.org/board");
-    expect(back).toHaveTextContent("topbar.backTo:HolyBuild");
+    // Словарное имя справочника — словарём страницы (localizedServiceName); мок t отдаёт ключ.
+    expect(back).toHaveTextContent("topbar.backTo:switcher.name.build");
     expect(window.location.search).toBe("");
     expect(window.sessionStorage.getItem("hc_profile_return_to")).toBe("https://build.holycode.org/board");
     fireEvent.click(getByTestId("service-switcher-trigger"));

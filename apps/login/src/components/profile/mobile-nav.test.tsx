@@ -143,7 +143,8 @@ describe("the services sheet", () => {
     expect(href.origin + href.pathname).toBe("https://build.holycode.org/");
     expect(href.searchParams.get("org")).toBe("acct-event74");
     expect(href.searchParams.get("return_to")).toBe(PROFILE);
-    expect(build).toHaveTextContent("HolyBuild");
+    // Словарное имя справочника показывается словарём страницы (localizedServiceName); мок t отдаёт ключ.
+    expect(build).toHaveTextContent("name.build");
     expect(build).toHaveTextContent("3 сборки идут");
     expect(getByTestId("sheet-tile-mail")).toHaveTextContent("1 новое");
     expect(getByTestId("sheet-tile-agent")).toHaveTextContent("hint.agent");

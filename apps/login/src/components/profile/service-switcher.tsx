@@ -1,6 +1,6 @@
 "use client";
 
-import { buildServiceHref, SERVICE_KEYS, ServiceEntry, ServiceOrg } from "@/lib/services";
+import { buildServiceHref, localizedServiceName, SERVICE_KEYS, ServiceEntry, ServiceOrg } from "@/lib/services";
 import { openServiceInDesktop } from "@/lib/topbar";
 import { clsx } from "clsx";
 import { useTranslations } from "next-intl";
@@ -130,6 +130,13 @@ const PATHS: Record<string, ReactNode> = {
       transform="translate(2 2) translate(0)"
     />
   ),
+  // Колокольчик (Heroicons solid, как bell в iconPaths.js эталона).
+  bell: (
+    <path
+      fillRule="evenodd"
+      d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z"
+    />
+  ),
   download: (
     <>
       <path
@@ -205,11 +212,14 @@ type SwitcherT = ReturnType<typeof useTranslations>;
 
 const KNOWN = new Set<string>(SERVICE_KEYS);
 
-/** The tile's name: from the server, else by key, else the key itself. */
+/**
+ * Имя плитки на языке профиля: словарное, если имя от сервера — одно из словарных
+ * для этого ключа («Профиль» в EN → «Profile»); своё имя сервера (white-label) —
+ * как есть; без имени — по ключу, иначе сам ключ.
+ */
 export function serviceName(service: Pick<ServiceEntry, "key" | "name">, t: SwitcherT): string {
-  const own = String(service.name ?? "").trim();
-  if (own) return own;
-  return KNOWN.has(service.key) ? t(`name.${service.key}`) : service.key;
+  const own = KNOWN.has(service.key) ? t(`name.${service.key}`) : "";
+  return localizedServiceName(service.name, service.key, own) || service.key;
 }
 
 /** Under the tile: "you are here" for the current service, else status.text from the server, else the hint by key. */

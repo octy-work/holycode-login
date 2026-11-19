@@ -1,6 +1,8 @@
 import { ProfileShell } from "@/components/profile/shell";
 import { AvailableIdp, LinkedIdp, ProfileView, SecondFactorKind } from "@/components/profile/types";
+import { CONTOUR_COOKIE, CONTOUR_METADATA_KEY, parseContourPreference, resolveContour } from "@/lib/contour";
 import { idpTypeToIdentityProviderType } from "@/lib/idp";
+import { PALETTE_COOKIE, PALETTE_METADATA_KEY, parsePalettePreference, resolvePalette } from "@/lib/palette";
 import {
   fullName,
   normalizeLanguageTag,
@@ -38,7 +40,7 @@ import { IdentityProvider, PasskeysType, SecondFactorType } from "@zitadel/proto
 import { AuthFactorState } from "@zitadel/proto/zitadel/user/v2/user_pb";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -174,6 +176,11 @@ export default async function Page(props: { params: Promise<{ section?: string[]
   });
 
   const themeEntry = metadata.metadata.find((m) => m.key === THEME_METADATA_KEY);
+  // Палитра и контур (19.11.2026) — рядом с темой: значение профиля ID побеждает
+  // общую cookie на .holycode.org, без него — cookie, иначе classic / all.
+  const cookieStore = await cookies();
+  const profileContour = parseContourPreference(metadata.metadata.find((m) => m.key === CONTOUR_METADATA_KEY)?.value);
+  const profilePalette = parsePalettePreference(metadata.metadata.find((m) => m.key === PALETTE_METADATA_KEY)?.value);
 
   const view: ProfileView = {
     section,
@@ -215,6 +222,9 @@ export default async function Page(props: { params: Promise<{ section?: string[]
     },
     recommendations,
     theme: parseThemePreference(themeEntry?.value),
+    contour: resolveContour(profileContour, cookieStore.get(CONTOUR_COOKIE)?.value),
+    palette: resolvePalette(profilePalette, cookieStore.get(PALETTE_COOKIE)?.value),
+    profilePrefs: { contour: profileContour, palette: profilePalette },
     sessionId: ctx.sessionCookie.id,
     daenerysUrl: process.env.NEXT_PUBLIC_DAENERYS_API_URL ?? "",
     links: {

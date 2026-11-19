@@ -5,8 +5,11 @@ import { usePageChrome } from "@/components/page-chrome-context";
 import { ThemeWrapper } from "@/components/theme-wrapper";
 import { Translated } from "@/components/translated";
 import { securityAttentionOf } from "@/lib/account-menu";
+import { isTenantBrand } from "@/lib/brand";
+import { CONTOUR_COOKIE, readCookie, writeSharedCookie } from "@/lib/contour";
 import { daenerysApiUrl } from "@/lib/daenerys";
 import { configureDebugSnapshot, registerDebugState } from "@/lib/debug-snapshot";
+import { PALETTE_COOKIE, paletteCss } from "@/lib/palette";
 import { profilePath, profilePrefixFromPathname, ProfileSection } from "@/lib/profile";
 import { canOpenAdmin } from "@/lib/services";
 import { rememberReturnTo } from "@/lib/topbar";
@@ -91,7 +94,9 @@ export function ProfileShell({
       endpoint: `${daenerysApiUrl(view.daenerysUrl)}/api/debug-reports`,
       lang: locale,
       user: { user_id: view.user.loginName, name: view.user.fullName, email: view.user.email },
-      org: directory.org ? { account_id: directory.org.account_id, name: directory.org.name, role: directory.org.role } : null,
+      org: directory.org
+        ? { account_id: directory.org.account_id, name: directory.org.name, role: directory.org.role }
+        : null,
       canViewReports: false,
     });
     return registerDebugState("profile", () => ({
@@ -121,6 +126,23 @@ export function ProfileShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Палитра и контур из профиля ID побеждают общие cookie (19.11.2026): дописать
+  // их в cookie .holycode.org, чтобы остальные сервисы этого браузера сразу
+  // получили тот же выбор. Без значения в профиле cookie не трогаем.
+  useEffect(() => {
+    const own = view.profilePrefs;
+    if (own?.palette && readCookie(PALETTE_COOKIE) !== own.palette) {
+      writeSharedCookie(PALETTE_COOKIE, own.palette, { publicHost: view.publicHost });
+    }
+    if (own?.contour && readCookie(CONTOUR_COOKIE) !== own.contour) {
+      writeSharedCookie(CONTOUR_COOKIE, own.contour, { publicHost: view.publicHost });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Палитра перекрашивает токены акцента (полоса, меню, кнопки). В режиме
+  // организации (white-label) — её собственный акцент, палитру не накладываем.
+  const paletteStyle = isTenantBrand(chrome.brandWordmark) ? "" : paletteCss(view.palette);
+
   const Section = {
     home: HomeSection,
     data: DataSection,
@@ -135,6 +157,7 @@ export function ProfileShell({
 
   return (
     <ThemeWrapper branding={branding}>
+      {paletteStyle ? <style data-hc-palette={view.palette} dangerouslySetInnerHTML={{ __html: paletteStyle }} /> : null}
       <TopBar
         branding={branding}
         homeHref={profilePath(prefix, "home")}
@@ -150,6 +173,8 @@ export function ProfileShell({
         user={view.user}
         accountLinks={accountLinks}
         securityAttention={securityAttentionOf(view.methods)}
+        contour={view.contour}
+        notificationsEnabled={daenerys.status !== "unauthorized"}
       />
       {/*
         Wide screens: the shell fills the viewport under the fixed 52 px bar — the

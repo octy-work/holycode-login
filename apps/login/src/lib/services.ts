@@ -45,6 +45,34 @@ export const DEFAULT_SERVICES: readonly ServiceEntry[] = Object.freeze([
   Object.freeze({ key: "mail", name: "", url: "https://mail.holycode.org/", icon: "mail", kind: "mail" }),
 ]);
 
+/**
+ * Словарные имена сервисов на обоих языках (как name_* в switcher/text.js эталона).
+ * Справочник /api/services отдаёт «Профиль», «Почта» по-русски; решение владельца
+ * 19.11.2026 — подписи плиток на языке профиля.
+ */
+export const KNOWN_SERVICE_NAMES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  chat: ["HolyCode"],
+  build: ["HolyBuild"],
+  agent: ["HolyAgent"],
+  panel: ["Daenerys"],
+  profile: ["Профиль", "Profile"],
+  mail: ["Почта", "Mail"],
+});
+
+/**
+ * Имя сервиса на языке страницы (localizedName эталона): имя от сервера совпадает с
+ * одним из словарных имён этого ключа (ru или en) — словарное имя страницы (`own`);
+ * своё имя (white-label, другой бренд) — как есть; пусто — словарное.
+ */
+export function localizedServiceName(raw: unknown, key: string | undefined | null, own: string): string {
+  const name = String(raw ?? "").trim();
+  const dictionary = String(own ?? "").trim();
+  if (!name) return dictionary;
+  if (!dictionary) return name;
+  const known = [...(KNOWN_SERVICE_NAMES[String(key ?? "")] ?? []), dictionary].map((item) => item.toLowerCase());
+  return known.includes(name.toLowerCase()) ? dictionary : name;
+}
+
 /** Roles that may open the organization admin (the same rule as the chat's `canOpenAdmin`). */
 export const ADMIN_ROLES: ReadonlySet<string> = new Set(["owner", "admin"]);
 

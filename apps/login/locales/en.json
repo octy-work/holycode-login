@@ -930,7 +930,31 @@
     "topbar": {
       "name": "Profile",
       "brandLabel": "HolyCode ID — profile",
-      "backTo": "Back to {name}"
+      "backTo": "Back to {name}",
+      "contour": {
+        "label": "Contour filter",
+        "all": "All",
+        "ru": "Russia",
+        "us": "USA",
+        "short": {
+          "all": "All",
+          "ru": "RU",
+          "us": "US"
+        },
+        "disabled": "This service does not split data by contour"
+      },
+      "bell": {
+        "label": "Notifications",
+        "title": "Notifications: {n}",
+        "empty": "All clear",
+        "stale": "Daenerys is unreachable: showing the last known state",
+        "severity": {
+          "bad": "urgent",
+          "warn": "waiting",
+          "info": "new",
+          "muted": "in 24 h"
+        }
+      }
     },
     "account": {
       "userMenu": "User menu",

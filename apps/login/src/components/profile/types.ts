@@ -1,3 +1,4 @@
+import type { Contour } from "@/lib/contour";
 import { AuthMethodsSummary, ProfileSection, Recommendation, ThemePreference } from "@/lib/profile";
 import { ServiceEntry } from "@/lib/services";
 import { IdentityProviderType } from "@zitadel/proto/zitadel/settings/v2/login_settings_pb";
@@ -62,6 +63,12 @@ export type ProfileView = {
   };
   recommendations: Recommendation[];
   theme: ThemePreference | null;
+  /** Контур «Все · Россия · США»: метаданные holycode.contour → cookie hc_contour → all (19.11.2026). */
+  contour?: Contour;
+  /** Палитра: метаданные holycode.palette → cookie hc_palette → classic (19.11.2026). */
+  palette?: string;
+  /** Есть ли значения в самом профиле ID — тогда страница дописывает их в общие cookie. */
+  profilePrefs?: { contour: Contour | null; palette: string | null };
   sessionId: string;
   daenerysUrl: string;
   links: {

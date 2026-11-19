@@ -9,7 +9,7 @@
  */
 
 import { desktopBridge, DesktopInvoke } from "./holyagent-release";
-import { BackTarget, readReturnTo, RETURN_TO_PARAM } from "./services";
+import { BackTarget, localizedServiceName, readReturnTo, RETURN_TO_PARAM } from "./services";
 
 /** 52 px on wide screens (`.hcs-bar` of the chat); on phones 48 px + the top safe area. */
 export const TOP_BAR_HEIGHT = 52;
@@ -96,8 +96,12 @@ export function rememberReturnTo(): string {
   }
 }
 
-/** "Back to HolyCode": the name from the directory, else by the service key, else the host. */
+/**
+ * "Back to HolyCode": the name from the directory, else by the service key, else the host.
+ * Словарное имя справочника («Профиль», «Почта») — на языке страницы (localizedServiceName).
+ */
 export function backName(back: BackTarget | null, nameByKey: (key: string) => string = () => ""): string {
   if (!back) return "";
-  return String(back.name || "").trim() || (back.key ? nameByKey(back.key) : "") || back.host;
+  const own = back.key ? nameByKey(back.key) : "";
+  return localizedServiceName(back.name, back.key, own) || back.host;
 }
