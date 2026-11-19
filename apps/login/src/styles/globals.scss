@@ -118,12 +118,12 @@ body {
 .hc-sidenav {
   border-right: 1px solid var(--hc-border);
   background:
-    radial-gradient(circle at top left, rgba(124, 58, 237, 0.08), transparent 34%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--hc-p600) 8%, transparent), transparent 34%),
     linear-gradient(180deg, #ffffff 0%, #f8f7ff 100%);
 }
 .dark .hc-sidenav {
   background:
-    radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 34%),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--hc-p600) 16%, transparent), transparent 34%),
     linear-gradient(180deg, rgba(18, 18, 40, 0.98) 0%, rgba(12, 12, 28, 1) 100%);
 }
 
@@ -153,20 +153,21 @@ body {
   background: rgba(15, 23, 42, 0.04);
 }
 .hc-sidenav-item[aria-current="page"] {
-  color: #4c1d95;
-  border-color: rgba(124, 58, 237, 0.35);
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(124, 58, 237, 0.16));
-  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.12);
+  // Акцент — от палитры (lib/palette.ts перекрашивает --hc-p600/--hc-cyan, 19.11.2026).
+  color: color-mix(in srgb, var(--hc-p600) 62%, #000);
+  border-color: color-mix(in srgb, var(--hc-p600) 35%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--hc-cyan) 12%, transparent), color-mix(in srgb, var(--hc-p600) 16%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hc-p600) 12%, transparent);
 }
 .dark .hc-sidenav-item:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 .dark .hc-sidenav-item[aria-current="page"] {
   color: #fff;
-  border-color: rgba(124, 58, 237, 0.34);
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(124, 58, 237, 0.22));
+  border-color: color-mix(in srgb, var(--hc-p600) 34%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--hc-cyan) 14%, transparent), color-mix(in srgb, var(--hc-p600) 22%, transparent));
   box-shadow:
-    inset 0 0 0 1px rgba(124, 58, 237, 0.18),
+    inset 0 0 0 1px color-mix(in srgb, var(--hc-p600) 18%, transparent),
     0 14px 30px rgba(6, 11, 30, 0.22);
 }
 
@@ -192,8 +193,8 @@ body {
 }
 .hc-sidenav-toggle:hover {
   color: var(--hc-text);
-  border-color: rgba(124, 58, 237, 0.4);
-  background: rgba(124, 58, 237, 0.14);
+  border-color: color-mix(in srgb, var(--hc-p600) 40%, transparent);
+  background: color-mix(in srgb, var(--hc-p600) 14%, transparent);
 }
 
 .hc-btn-primary {
